@@ -3,15 +3,15 @@ var bodyParser = require('body-parser');
 var neo4j = require('neo4j-driver').v1;
 
 //---> Credentials for connecting to GRAPHENEDB with Heroku!
-  var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-  var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-  var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+  // var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+  // var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+  // var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+  // var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
-  var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 
   const port = process.env.PORT || 3000;
   //----> Local credentials
-  //var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
+  var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
   var session = driver.session();
   var app = express();
   app.use(bodyParser.json()); //uses bodyParser middleware
@@ -70,7 +70,7 @@ app.post('/postTest',(req,res,next) => {
         res.send("Success! ---> " + name + ' ' + email + ' ' + location);
       })
       .catch((e) => {
-        console.log(JSON.stringify(e));
+        console.log('error: ' + JSON.stringify(e));
       });
   }
   else {
@@ -86,7 +86,7 @@ app.post('/findByEmail', (req,res,next) => {
     session
       .run("MATCH (a:Person) WHERE a.email = {email} RETURN a.email AS Email",
                {email: email})
-      .then(() =>{
+      .then((result) =>{
         //console.log(result);
         for(x in result.records){
           console.log(result.records[x]);
@@ -94,7 +94,7 @@ app.post('/findByEmail', (req,res,next) => {
         res.send(email);
       })
       .catch((e) => {
-        console.log(JSON.stringify(e));
+        console.log('error : ' + JSON.stringify(e));
       })
   }
   else {
