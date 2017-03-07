@@ -77,8 +77,8 @@ app.post('/postTest',(req,res,next) => {
     res.send('Fail, yo!');
   }
 });
-//searches for user by email, returns email. 
-app.post('/findByEmail', (req,res) => {
+//searches for user by email, returns email.
+app.post('/findByEmail', (req,res,next) => {
   var email = null;
   email = req.body.email;
 
