@@ -3,15 +3,15 @@ var bodyParser = require('body-parser');
 var neo4j = require('neo4j-driver').v1;
 
 //---> Credentials for connecting to GRAPHENEDB with Heroku!
-  // var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-  // var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-  // var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
-  // var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
+   var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+   var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+   var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+   var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 
   const port = process.env.PORT || 3000;
   //----> Local credentials
-  var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
+  //var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
   var session = driver.session();
   var app = express();
   app.use(bodyParser.json()); //uses bodyParser middleware
