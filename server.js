@@ -77,6 +77,7 @@ app.post('/postTest',(req,res,next) => {
     res.send('Fail, yo!');
   }
 });
+//searches for user by email, returns email. 
 app.post('/findByEmail', (req,res) => {
   var email = null;
   email = req.body.email;
@@ -95,6 +96,9 @@ app.post('/findByEmail', (req,res) => {
       .catch((e) => {
         console.log(JSON.stringify(e));
       })
+  }
+  else {
+    res.status(400).send("email must be in correct format!!!");
   }
 });
  app.listen(port, () => {
