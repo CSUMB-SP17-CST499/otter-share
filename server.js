@@ -17,6 +17,9 @@ var neo4j = require('neo4j-driver').v1;
   app.use(bodyParser.json()); //uses bodyParser middleware
 
   // Tests a fake email hard-coded in source. Can delete this block now
+  app.get('/', (req,res) => {
+    res.status(200).send("Welcome to OtterShare, nothing to GET, though");
+  });
   app.get('/getTest', (req,res,next) => {
     session
       .run("MATCH (a:Person) WHERE a.email <> {email} RETURN a.name AS name, a.email AS email, a.location AS location",
