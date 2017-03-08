@@ -1,0 +1,38 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textColor">@color/main_text</item>
+    </style>
+
+    <style name="generalNoTitle" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:textColor">@color/main_text</item>
+    </style>
+
+    <style name="login_input">
+        <item name="android:textColor">@color/login_input_text</item>
+        <item name="android:background">@color/login_input_back</item>
+        <item name="android:padding">@dimen/login_input_text_padding</item>
+        <item name="android:textSize">@dimen/login_text_size</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_width">@dimen/login_input_size</item>
+    </style>
+
+    <style name="login_text">
+        <item name="android:padding">@dimen/login_input_text_padding</item>
+        <item name="android:textSize">@dimen/login_text_size</item>
+        <item name="android:layout_centerHorizontal">true</item>
+    </style>
+
+    <style name="login_button">
+        <item name="android:padding">@dimen/login_input_text_padding</item>
+        <item name="android:layout_width">@dimen/login_input_size</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:textColor">@color/login_btn_text</item>
+    </style>
+</resources>
