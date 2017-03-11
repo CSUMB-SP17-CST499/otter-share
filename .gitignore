@@ -7,3 +7,5 @@
 /build
 /captures
 .externalNativeBuild
+.idea/encodings.xml
+app/src/main/res/values/api_keys.xml
