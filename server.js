@@ -9,7 +9,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./db_operations/db');
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 var app = express();
 var expressValidator = require('express-validator');
@@ -83,7 +83,7 @@ app.post('/createUser', (req, res) => {
     // need to check for session as well, via auth key, will after testing.
     if (!!name && !!email && !!location && !!password) {
         // hashes password via response from callback, stored in hash!
-        bcrypt.hash(password, 12, (err, hash) => {
+        bcrypt.hash(password, 10, (err, hash) => {
             // Store hash in password DB, as well as all other fields.
             let hashedPassword = hash;
             db.createUser(email, name, location, hashedPassword, (err, succ) => {

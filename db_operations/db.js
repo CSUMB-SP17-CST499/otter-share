@@ -1,10 +1,9 @@
 /*
   Handles all db operations
-
 */
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-//var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
+// var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
 //
 // ---> Credentials for connecting to GRAPHENEDB with Heroku!
 var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
@@ -13,7 +12,7 @@ var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
 var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 var session = driver.session();
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 //Takes email and password, searches neo4j db for them, if found, returns name, location and hashed pw -> FOR TESTING ONLY! need to remove!
 const findByEmailPw = (email, password, callback) => {

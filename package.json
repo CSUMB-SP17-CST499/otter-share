@@ -4,7 +4,7 @@
   "description": "OtterShare!",
   "main": "server.js",
   "dependencies": {
-    "bcrypt": "^1.0.2",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.0",
     "client-sessions": "^0.7.0",
     "express": "^4.14.1",
@@ -15,8 +15,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node ./server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "node-pre-gyp install --fallback-to-build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
     "node": "7.2.0"
