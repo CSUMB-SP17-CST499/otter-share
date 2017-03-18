@@ -35,7 +35,7 @@ app.get('/verify/:key', (req,res) => {
         if(err) {
           console.log(err);
         }
-        res.send(verify_email_key);
+        res.send('VERIFIED!' + verify_email_key);
     });
   }
 });

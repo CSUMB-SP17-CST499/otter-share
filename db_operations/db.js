@@ -4,22 +4,21 @@
 */
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
+  // var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
 //
 // ---> Credentials for connecting to GRAPHENEDB with Heroku!
-// var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-// var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-// var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
-// var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
+var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 var session = driver.session();
 var bcrypt = require('bcryptjs');
 var _ = require('lodash');
 const cryptoRandomString = require('crypto-random-string');
-const env = require('env2')('.env');
+const env = require('env2')('./.env');
 const nodemailer = require('nodemailer');
 var fs = require('fs');
-//console.log(process.env.EMAIL_USER + ' ' + process.env.EMAIL_PASS); // "127.0.0.1"
 
 //Takes email and password, searches neo4j db for them, if found, returns name, location and hashed pw ->
 // NOTE: need to remove return string that is sent back, also need to check WHERE a.email_verify_key = TRUE.
@@ -93,16 +92,14 @@ const createUser = (email, name, location, password, callback) => {
       });
 }
 // send's an email to given user, as well as the email verification key required to activate an account
-console.log(process.env.EMAIL_USER);
 const sendEmail = (name, email, verifyEmailKey) => {
     // loads my custom html, converts to String, use Lodash function that inserts user info into html (lodash is freaken awesome!)
-    let verifyUrl = process.env.LOCAL_AUTH_URL + verifyEmailKey;
+    let verifyUrl = process.env.AUTH_URL + verifyEmailKey;
     var html = fs.readFileSync(__dirname + '/email.html', 'utf-8');
     html = _.toString(html);
     var compiled = _.template(html);
     var modifiedHtml = compiled({'user' : name , 'url' : verifyUrl });
     // the following code blocks are what is needed to run nodemailer.
-    console.log (process.env.)
     let transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
