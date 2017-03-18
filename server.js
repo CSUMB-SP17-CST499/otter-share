@@ -6,14 +6,14 @@
     @author Mason Lopez
     @version 1.1 3/15/2017
 **/
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./db_operations/db');
 var bcrypt = require('bcryptjs');
+var _ = require('lodash');
 
 var app = express();
-var expressValidator = require('express-validator');
-var expressSession = require('express-session');
 
 const port = process.env.PORT || 3000;
 
@@ -21,46 +21,38 @@ app.use(bodyParser.json()); //uses bodyParser middleware for reading body
 app.use(bodyParser.urlencoded({
     extended: false
 }));
-app.use(expressValidator());
 
-var settings = {
-    secret: "asdfqwerty784334",
-    cookie: {},
-    saveUninitialized: false,
-    resave: false
-};
-app.use(expressSession(settings));
-
-//route points
+//routes
 app.get('/', (req, res) => {
     //may serve up OtterShare website later.
     res.status(200).send("Welcome to OtterShare, nothing to GET, though");
 });
-//demonstrates maintained session.
-app.get('/connected', (req, res) => {
-    //res.send('In connect');
-    if (req.session.user)
-        res.send('in connected ' + req.session.user);
-    else
-        res.status(401).send('Unauthorized!');
+
+app.get('/verify/:key', (req,res) => {
+  //check to see if key is in db, if so, authenticate user it matches with!
+  if(req.params.key){
+      db.verifyEmail(req.params.key, (err,verify_email_key) => {
+        if(err) {
+          console.log(err);
+        }
+        res.send(verify_email_key);
+    });
+  }
 });
 
-app.post('/login/authenticate', (req, res) => {
+app.post('/login', (req, res) => {
     // Search for name in db
     // need to check for CSUMB email
     // will need to check for email & auth key instead, next goal
     if (!!req.body.email && !!req.body.password) {
         //run findByEmailPw callback function, if found w/ matching pw, authenticate
-
         // Send in hashed pw, for comparison
         db.findByEmailPw(req.body.email, req.body.password, (err, user) => {
             if (err) {
                 res.send(err);
             }
-            // sets session to user.
             if (!!user) {
-                req.session.user = user;
-                res.redirect('/connected');
+                res.send('Connected as : ' + user);
             } else {
                 res.send('User not found');
             }
@@ -70,7 +62,29 @@ app.post('/login/authenticate', (req, res) => {
         console.log(req.body.email);
     }
 });
+app.post('/testAuth', (req,res) => {
+  if(!!req.body.authKey) {
+    db.auth(req.body.authKey, (err, authUser) => {
+      let toJson = '';
+      _.forEach(authUser.records, (record) => {
+        // Prints the password field console.log(record._fields[3]);
+        toJson += record._fields;
+      });
+      if(_.isEmpty(toJson)){
+        console.log('Failed to match');
+        res.status(401).send('<h3>Failed to Authenticate</h3>');
 
+      }
+      else {
+        console.log(toJson);
+        res.send(toJson);
+      }
+    });
+  } else {
+    console.log('Auth Error -> No api key given');
+    res.status(401).send('<h2>Looking for something?</h2>');
+  }
+});
 app.post('/createUser', (req, res) => {
     // Search for name in db
     // need to check for CSUMB email
@@ -86,11 +100,11 @@ app.post('/createUser', (req, res) => {
         bcrypt.hash(password, 10, (err, hash) => {
             // Store hash in password DB, as well as all other fields.
             let hashedPassword = hash;
-            db.createUser(email, name, location, hashedPassword, (err, succ) => {
+            db.createUser(email, name, location, hashedPassword, (err, response) => {
                 if (err) {
                     res.send(err);
                 }
-                res.send(succ);
+                res.send(response);
             });
         });
     }
@@ -105,6 +119,7 @@ app.post('/createUser', (req, res) => {
 //         }
 //     });
 // });
+
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log("Started on port " + port);
