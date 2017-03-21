@@ -4,13 +4,13 @@
 */
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-  // var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
+  var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
 //
 // ---> Credentials for connecting to GRAPHENEDB with Heroku!
-var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
-var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
+// var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+// var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+// var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+// var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 var session = driver.session();
 var bcrypt = require('bcryptjs');
@@ -30,27 +30,37 @@ const findByEmailPw = (email, password, callback) => {
             email: email
         })
         .then((result) => {
-            let result_string = '';
-            let hash = null;
-
+          session.close();
+            if(!_.isEmpty(result.records)) {
+              var userObj = new Object();
             _.forEach(result.records, (record) => {
               // Prints the password field console.log(record._fields[3]);
-              hash = record._fields[3];
-              result_string += record._fields + ' ';
+              userObj.name = record._fields[0];
+              userObj.email = record._fields[1];
+              userObj.location = record._fields[2];
+              userObj.password = record._fields[3];
+              userObj.api_key = record._fields[4];
+
             });
-            // prints a more legible user profile output
+            var result_string = JSON.stringify(userObj);
+            // prints a more legible user profile output, in json
             //console.log('in then case -> ' + result_string);
-            bcrypt.compare(password, hash, function(err, res) {
+            bcrypt.compare(password, userObj.password, function(err, res) {
                 if (res == true) {
                     return callback(null, result_string);
                 }
-                // return nothing if no match
-                return callback(null, null);
+                // return nothing if no match, NOTE: Should return false
+                return callback(null, false);
             });
+          } else {
+            // user Does Not exist. NOTE: Should return nothing null, this is ok.
+            return callback(null,null);
+          }
         })
         .catch((e) => {
+            session.close();
             console.log(e);
-            return callback('error : ' + JSON.stringify(e));
+            return callback('error caught via Login ->: ' + JSON.stringify(e));
         });
 }
 
@@ -61,6 +71,7 @@ const createUser = (email, name, location, password, callback) => {
       .then((results) => {
         if(!_.isEmpty(results.records)){
           // if we have records that return, this shows that email is in use, therefore fail with null
+          session.close();
           return callback(null, "Fail , this email is in use! Try to login instead. ");
         }
         else {
@@ -77,17 +88,22 @@ const createUser = (email, name, location, password, callback) => {
                   verify_email_key: verifyEmailKey
               })
               .then(() => {
-                  let succ = ("Success! ---> " + name + ' ' + email + ' ' + location + ' ' + password + ', please check your email to verify your account!');
+                  // let succ = ("Success! ---> " + name + ' ' + email + ' ' + location + ' ' + password + ', please check your email to verify your account!');
+                  session.close();
+                  successObject = new Object();
+                  successObject.success = "Creation successful! To continue, check your email to verify account!";
                   // sends email to user with instructions to verify email, without it no access to Ottershare
-                  sendEmail(name,email,verifyEmailKey);
-                  return callback(null, succ);
+                  sendEmail(name, email, verifyEmailKey);
+                  return callback(null, JSON.stringify(successObject));
               })
               .catch((e) => {
+                  session.close();
                   return callback('error : ' + JSON.stringify(e));
               });
         }
       })
       .catch((e) => {
+          session.close();
           return callback('error : ' + JSON.stringify(e));
       });
 }
@@ -122,19 +138,21 @@ const sendEmail = (name, email, verifyEmailKey) => {
     // send mail with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log('mailer error: '+error);
+            return console.log('mailer error: '+ error);
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
     });
 }
-// Clears db FOR TESTING PURPOSES ONLY, LEAVE commented before spinning up on server!
+// Clears db FOR TESTING PURPOSES ONLY
 const resetDB = (callback) => {
     session
         .run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
         .then(() => {
+            session.close();
             return callback(null, 'success');
         })
         .catch((e) => {
+            session.close();
             return callback(null, e);
         });
 }
@@ -143,6 +161,7 @@ const auth = (api_access_key, callback) => {
   session
     .run('MATCH (user:User {api_access_key: {api_access_key}}) RETURN user', {api_access_key: api_access_key})
     .then((user) => {
+      session.close();
       if(!_.isEmpty(user)) {
         return callback(null, user);
       }
@@ -159,6 +178,7 @@ const verifyEmail = (verifyString, callback) => {
     .run('MATCH (user:User {verify_email_key: {verify_email_key}}) SET user.verify_email_key = true RETURN user.verify_email_key',
         {verify_email_key:verifyString})
     .then((verify_email_key) => {
+      session.close();
       let result_string = '';
       if(!_.isEmpty(verify_email_key)) {
         _.forEach(verify_email_key.records, (record) => {
@@ -170,14 +190,16 @@ const verifyEmail = (verifyString, callback) => {
       return callback(null, false)
     })
     .catch((e) => {
+      session.close();
       return callback(null, JSON.stringify(e));
     });
 
 }
+// if using reset, add variable below!
 module.exports = {
     findByEmailPw,
     createUser,
-    resetDB,
     auth,
-    verifyEmail
+    verifyEmail,
+    resetDB
 };

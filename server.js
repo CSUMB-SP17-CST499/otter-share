@@ -6,7 +6,6 @@
     @author Mason Lopez
     @version 1.1 3/15/2017
 **/
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./db_operations/db');
@@ -28,16 +27,17 @@ app.get('/', (req, res) => {
     res.status(200).send("Welcome to OtterShare, nothing to GET, though");
 });
 
-app.get('/verify/:key', (req,res) => {
-  //check to see if key is in db, if so, authenticate user it matches with!
-  if(req.params.key){
-      db.verifyEmail(req.params.key, (err,verify_email_key) => {
-        if(err) {
-          console.log(err);
-        }
-        res.send('VERIFIED!' + verify_email_key);
-    });
-  }
+app.get('/verify/:key', (req, res) => {
+    //check to see if key is in db, if so, authenticate user it matches with!
+    if (req.params.key) {
+        db.verifyEmail(req.params.key, (err, verify_email_key) => {
+            if (err) {
+                console.log(err);
+            }
+            res.send('VERIFIED! ' + verify_email_key);
+            //res.json when serving to our client on Android
+        });
+    }
 });
 
 app.post('/login', (req, res) => {
@@ -53,8 +53,11 @@ app.post('/login', (req, res) => {
             }
             if (!!user) {
                 res.send('Connected as : ' + user);
-            } else {
-                res.send('User not found');
+            } else if (user == false) {
+                res.json({error: 'Incorrect password!'});
+            }
+            else {
+              res.json({error: 'User does not exist!!'});
             }
         });
 
@@ -62,28 +65,28 @@ app.post('/login', (req, res) => {
         console.log(req.body.email);
     }
 });
-app.post('/testAuth', (req,res) => {
-  if(!!req.body.authKey) {
-    db.auth(req.body.authKey, (err, authUser) => {
-      let toJson = '';
-      _.forEach(authUser.records, (record) => {
-        // Prints the password field console.log(record._fields[3]);
-        toJson += record._fields;
-      });
-      if(_.isEmpty(toJson)){
-        console.log('Failed to match');
-        res.status(401).send('<h3>Failed to Authenticate</h3>');
+// takes api auth key, runs function to see if it exists.
+app.post('/testAuth', (req, res) => {
+    if (!!req.body.authKey) {
+        db.auth(req.body.authKey, (err, authUser) => {
+            let toJson = '';
+            _.forEach(authUser.records, (record) => {
+                // Prints the password field console.log(record._fields[3]);
+                toJson += record._fields;
+            });
+            if (_.isEmpty(toJson)) {
+                console.log('Failed to match');
+                res.status(401).send('<h3>Failed to Authenticate</h3>');
 
-      }
-      else {
-        console.log(toJson);
-        res.send(toJson);
-      }
-    });
-  } else {
-    console.log('Auth Error -> No api key given');
-    res.status(401).send('<h2>Looking for something?</h2>');
-  }
+            } else {
+                console.log(toJson);
+                res.send(toJson);
+            }
+        });
+    } else {
+        console.log('Auth Error -> No api key given');
+        res.status(401).send('<h2>Looking for something?</h2>');
+    }
 });
 app.post('/createUser', (req, res) => {
     // Search for name in db
@@ -93,7 +96,6 @@ app.post('/createUser', (req, res) => {
     var email = null || req.body.email;
     var location = null || req.body.location;
     var password = null || req.body.password;
-
     // need to check for session as well, via auth key, will after testing.
     if (!!name && !!email && !!location && !!password) {
         // hashes password via response from callback, stored in hash!
@@ -109,7 +111,7 @@ app.post('/createUser', (req, res) => {
         });
     }
 });
-// Essentially DROPS data from database ! For testing purposes only!!!
+// Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res, next) => {
 //     db.resetDB((err, succ) => {
 //         if (err) {
