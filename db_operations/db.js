@@ -4,7 +4,7 @@
 */
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-  // var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
+// var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
 //
 // ---> Credentials for connecting to GRAPHENEDB with Heroku!
 var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
@@ -20,11 +20,14 @@ const env = require('env2')('./.env');
 const nodemailer = require('nodemailer');
 var fs = require('fs');
 
-//Takes email and password, searches neo4j db for them, if found, returns name, location and hashed pw ->
-// NOTE: need to remove return string that is sent back, also need to check WHERE a.email_verify_key = TRUE.
+// Takes email and password, searches neo4j db for them, if found, returns user data
+// NOTE: need to remove return string that is sent back, also need to check WHERE a.email_verify_key = TRUE, maybe call auth key verification as well.
 const findByEmailPw = (email, password, callback) => {
     let cqlString =
-      "MATCH (a:User) WHERE a.email = {email} RETURN a.name AS name, a.email AS email, a.location AS location, a.password AS password, a.api_access_key AS api_key";
+      "MATCH (a:User) WHERE a.email = {email} RETURN " +
+       "a.name AS name, a.email AS email, a.password AS password," +
+        "a.api_access_key AS api_key, a.verify_email_key AS verify_email_key";
+
     session
         .run(cqlString , {
             email: email
@@ -33,19 +36,24 @@ const findByEmailPw = (email, password, callback) => {
           session.close();
             if(!_.isEmpty(result.records)) {
               var userObj = new Object();
+              let stored_pw = '';
             _.forEach(result.records, (record) => {
-              // Prints the password field console.log(record._fields[3]);
+              // Prints the password field console.log(record._fields[2]);
               userObj.name = record._fields[0];
               userObj.email = record._fields[1];
-              userObj.location = record._fields[2];
-              userObj.password = record._fields[3];
-              userObj.api_key = record._fields[4];
+              stored_pw = record._fields[2];
+              userObj.api_key = record._fields[3];
+              userObj.email_verified = record._fields[4];
+              // Make this false for client, if false, tell user to verify email!
+              if(_.isString(userObj.email_verified)){
+                userObj.email_verified = false;
+              }
 
             });
+            // converts the object into a Json string for client
             var result_string = JSON.stringify(userObj);
-            // prints a more legible user profile output, in json
-            //console.log('in then case -> ' + result_string);
-            bcrypt.compare(password, userObj.password, function(err, res) {
+            // compares entered password with stored_pw in database.
+            bcrypt.compare(password, stored_pw, function(err, res) {
                 if (res == true) {
                     return callback(null, result_string);
                 }
@@ -64,7 +72,7 @@ const findByEmailPw = (email, password, callback) => {
         });
 }
 
-const createUser = (email, name, location, password, callback) => {
+const createUser = (email, name, password, callback) => {
     // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
     session
       .run('MATCH (user:User {email: {email}}) RETURN user', {email: email})
@@ -79,11 +87,10 @@ const createUser = (email, name, location, password, callback) => {
           // it will first store a key, then a boolean value of TRUE when account has been verified
           var verifyEmailKey = cryptoRandomString(60);
           session
-              .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, location: {location}, api_access_key: {api_access_key}, verify_email_key: {verify_email_key} })", {
+              .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, api_access_key: {api_access_key}, verify_email_key: {verify_email_key} })", {
                   name: name,
                   email: email,
                   password: password,
-                  location: location,
                   api_access_key: cryptoRandomString(60),
                   verify_email_key: verifyEmailKey
               })

@@ -46,18 +46,29 @@ app.post('/login', (req, res) => {
     // will need to check for email & auth key instead, next goal
     if (!!req.body.email && !!req.body.password) {
         //run findByEmailPw callback function, if found w/ matching pw, authenticate
-        // Send in hashed pw, for comparison
-        db.findByEmailPw(req.body.email, req.body.password, (err, user) => {
+        // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
+        db.findByEmailPw(req.body.email.trim(), req.body.password.trim(), (err, user) => {
             if (err) {
                 res.send(err);
             }
             if (!!user) {
-                res.send('Connected as : ' + user);
-            } else if (user == false) {
+                // If email is not verified, then we send an error back describing what to do next
+                if(!JSON.parse(user).email_verified){
+                  res.json({error: 'Sorry, you need to verify your account by clicking the link in the email!'})
+                }
+                else {
+                  // If email is verified, we return logged in users info
+                  res.send(user);
+                }
+
+            }
+            // Pw is wrong
+            else if (user == false) {
                 res.json({error: 'Incorrect password!'});
             }
+            // User does not exist
             else {
-              res.json({error: 'User does not exist!!'});
+              res.json({error: 'User does not exist, make an account!'});
             }
         });
 
@@ -88,27 +99,29 @@ app.post('/testAuth', (req, res) => {
         res.status(401).send('<h2>Looking for something?</h2>');
     }
 });
+// Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.
 app.post('/createUser', (req, res) => {
-    // Search for name in db
-    // need to check for CSUMB email
-    // app just needs to start here by sending email, right now I have email. No pw yet
-    var name = null || req.body.name;
-    var email = null || req.body.email;
-    var location = null || req.body.location;
-    var password = null || req.body.password;
-    // need to check for session as well, via auth key, will after testing.
-    if (!!name && !!email && !!location && !!password) {
+    const regex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
+    var name = null || req.body.name.trim();
+    var email = null || req.body.email.trim();
+    var password = null || req.body.password.trim();
+
+    // if all of these fields are not null, and email is in correct format then continue with creation.
+    if (!!name && !!email && !!password && regex.test(email)) {
         // hashes password via response from callback, stored in hash!
         bcrypt.hash(password, 10, (err, hash) => {
             // Store hash in password DB, as well as all other fields.
             let hashedPassword = hash;
-            db.createUser(email, name, location, hashedPassword, (err, response) => {
+            db.createUser(email, name, hashedPassword, (err, response) => {
                 if (err) {
                     res.send(err);
                 }
                 res.send(response);
             });
         });
+    }
+    else {
+      res.json({error:'incorrect field format'});
     }
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
