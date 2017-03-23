@@ -10,10 +10,9 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./db_operations/db');
 var bcrypt = require('bcryptjs');
+var _ = require('lodash');
 
 var app = express();
-var expressValidator = require('express-validator');
-var expressSession = require('express-session');
 
 const port = process.env.PORT || 3000;
 
@@ -21,48 +20,55 @@ app.use(bodyParser.json()); //uses bodyParser middleware for reading body
 app.use(bodyParser.urlencoded({
     extended: false
 }));
-app.use(expressValidator());
 
-var settings = {
-    secret: "asdfqwerty784334",
-    cookie: {},
-    saveUninitialized: false,
-    resave: false
-};
-app.use(expressSession(settings));
-
-//route points
+//routes
 app.get('/', (req, res) => {
     //may serve up OtterShare website later.
     res.status(200).send("Welcome to OtterShare, nothing to GET, though");
 });
-//demonstrates maintained session.
-app.get('/connected', (req, res) => {
-    //res.send('In connect');
-    if (req.session.user)
-        res.send('in connected ' + req.session.user);
-    else
-        res.status(401).send('Unauthorized!');
+
+app.get('/verify/:key', (req, res) => {
+    //check to see if key is in db, if so, authenticate user it matches with!
+    if (req.params.key) {
+        db.verifyEmail(req.params.key, (err, verify_email_key) => {
+            if (err) {
+                console.log(err);
+            }
+            res.send('VERIFIED! ' + verify_email_key);
+            //res.json when serving to our client on Android
+        });
+    }
 });
 
-app.post('/login/authenticate', (req, res) => {
+app.post('/login', (req, res) => {
     // Search for name in db
     // need to check for CSUMB email
     // will need to check for email & auth key instead, next goal
     if (!!req.body.email && !!req.body.password) {
         //run findByEmailPw callback function, if found w/ matching pw, authenticate
-
-        // Send in hashed pw, for comparison
-        db.findByEmailPw(req.body.email, req.body.password, (err, user) => {
+        // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
+        db.findByEmailPw(req.body.email.trim(), req.body.password.trim(), (err, user) => {
             if (err) {
                 res.send(err);
             }
-            // sets session to user.
             if (!!user) {
-                req.session.user = user;
-                res.redirect('/connected');
-            } else {
-                res.send('User not found');
+                // If email is not verified, then we send an error back describing what to do next
+                if(!JSON.parse(user).email_verified){
+                  res.json({error: 'Sorry, you need to verify your account by clicking the link in the email!'})
+                }
+                else {
+                  // If email is verified, we return logged in users info
+                  res.send(user);
+                }
+
+            }
+            // Pw is wrong
+            else if (user == false) {
+                res.json({error: 'Incorrect password!'});
+            }
+            // User does not exist
+            else {
+              res.json({error: 'User does not exist, make an account!'});
             }
         });
 
@@ -70,32 +76,55 @@ app.post('/login/authenticate', (req, res) => {
         console.log(req.body.email);
     }
 });
+// takes api auth key, runs function to see if it exists.
+app.post('/testAuth', (req, res) => {
+    if (!!req.body.authKey) {
+        db.auth(req.body.authKey, (err, authUser) => {
+            let toJson = '';
+            _.forEach(authUser.records, (record) => {
+                // Prints the password field console.log(record._fields[3]);
+                toJson += record._fields;
+            });
+            if (_.isEmpty(toJson)) {
+                console.log('Failed to match');
+                res.status(401).send('<h3>Failed to Authenticate</h3>');
 
+            } else {
+                console.log(toJson);
+                res.send(toJson);
+            }
+        });
+    } else {
+        console.log('Auth Error -> No api key given');
+        res.status(401).send('<h2>Looking for something?</h2>');
+    }
+});
+// Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.
 app.post('/createUser', (req, res) => {
-    // Search for name in db
-    // need to check for CSUMB email
-    // app just needs to start here by sending email, right now I have email. No pw yet
-    var name = null || req.body.name;
-    var email = null || req.body.email;
-    var location = null || req.body.location;
-    var password = null || req.body.password;
+    const regex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
+    var name = null || req.body.name.trim();
+    var email = null || req.body.email.trim();
+    var password = null || req.body.password.trim();
 
-    // need to check for session as well, via auth key, will after testing.
-    if (!!name && !!email && !!location && !!password) {
+    // if all of these fields are not null, and email is in correct format then continue with creation.
+    if (!!name && !!email && !!password && regex.test(email)) {
         // hashes password via response from callback, stored in hash!
         bcrypt.hash(password, 10, (err, hash) => {
             // Store hash in password DB, as well as all other fields.
             let hashedPassword = hash;
-            db.createUser(email, name, location, hashedPassword, (err, succ) => {
+            db.createUser(email, name, hashedPassword, (err, response) => {
                 if (err) {
                     res.send(err);
                 }
-                res.send(succ);
+                res.send(response);
             });
         });
     }
+    else {
+      res.json({error:'incorrect field format'});
+    }
 });
-// Essentially DROPS data from database ! For testing purposes only!!!
+// Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res, next) => {
 //     db.resetDB((err, succ) => {
 //         if (err) {
@@ -105,6 +134,7 @@ app.post('/createUser', (req, res) => {
 //         }
 //     });
 // });
+
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log("Started on port " + port);

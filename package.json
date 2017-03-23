@@ -6,11 +6,12 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.0",
-    "client-sessions": "^0.7.0",
+    "crypto-random-string": "^1.0.0",
+    "env2": "^2.1.1",
     "express": "^4.14.1",
-    "express-session": "^1.15.1",
-    "express-validator": "^3.1.2",
-    "neo4j-driver": "^1.1.0"
+    "lodash": "^4.17.4",
+    "neo4j-driver": "^1.1.0",
+    "nodemailer": "^3.1.7"
   },
   "devDependencies": {},
   "scripts": {
