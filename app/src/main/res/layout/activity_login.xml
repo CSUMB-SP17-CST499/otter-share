@@ -27,35 +27,29 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/login_label_email"
-        android:id="@+id/login_email"
-        android:layout_below="@+id/login_logo"
+        android:text="@string/login_heading"
+        android:id="@+id/login_heading"
         style="@style/login_text"
-        android:layout_margin="0dp"/>
+        android:layout_below="@+id/login_logo"/>
+
 
     <EditText
         android:layout_height="wrap_content"
         android:id="@+id/login_email_input"
-        android:layout_below="@+id/login_email"
-        android:hint="example@csumb.edu"
+        android:layout_below="@+id/login_heading"
         android:inputType="textEmailAddress"
         style="@style/login_input"
-        android:nextFocusDown="@+id/login_password_input"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/login_label_password"
-        android:id="@+id/login_password"
-        android:layout_below="@+id/login_email_input"
-        style="@style/login_text"/>
+        android:nextFocusDown="@+id/login_password_input"
+        android:hint="@string/login_label_email"/>
 
     <EditText
         android:layout_height="wrap_content"
         android:id="@+id/login_password_input"
-        android:layout_below="@+id/login_password"
+        android:layout_below="@+id/login_email_input"
         android:inputType="textPassword"
+        android:hint="@string/login_label_password"
         style="@style/login_input"
+        android:layout_marginTop="10dp"
         android:imeOptions="actionDone"/>
 
     <Button

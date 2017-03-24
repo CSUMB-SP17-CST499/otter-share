@@ -6,4 +6,5 @@
     <string name="login_btn_create">Create Account</string>
     <string name="login_btn_create_label">Not a member?</string>
     <string name="reg_hint_email">example@csumb.edu</string>
+    <string name="login_heading">Sign in</string>
 </resources>
