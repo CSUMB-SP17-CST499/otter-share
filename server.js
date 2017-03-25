@@ -6,6 +6,7 @@
     @author Mason Lopez
     @version 1.1 3/15/2017
 **/
+"use strict";
 var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./db_operations/db');

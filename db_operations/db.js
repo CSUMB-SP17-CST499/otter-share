@@ -1,6 +1,7 @@
 /*
   Handles all db operations
 */
+"use strict";
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
 // var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
