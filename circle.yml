@@ -6,9 +6,7 @@ dependencies:
     override:
         - chmod +x gradlew
         - ./gradlew dependencies
-test:
-  override:
-    - mocha ./tests/*.unitTest.js
+
 deployment:
   staging:
     branch: master
