@@ -6,7 +6,10 @@ dependencies:
     override:
         - chmod +x gradlew
         - ./gradlew dependencies
-
+test:
+  pre: npm install mocha
+  override:
+    - mocha ./tests/*.unitTest.js
 deployment:
   staging:
     branch: master
