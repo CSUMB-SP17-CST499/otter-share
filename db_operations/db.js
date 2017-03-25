@@ -1,6 +1,5 @@
 /*
   Handles all db operations
-
 */
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
@@ -21,7 +20,6 @@ const nodemailer = require('nodemailer');
 var fs = require('fs');
 
 // Takes email and password, searches neo4j db for them, if found, returns user data
-// NOTE: need to remove return string that is sent back, also need to check WHERE a.email_verify_key = TRUE, maybe call auth key verification as well.
 const findByEmailPw = (email, password, callback) => {
     let cqlString =
       "MATCH (a:User) WHERE a.email = {email} RETURN " +
@@ -74,44 +72,62 @@ const findByEmailPw = (email, password, callback) => {
 
 const createUser = (email, name, password, callback) => {
     // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
+
+    const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
+    const nameRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
+    const passRegex = /^([a-zA-Z0-9@*#]{8,15})$/;
+    if(!emailRegex.test(email)){
+      return callback(null, {error:'Incorrect email format, it must be from CSUMB!'});
+    }
+    if(!nameRegex.test(name)){
+      return callback(null,{error: 'Incorrect Name format!'});
+    }
+    if(!passRegex.test(password)){
+      return callback(null,{error: 'Incorrect password format! Must be minimum 8 characters!'});
+    }
+
     session
       .run('MATCH (user:User {email: {email}}) RETURN user', {email: email})
       .then((results) => {
         if(!_.isEmpty(results.records)){
           // if we have records that return, this shows that email is in use, therefore fail with null
           session.close();
-          return callback(null, "Fail , this email is in use! Try to login instead. ");
+          return callback(null, {error :'This email is in use! Try to login instead'});
         }
         else {
           // this key will be sent to users emails to verify they are csumb students!
           // it will first store a key, then a boolean value of TRUE when account has been verified
           var verifyEmailKey = cryptoRandomString(60);
-          session
-              .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, api_access_key: {api_access_key}, verify_email_key: {verify_email_key} })", {
-                  name: name,
-                  email: email,
-                  password: password,
-                  api_access_key: cryptoRandomString(60),
-                  verify_email_key: verifyEmailKey
-              })
-              .then(() => {
-                  // let succ = ("Success! ---> " + name + ' ' + email + ' ' + location + ' ' + password + ', please check your email to verify your account!');
-                  session.close();
-                  successObject = new Object();
-                  successObject.success = "Creation successful! To continue, check your email to verify account!";
-                  // sends email to user with instructions to verify email, without it no access to Ottershare
-                  sendEmail(name, email, verifyEmailKey);
-                  return callback(null, JSON.stringify(successObject));
-              })
-              .catch((e) => {
-                  session.close();
-                  return callback('error : ' + JSON.stringify(e));
-              });
+          bcrypt.hash(password, 10, (err, hash) => {
+            session
+                .run("CREATE (a:User {name: {name}, email: {email}, password: {password},"+
+                      " api_access_key: {api_access_key}, verify_email_key: {verify_email_key} })", {
+                    name: name,
+                    email: email,
+                    password: hash,
+                    api_access_key: cryptoRandomString(60),
+                    verify_email_key: verifyEmailKey
+                })
+                .then(() => {
+                    session.close();
+                    successObject = new Object();
+                    successObject.success = "Creation successful! To continue, check your email to verify account!";
+                    // sends email to user with instructions to verify email, without it no access to Ottershare
+                    sendEmail(name, email, verifyEmailKey);
+                    return callback(null, JSON.stringify(successObject));
+                })
+                .catch((e) => {
+                    session.close();
+                    return callback(null, {error:e});
+                });
+
+          });
+
         }
       })
       .catch((e) => {
           session.close();
-          return callback('error : ' + JSON.stringify(e));
+          return callback(null, {error:e});
       });
 }
 // send's an email to given user, as well as the email verification key required to activate an account

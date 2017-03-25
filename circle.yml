@@ -4,4 +4,9 @@ machine:
 dependencies:
     override:
         - chmod +x gradlew
-        - ./gradlew dependencies 
+        - ./gradlew dependencies
+deployment:
+  staging:
+    branch: master
+    heroku:
+      appname: young-plains-98404
