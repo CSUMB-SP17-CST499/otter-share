@@ -3,13 +3,14 @@ machine:
       version: 7.2.0
 
 dependencies:
-    pre:
-      - npm install
-      - npm -g list
+    post:
+      - sudo npm install mocha -g
     override:
         - chmod +x gradlew
         - ./gradlew dependencies
-
+test:
+  override:
+    - mocha ./tests/*.unitTest.js
 deployment:
   staging:
     branch: master
