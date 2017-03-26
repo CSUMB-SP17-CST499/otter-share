@@ -3,11 +3,11 @@ machine:
       version: 7.2.0
 
 dependencies:
-    post:
-      - sudo npm install mocha -g
     override:
         - chmod +x gradlew
         - ./gradlew dependencies
+        - npm install --dev
+
 test:
   override:
     - mocha ./tests/*.unitTest.js
