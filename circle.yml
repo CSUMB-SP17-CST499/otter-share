@@ -6,7 +6,7 @@ dependencies:
     override:
         - chmod +x gradlew
         - ./gradlew dependencies
-        - npm install --dev
+        - npm install -g mocha
 
 test:
   override:
