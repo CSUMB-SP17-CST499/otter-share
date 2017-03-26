@@ -111,7 +111,7 @@ const createUser = (email, name, password, callback) => {
                 })
                 .then(() => {
                     session.close();
-                    successObject = new Object();
+                    var successObject = new Object();
                     successObject.success = "Creation successful! To continue, check your email to verify account!";
                     // sends email to user with instructions to verify email, without it no access to Ottershare
                     sendEmail(name, email, verifyEmailKey);
@@ -119,7 +119,8 @@ const createUser = (email, name, password, callback) => {
                 })
                 .catch((e) => {
                     session.close();
-                    return callback(null, {error:e});
+                    var out = e;
+                    return callback(null, {error:out});
                 });
 
           });
@@ -128,7 +129,8 @@ const createUser = (email, name, password, callback) => {
       })
       .catch((e) => {
           session.close();
-          return callback(null, {error:e});
+          var out = e;
+          return callback(null, {error:out});
       });
 }
 // send's an email to given user, as well as the email verification key required to activate an account

@@ -37,7 +37,7 @@ it('should return fail on creation.', (done) => {
     request(app)
         .post('/createUser')
         .send('name=' + testName)
-        .send('email=' + 'cjones847728@gmail.com')
+        .send('email=' + 'cjone45s847728@gmail.com')
         .send('password=' + testPassword)
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');

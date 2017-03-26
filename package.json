@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "node ./server.js",
-    "test": "mocha test --reporter mocha-junit-reporter --reporter-options mochaFile=./test_results/test-results.xml"
+    "test": "mocha ./tests/*.unitTest.js"
   },
   "engines": {
     "node": "7.2.0"
