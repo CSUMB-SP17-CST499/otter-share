@@ -40,17 +40,38 @@ app.get('/verify/:key', (req, res) => {
         });
     }
 });
+app.post('/users', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  // NOTE if account exists, return Profile info, else 'user does not exist'
+  // if received strings user and api key, then we set vars equal to said data
+  // otherwise they are null and refuse access
+  var username = req.body.username.trim() || null;
+  var api_key = req.body.api_key.trim() || null;
+  if(!!username && !!api_key){
+    db.authCheck(api_key, (err, user) => {
+      if(err){
+        res.send({error:"callback error"});
+      }
+      db.retrieveUser(username, (err, payload) => {
+        if(err){
+          res.send({error:"callback error"});
+        }
+        // console.log(payload);
+        res.send(payload);
+      });
+    });
+  } else {
+    res.send({error:'Unauthorized'});
+  }
+});
 
 app.post('/login', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     // Search for name in db
-    // need to check for CSUMB email
-    // will need to check for email & auth key instead, next goal
     if (!!req.body.email && !!req.body.password) {
-        //run findByEmailPw callback function, if found w/ matching pw, authenticate
+        //run login callback function, if found w/ matching pw, authenticate
         // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
-        res.setHeader('Content-Type', 'application/json');
-        db.findByEmailPw(req.body.email.trim(), req.body.password.trim(), (err, user) => {
+        db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
             if (err) {
                 res.send(err);
             }
@@ -58,7 +79,7 @@ app.post('/login', (req, res) => {
                 // If email is not verified, then we send an error back describing what to do next
                 if (!JSON.parse(user).email_verified) {
                     res.json({
-                        error: 'Sorry, you need to verify your account by clicking the link in the email!'
+                        error: 'Code 0'
                     })
                 } else {
                     // If email is verified, we return logged in users info
@@ -69,13 +90,13 @@ app.post('/login', (req, res) => {
             // Pw is wrong
             else if (user == false) {
                 res.json({
-                    error: 'Incorrect password!'
+                    error: 'Code 1'
                 });
             }
             // User does not exist
             else {
                 res.json({
-                    error: 'User does not exist, make an account!'
+                    error: 'Code 1'
                 });
             }
         });
@@ -89,7 +110,7 @@ app.post('/testAuth', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
 
     if (!!req.body.authKey) {
-        db.auth(req.body.authKey, (err, authUser) => {
+        db.authCheck(req.body.authKey, (err, authUser) => {
             let toJson = '';
             _.forEach(authUser.records, (record) => {
                 // Prints the password field console.log(record._fields[3]);
@@ -115,11 +136,14 @@ app.post('/createUser', (req, res) => {
     var name = null || req.body.name.trim();
     var email = null || req.body.email.trim();
     var password = null || req.body.password.trim();
+    var username = null || req.body.username.trim();
+    var carMakeModel = null || req.body.carMakeModel.trim();
+    var schedule = null || req.body.schedule.trim();
 
     // if all of these fields are not null, and email is in correct format then continue with creation.
-    if (!!name && !!email && !!password) {
+    if (!!name && !!email && !!password && !!username && !!carMakeModel && !!schedule) {
         // Store hash in password DB, as well as all other fields.
-        db.createUser(email, name, password, (err, response) => {
+        db.createUser(email, name, password, username, carMakeModel, schedule, (err, response) => {
             if (err) {
                 res.send(err);
             }
@@ -132,15 +156,15 @@ app.post('/createUser', (req, res) => {
     }
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-// app.get('/reset', (req, res, next) => {
-//     db.resetDB((err, succ) => {
-//         if (err) {
-//             console.log(err);
-//         } else {
-//             res.send(succ);
-//         }
-//     });
-// });
+app.get('/reset', (req, res, next) => {
+    db.resetDB((err, succ) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.send(succ);
+        }
+    });
+});
 
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {

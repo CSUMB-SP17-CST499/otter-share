@@ -4,13 +4,13 @@
 "use strict";
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-// var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
+var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
 //
 // ---> Credentials for connecting to GRAPHENEDB with Heroku!
-var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
-var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
+// var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+// var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+// var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+// var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 var session = driver.session();
 var bcrypt = require('bcryptjs');
@@ -21,11 +21,12 @@ const nodemailer = require('nodemailer');
 var fs = require('fs');
 
 // Takes email and password, searches neo4j db for them, if found, returns user data
-const findByEmailPw = (email, password, callback) => {
+const login = (email, password, callback) => {
     let cqlString =
       "MATCH (a:User) WHERE a.email = {email} RETURN " +
        "a.name AS name, a.email AS email, a.password AS password," +
-        "a.api_access_key AS api_key, a.verify_email_key AS verify_email_key";
+        "a.api_access_key AS api_key, a.verify_email_key AS verify_email_key," +
+        "a.username AS username, a.carMakeModel AS carMakeModel, a.schedule AS schedule";
 
     session
         .run(cqlString , {
@@ -36,23 +37,25 @@ const findByEmailPw = (email, password, callback) => {
             if(!_.isEmpty(result.records)) {
               var userObj = new Object();
               let stored_pw = '';
-            _.forEach(result.records, (record) => {
-              // Prints the password field console.log(record._fields[2]);
-              userObj.name = record._fields[0];
-              userObj.email = record._fields[1];
-              stored_pw = record._fields[2];
-              userObj.api_key = record._fields[3];
-              userObj.email_verified = record._fields[4];
-              // Make this false for client, if false, tell user to verify email!
-              if(_.isString(userObj.email_verified)){
-                userObj.email_verified = false;
-              }
-
-            });
+              _.forEach(result.records, (record) => {
+               // Prints the password field console.log(record._fields[2]);
+                userObj.name = record._fields[0];
+                userObj.email = record._fields[1];
+                stored_pw = record._fields[2];
+                userObj.api_key = record._fields[3];
+                userObj.email_verified = record._fields[4];
+                userObj.username = record._fields[5];
+                userObj.carMakeModel = record._fields[6];
+                userObj.schedule = record._fields[7];
+                // Make this false for client, if false, tell user to verify email!
+                if(_.isString(userObj.email_verified)){
+                  userObj.email_verified = false;
+                }
+              });
             // converts the object into a Json string for client
             var result_string = JSON.stringify(userObj);
             // compares entered password with stored_pw in database.
-            bcrypt.compare(password, stored_pw, function(err, res) {
+            bcrypt.compare(password, stored_pw, (err, res) => {
                 if (res == true) {
                     return callback(null, result_string);
                 }
@@ -71,9 +74,9 @@ const findByEmailPw = (email, password, callback) => {
         });
 }
 
-const createUser = (email, name, password, callback) => {
+const createUser = (email, name, password, username, carMakeModel, schedule, callback) => {
     // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
-
+    // NOTE if schedule isn't received as an array, we will need to tokenize it and push it into an array before storing
     const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
     const nameRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
     const passRegex = /^([a-zA-Z0-9@*#]{8,15})$/;
@@ -101,13 +104,17 @@ const createUser = (email, name, password, callback) => {
           var verifyEmailKey = cryptoRandomString(60);
           bcrypt.hash(password, 10, (err, hash) => {
             session
-                .run("CREATE (a:User {name: {name}, email: {email}, password: {password},"+
-                      " api_access_key: {api_access_key}, verify_email_key: {verify_email_key} })", {
+                .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, " +
+                      "api_access_key: {api_access_key}, verify_email_key: {verify_email_key}," +
+                       "username:{username}, carMakeModel:{carMakeModel}, schedule:{schedule} })", {
                     name: name,
                     email: email,
                     password: hash,
                     api_access_key: cryptoRandomString(60),
-                    verify_email_key: verifyEmailKey
+                    verify_email_key: verifyEmailKey,
+                    username: username,
+                    carMakeModel: carMakeModel,
+                    schedule: schedule
                 })
                 .then(() => {
                     session.close();
@@ -120,7 +127,7 @@ const createUser = (email, name, password, callback) => {
                 .catch((e) => {
                     session.close();
                     var out = e;
-                    return callback(null, {error:out});
+                    return callback(null, {error_output:out});
                 });
 
           });
@@ -183,9 +190,9 @@ const resetDB = (callback) => {
         });
 }
 // if Authentication key exists, grant access
-const auth = (api_access_key, callback) => {
+const authCheck = (api_key, callback) => {
   session
-    .run('MATCH (user:User {api_access_key: {api_access_key}}) RETURN user', {api_access_key: api_access_key})
+    .run('MATCH (user:User {api_access_key: {api_key}}) RETURN user', {api_key: api_key})
     .then((user) => {
       session.close();
       if(!_.isEmpty(user)) {
@@ -202,7 +209,7 @@ const auth = (api_access_key, callback) => {
 const verifyEmail = (verifyString, callback) => {
   session
     .run('MATCH (user:User {verify_email_key: {verify_email_key}}) SET user.verify_email_key = true RETURN user.verify_email_key',
-        {verify_email_key:verifyString})
+          {verify_email_key:verifyString})
     .then((verify_email_key) => {
       session.close();
       let result_string = '';
@@ -221,11 +228,36 @@ const verifyEmail = (verifyString, callback) => {
     });
 
 }
+// Will return profile information of a user
+// NOTE: need to specify exactly what to return
+const retrieveUser = (username, callback) => {
+  session
+    .run('MATCH (user:User {username:{username}}) RETURN user',
+          {username:username})
+    .then((user) => {
+      var profileObject = new Object();
+      session.close();
+      _.forEach(user.records, (record) => {
+        // places each part of user properties into Object for jsonification
+        profileObject.username = (record._fields[0].properties.username);
+        profileObject.email = (record._fields[0].properties.email);
+        profileObject.name = (record._fields[0].properties.name);
+        profileObject.carMakeModel = (record._fields[0].properties.carMakeModel);
+      })
+      console.log(profileObject);
+      return callback(null,JSON.stringify(profileObject));
+    })
+    .catch((e) => {
+      session.close();
+      return callback(null, JSON.stringify(e));
+    });
+}
 // if using reset, add variable below!
 module.exports = {
-    findByEmailPw,
+    login,
     createUser,
-    auth,
+    authCheck,
     verifyEmail,
-    resetDB
+    resetDB,
+    retrieveUser
 };
