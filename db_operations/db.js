@@ -6,7 +6,7 @@ var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
 // var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
 //
-// ---> Credentials for connecting to GRAPHENEDB with Heroku!
+// ---> Credentials for connecting to GRAPHENEDB with Heroku! 
 var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
 var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
 var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
@@ -77,6 +77,7 @@ const login = (email, password, callback) => {
 const createUser = (email, name, password, username, carMakeModel, schedule, callback) => {
     // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
     // NOTE if schedule isn't received as an array, we will need to tokenize it and push it into an array before storing
+    // NOTE will need to search to see if username is in use! if so, send back error
     const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
     const nameRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
     const passRegex = /^([a-zA-Z0-9@*#]{8,15})$/;

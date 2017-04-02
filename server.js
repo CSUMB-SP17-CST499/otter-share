@@ -155,6 +155,7 @@ app.post('/createUser', (req, res) => {
         });
     }
 });
+
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res, next) => {
 //     db.resetDB((err, succ) => {
