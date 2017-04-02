@@ -128,7 +128,6 @@ it('should retrieve another user\'s profile', (done) => {
     .end(done);
 
 })
-
 // Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
 it('should retrieve own personal profile', (done) => {
   request(app)
