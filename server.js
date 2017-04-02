@@ -156,15 +156,15 @@ app.post('/createUser', (req, res) => {
     }
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-app.get('/reset', (req, res, next) => {
-    db.resetDB((err, succ) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.send(succ);
-        }
-    });
-});
+// app.get('/reset', (req, res, next) => {
+//     db.resetDB((err, succ) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.send(succ);
+//         }
+//     });
+// });
 
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
