@@ -4,13 +4,13 @@
 "use strict";
 var neo4j = require('neo4j-driver').v1;
 //----> Local credentials
-// var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
+var driver = neo4j.driver("bolt://localhost:3001", neo4j.auth.basic("neo4j", "root"));
 //
-// ---> Credentials for connecting to GRAPHENEDB with Heroku! 
-var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
-var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
-var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
-var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
+// ---> Credentials for connecting to GRAPHENEDB with Heroku!
+// var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
+// var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
+// var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
+// var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
 //
 var session = driver.session();
 var bcrypt = require('bcryptjs');
@@ -26,7 +26,7 @@ const login = (email, password, callback) => {
       "MATCH (a:User) WHERE a.email = {email} RETURN " +
        "a.name AS name, a.email AS email, a.password AS password," +
         "a.api_access_key AS api_key, a.verify_email_key AS verify_email_key," +
-        "a.username AS username, a.carMakeModel AS carMakeModel, a.schedule AS schedule";
+        "a.carMakeModel AS carMakeModel, a.schedule AS schedule";
 
     session
         .run(cqlString , {
@@ -44,9 +44,8 @@ const login = (email, password, callback) => {
                 stored_pw = record._fields[2];
                 userObj.api_key = record._fields[3];
                 userObj.email_verified = record._fields[4];
-                userObj.username = record._fields[5];
-                userObj.carMakeModel = record._fields[6];
-                userObj.schedule = record._fields[7];
+                userObj.carMakeModel = record._fields[5];
+                userObj.schedule = record._fields[6];
                 // Make this false for client, if false, tell user to verify email!
                 if(_.isString(userObj.email_verified)){
                   userObj.email_verified = false;
@@ -74,10 +73,9 @@ const login = (email, password, callback) => {
         });
 }
 
-const createUser = (email, name, password, username, carMakeModel, schedule, callback) => {
+const createUser = (email, name, password, carMakeModel, schedule, callback) => {
     // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
     // NOTE if schedule isn't received as an array, we will need to tokenize it and push it into an array before storing
-    // NOTE will need to search to see if username is in use! if so, send back error
     const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
     const nameRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
     const passRegex = /^([a-zA-Z0-9@*#]{8,15})$/;
@@ -107,13 +105,12 @@ const createUser = (email, name, password, username, carMakeModel, schedule, cal
             session
                 .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, " +
                       "api_access_key: {api_access_key}, verify_email_key: {verify_email_key}," +
-                       "username:{username}, carMakeModel:{carMakeModel}, schedule:{schedule} })", {
+                       "carMakeModel:{carMakeModel}, schedule:{schedule} })", {
                     name: name,
                     email: email,
                     password: hash,
                     api_access_key: cryptoRandomString(60),
                     verify_email_key: verifyEmailKey,
-                    username: username,
                     carMakeModel: carMakeModel,
                     schedule: schedule
                 })
@@ -231,27 +228,47 @@ const verifyEmail = (verifyString, callback) => {
 }
 // Will return profile information of a user
 // NOTE: need to specify exactly what to return
-const retrieveUser = (username, callback) => {
+const retrieveUser = (email, callback) => {
   session
-    .run('MATCH (user:User {username:{username}}) RETURN user',
-          {username:username})
+    .run('MATCH (user:User {email:{email}}) RETURN user',
+          {email:email})
     .then((user) => {
       var profileObject = new Object();
       session.close();
       _.forEach(user.records, (record) => {
         // places each part of user properties into Object for jsonification
-        profileObject.username = (record._fields[0].properties.username);
         profileObject.email = (record._fields[0].properties.email);
         profileObject.name = (record._fields[0].properties.name);
         profileObject.carMakeModel = (record._fields[0].properties.carMakeModel);
       })
-      console.log(profileObject);
+      // console.log(profileObject);
       return callback(null,JSON.stringify(profileObject));
     })
     .catch((e) => {
       session.close();
       return callback(null, JSON.stringify(e));
     });
+}
+const retrieveMyProfile = (email, api_key, callback) => {
+  session
+    .run('MATCH (user:User) WHERE user.email = {email} AND user.api_access_key = {api_access_key} RETURN user', {
+       email: email,
+       api_access_key: api_key
+     })
+     .then((user) => {
+       session.close();
+       var myProfileObject = new Object();
+       _.forEach(user.records, (record) => {
+         myProfileObject.email = (record._fields[0].properties.email);
+         myProfileObject.name = (record._fields[0].properties.name);
+         myProfileObject.carMakeModel = (record._fields[0].properties.carMakeModel);
+         myProfileObject.schedule = (record._fields[0].properties.schedule);
+       });
+       return callback(null, JSON.stringify(myProfileObject));
+     })
+     .catch((e) => {
+       console.log({error:e});
+     });
 }
 // if using reset, add variable below!
 module.exports = {
@@ -260,5 +277,6 @@ module.exports = {
     authCheck,
     verifyEmail,
     resetDB,
-    retrieveUser
+    retrieveUser,
+    retrieveMyProfile
 };

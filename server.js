@@ -13,10 +13,9 @@ var db = require('./db_operations/db');
 var bcrypt = require('bcryptjs');
 var _ = require('lodash');
 
-var app = express();
-
 const port = process.env.PORT || 3000;
 
+var app = express();
 app.use(bodyParser.json()); //uses bodyParser middleware for reading body
 app.use(bodyParser.urlencoded({
     extended: false
@@ -27,6 +26,8 @@ app.get('/', (req, res) => {
     //may serve up OtterShare website later.
     res.status(200).send("Welcome to OtterShare, nothing to GET, though");
 });
+
+// Verification of email address via email sent to user
 app.get('/verify/:key', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     //check to see if key is in db, if so, authenticate user it matches with!
@@ -35,28 +36,38 @@ app.get('/verify/:key', (req, res) => {
             if (err) {
                 console.log(err);
             }
-            res.send('VERIFIED ! ' + verify_email_key);
-            //res.json when serving to our client on Android
+            res.send(`Verification? ${verify_email_key}`);
         });
     }
 });
+// For viewing a users own private profile, generates a little more.
+// NOTE: Must have matching API key to view this
+app.post('/myProfile', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  var api_key = req.body.api_key;
+  var email = req.body.email;
+  if(!!email && !!api_key){
+    db.retrieveMyProfile(email.trim(),api_key.trim(), (err,payload) => {
+      res.send(payload);
+    });
+  }
+  
+});
+
+// For receiving public profile of another user, requires an api_key and target email address
 app.post('/users', (req,res) => {
   res.setHeader('Content-Type', 'application/json');
-  // NOTE if account exists, return Profile info, else 'user does not exist'
-  // if received strings user and api key, then we set vars equal to said data
-  // otherwise they are null and refuse access
-  var username = req.body.username.trim() || null;
-  var api_key = req.body.api_key.trim() || null;
-  if(!!username && !!api_key){
-    db.authCheck(api_key, (err, user) => {
+  var email = req.body.email;
+  var api_key = req.body.api_key;
+  if(!!email && !!api_key){
+    db.authCheck(api_key.trim(), (err, user) => {
       if(err){
         res.send({error:"callback error"});
       }
-      db.retrieveUser(username, (err, payload) => {
+      db.retrieveUser(email.trim(), (err, payload) => {
         if(err){
           res.send({error:"callback error"});
         }
-        // console.log(payload);
         res.send(payload);
       });
     });
@@ -64,12 +75,12 @@ app.post('/users', (req,res) => {
     res.send({error:'Unauthorized'});
   }
 });
-
+// Login requires an email from CSUMB and password of a user, password must be minimum of 8 characters
 app.post('/login', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     // Search for name in db
     if (!!req.body.email && !!req.body.password) {
-        //run login callback function, if found w/ matching pw, authenticate
+        // Run login callback function, if found w/ matching pw, retrieve login info
         // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
         db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
             if (err) {
@@ -85,7 +96,6 @@ app.post('/login', (req, res) => {
                     // If email is verified, we return logged in users info
                     res.send(user);
                 }
-
             }
             // Pw is wrong
             else if (user == false) {
@@ -105,45 +115,19 @@ app.post('/login', (req, res) => {
         console.log(req.body.email);
     }
 });
-// takes api auth key, runs function to see if it exists.
-app.post('/testAuth', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-
-    if (!!req.body.authKey) {
-        db.authCheck(req.body.authKey, (err, authUser) => {
-            let toJson = '';
-            _.forEach(authUser.records, (record) => {
-                // Prints the password field console.log(record._fields[3]);
-                toJson += record._fields;
-            });
-            if (_.isEmpty(toJson)) {
-                console.log('Failed to match');
-                res.status(401).send('<h3>Failed to Authenticate</h3>');
-
-            } else {
-                console.log(toJson);
-                res.send(toJson);
-            }
-        });
-    } else {
-        console.log('Auth Error -> No api key given');
-        res.status(401).send('<h2>Looking for something?</h2>');
-    }
-});
 // Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.
 app.post('/createUser', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    var name = null || req.body.name.trim();
-    var email = null || req.body.email.trim();
-    var password = null || req.body.password.trim();
-    var username = null || req.body.username.trim();
-    var carMakeModel = null || req.body.carMakeModel.trim();
-    var schedule = null || req.body.schedule.trim();
+    var name = req.body.name;
+    var email = req.body.email;
+    var password = req.body.password;
+    var carMakeModel = req.body.carMakeModel;
+    var schedule = req.body.schedule;
 
     // if all of these fields are not null, and email is in correct format then continue with creation.
-    if (!!name && !!email && !!password && !!username && !!carMakeModel && !!schedule) {
+    if (!!name && !!email && !!password && !!carMakeModel && !!schedule) {
         // Store hash in password DB, as well as all other fields.
-        db.createUser(email, name, password, username, carMakeModel, schedule, (err, response) => {
+        db.createUser(email.trim(), name.trim(), password.trim(), carMakeModel.trim(), schedule.trim(), (err, response) => {
             if (err) {
                 res.send(err);
             }
@@ -169,7 +153,7 @@ app.post('/createUser', (req, res) => {
 
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
-    console.log("Started on port " + port);
+    console.log(`Started on port ${port}`);
 });
 
 module.exports.app = app;

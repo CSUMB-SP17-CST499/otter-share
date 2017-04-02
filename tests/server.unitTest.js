@@ -8,7 +8,6 @@ const env = require('env2')('./.env');
 var testEmail = cryptoRandomString(8) + '@csumb.edu';
 var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
-var testUsername = 'Testman' + cryptoRandomString(3);
 var testCarMakeModel = 'Toyota Corolla';
 var testSchedule = 'Bunch of data !';
 
@@ -27,7 +26,6 @@ it('should return success on creation.', (done) => {
         .send('name=' + testName)
         .send('email=' + testEmail)
         .send('password=' + testPassword)
-        .send('username=' + testUsername)
         .send('carMakeModel=' + testCarMakeModel)
         .send('schedule=' + testSchedule)
 
@@ -46,7 +44,6 @@ it('should return fail on creation.', (done) => {
         .send('name=' + testName)
         .send('email=' + 'cjone45s847728@gmail.com')
         .send('password=' + testPassword)
-        .send('username=' + testUsername)
         .send('carMakeModel=' + testCarMakeModel)
         .send('schedule=' + testSchedule)
         .expect((res) => {
@@ -64,7 +61,6 @@ it('should return fail on creation with bad format of password.', (done) => {
         .send('name=' + testName)
         .send('email=' + 'g' + testEmail)
         .send('password=' + 'bob')
-        .send('username=' + testUsername)
         .send('carMakeModel=' + testCarMakeModel)
         .send('schedule=' + testSchedule)
         .expect((res) => {
@@ -80,7 +76,6 @@ it('should not allow login without email being verified!', (done) => {
         .post('/login')
         .send('email=' + testEmail)
         .send('password=' + testPassword)
-        .send('username=' + testUsername)
         .send('carMakeModel=' + testCarMakeModel)
         .send('schedule=' + testSchedule)
         .expect((res) => {
@@ -97,9 +92,6 @@ it('should allow login with verified email address !', (done) => {
         .post('/login')
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS)
-        .send('username=' + testUsername)
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
@@ -114,9 +106,6 @@ it('should not allow login with incorrect password', (done) => {
         .post('/login')
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS + 'y')
-        .send('username=' + testUsername)
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
@@ -125,3 +114,32 @@ it('should not allow login with incorrect password', (done) => {
         })
         .end(done);
 });
+// Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
+it('should retrieve another user\'s profile', (done) => {
+  request(app)
+    .post('/users')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        carMakeModel: /.*/
+      });
+    })
+    .end(done);
+
+})
+
+// Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
+it('should retrieve own personal profile', (done) => {
+  request(app)
+    .post('/myProfile')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        schedule: /.*/
+      });
+      // throw Error(JSON.string);
+    })
+    .end(done);
+})
