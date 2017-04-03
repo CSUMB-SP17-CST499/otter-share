@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+        <declare-styleable name="UnlockSlider">
+            <attr name="unlockSliderText" format="string"/>
+            <attr name="sliderColor" format="color"/>
+            <attr name="unlockSliderTextColor" format="color"/>
+            <attr name="unlockSliderPathColor" format="color"/>
+            <attr name="cornerRadiusX" format="dimension"/>
+            <attr name="cornerRadiusY" format="dimension"/>
+        </declare-styleable>
+</resources>

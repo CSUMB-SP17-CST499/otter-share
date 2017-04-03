@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#B9D6F2</color>
+    <color name="colorPrimaryDark">#006DAA</color>
+    <color name="colorSecond">#FBFBF2</color>
+    <color name="colorsecondDark">#FAF8D4</color>
+    <color name="colorsecondDarker">#FFDDA1</color>
     <color name="Color_AppBackground">#fff</color>
     <color name="main_text">#000</color>
     <color name="login_input_back">#39645a</color><!--ocean blu: 002a4e-->

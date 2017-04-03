@@ -15,11 +15,12 @@
             android:name=".SplashScreen"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/generalNoTitle"/>
+            android:theme="@style/generalNoTitle" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -28,6 +29,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/key_google_api" />
 
+        <activity android:name=".ParkingActivity" />
+        <activity android:name=".SwipeButton"></activity>
     </application>
 
 </manifest>
