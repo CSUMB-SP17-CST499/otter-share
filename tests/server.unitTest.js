@@ -26,9 +26,6 @@ it('should return success on creation.', (done) => {
         .send('name=' + testName)
         .send('email=' + testEmail)
         .send('password=' + testPassword)
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
-
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
@@ -44,8 +41,6 @@ it('should return fail on creation.', (done) => {
         .send('name=' + testName)
         .send('email=' + 'cjone45s847728@gmail.com')
         .send('password=' + testPassword)
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
@@ -138,7 +133,6 @@ it('should retrieve own personal profile', (done) => {
       expect(res.body).toMatch({
         schedule: /.*/
       });
-      // throw Error(JSON.string);
     })
     .end(done);
 })

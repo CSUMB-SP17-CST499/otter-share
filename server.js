@@ -51,7 +51,7 @@ app.post('/myProfile', (req,res) => {
       res.send(payload);
     });
   }
-  
+
 });
 
 // For receiving public profile of another user, requires an api_key and target email address
@@ -121,13 +121,11 @@ app.post('/createUser', (req, res) => {
     var name = req.body.name;
     var email = req.body.email;
     var password = req.body.password;
-    var carMakeModel = req.body.carMakeModel;
-    var schedule = req.body.schedule;
 
     // if all of these fields are not null, and email is in correct format then continue with creation.
-    if (!!name && !!email && !!password && !!carMakeModel && !!schedule) {
+    if (!!name && !!email && !!password) {
         // Store hash in password DB, as well as all other fields.
-        db.createUser(email.trim(), name.trim(), password.trim(), carMakeModel.trim(), schedule.trim(), (err, response) => {
+        db.createUser(email.trim(), name.trim(), password.trim(), (err, response) => {
             if (err) {
                 res.send(err);
             }
@@ -140,16 +138,35 @@ app.post('/createUser', (req, res) => {
     }
 });
 
+app.post('/createUser/completeProfile', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  var api_key = req.body.api_key;
+  var carMakeModel = req.body.carMakeModel;
+  var schedule = req.body.schedule;
+  if(!!api_key && !!carMakeModel && !!schedule){
+    db.completeProfile(api_key, carMakeModel, schedule, (err, response) => {
+        if(response){
+          res.send(response);
+        }
+        else {
+          res.send(err);
+        }
+    });
+  }
+  else {
+    res.send({error:'Please fill out all fields before sending a POST request'});
+  }
+});
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-// app.get('/reset', (req, res, next) => {
-//     db.resetDB((err, succ) => {
-//         if (err) {
-//             console.log(err);
-//         } else {
-//             res.send(succ);
-//         }
-//     });
-// });
+app.get('/reset', (req, res, next) => {
+    db.resetDB((err, succ) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.send(succ);
+        }
+    });
+});
 
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {

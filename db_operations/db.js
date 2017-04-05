@@ -35,7 +35,6 @@ const login = (email, password, callback) => {
               var userObj = new Object();
               let stored_pw = '';
               _.forEach(result.records, (record) => {
-               // Prints the password field console.log(record._fields[2]);
                 userObj.name = record._fields[0];
                 userObj.email = record._fields[1];
                 stored_pw = record._fields[2];
@@ -69,9 +68,51 @@ const login = (email, password, callback) => {
             return callback('error caught via Login ->: ' + JSON.stringify(e));
         });
 }
+const completeProfile = (api_key, carMakeModel, schedule, callback) => {
+    // NOTE: Can regex to prevent users from making up fake models of car
+    session
+      .run('MATCH (user:User {api_access_key: {api_access_key}}) RETURN user', {api_access_key: api_key})
+      .then((results) => {
+        session.close();
+        // accessing model of car by results.records[0]._fields[0].properties.carMakeModel
+        // if api_key entered wrong, return error object
+        if(_.isEmpty(results.records)) return callback(null, {error:'incorrect api_key'});
+        // if it exists, exit with callback error, else insert new values to current user node by api_key
+        if(typeof results.records[0]._fields[0].properties.carMakeModel == 'undefined'){
+          session
+            .run('MATCH (user:User {api_access_key:{api_access_key}})' +
+                  'SET user.carMakeModel = {carMakeModel}, user.schedule = {schedule}' +
+                      'RETURN user', {
+                        api_access_key: api_key,
+                        carMakeModel: carMakeModel,
+                        schedule: schedule
+              })
+              .then((results) => {
+                session.close();
+                if(!_.isEmpty(results.records)){
+                  return callback(null, {success:'Profile creation complete!!'});
+                }
+                else {
+                  return callback(null, {error:'error'});
+                }
+              })
+              .catch((e) => {
+                session.close();
+                return callback(null,{error:e});
+              });
+        }
+        else
+          return callback(null, {error:'Looks like you have already created a profile...'});
+      })
+      .catch((e) => {
+        session.close();
+        console.log(e);
+        return callback('error caught via completeProfile ->: ' + JSON.stringify(e));
+      })
 
-const createUser = (email, name, password, carMakeModel, schedule, callback) => {
-    // next step -> run a match for looking at email/authkey, if it finds it, then we return failure, if not, then we create user.
+}
+
+const createUser = (email, name, password, callback) => {
     // NOTE if schedule isn't received as an array, we will need to tokenize it and push it into an array before storing
     const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
     const nameRegex = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
@@ -101,15 +142,12 @@ const createUser = (email, name, password, carMakeModel, schedule, callback) => 
           bcrypt.hash(password, 10, (err, hash) => {
             session
                 .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, " +
-                      "api_access_key: {api_access_key}, verify_email_key: {verify_email_key}," +
-                       "carMakeModel:{carMakeModel}, schedule:{schedule} })", {
+                      "api_access_key: {api_access_key}, verify_email_key: {verify_email_key}})", {
                     name: name,
                     email: email,
                     password: hash,
                     api_access_key: cryptoRandomString(60),
-                    verify_email_key: verifyEmailKey,
-                    carMakeModel: carMakeModel,
-                    schedule: schedule
+                    verify_email_key: verifyEmailKey
                 })
                 .then(() => {
                     session.close();
@@ -124,9 +162,7 @@ const createUser = (email, name, password, carMakeModel, schedule, callback) => 
                     var out = e;
                     return callback(null, {error_output:out});
                 });
-
           });
-
         }
       })
       .catch((e) => {
@@ -210,7 +246,6 @@ const verifyEmail = (verifyString, callback) => {
       let result_string = '';
       if(!_.isEmpty(verify_email_key)) {
         _.forEach(verify_email_key.records, (record) => {
-          // Prints the password field console.log(record._fields[3]);
           result_string += record._fields + ' ';
         });
         return callback(null,result_string);
@@ -238,7 +273,6 @@ const retrieveUser = (email, callback) => {
         profileObject.name = (record._fields[0].properties.name);
         profileObject.carMakeModel = (record._fields[0].properties.carMakeModel);
       })
-      // console.log(profileObject);
       return callback(null,JSON.stringify(profileObject));
     })
     .catch((e) => {
@@ -271,6 +305,7 @@ const retrieveMyProfile = (email, api_key, callback) => {
 module.exports = {
     login,
     createUser,
+    completeProfile,
     authCheck,
     verifyEmail,
     resetDB,
