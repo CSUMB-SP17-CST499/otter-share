@@ -50,7 +50,8 @@
         android:hint="@string/login_label_password"
         style="@style/login_input"
         android:layout_marginTop="10dp"
-        android:imeOptions="actionDone"/>
+        android:selectAllOnFocus="true"
+        android:imeOptions="actionDone" />
 
     <Button
         android:layout_height="wrap_content"

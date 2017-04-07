@@ -1,7 +1,9 @@
 package com.ottershare.ottershare;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -11,13 +13,16 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.json.JSONTokener;
@@ -40,6 +45,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -48,6 +54,9 @@ public class LoginActivity extends AppCompatActivity {
     EditText emailInput;
     EditText passwordInput;
     Button loginSubmit;
+
+    final static int BTN_CODE_SUBMIT = 1;
+    final static int BTN_CODE_REGISTER = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,14 +67,17 @@ public class LoginActivity extends AppCompatActivity {
         passwordInput = (EditText) findViewById(R.id.login_password_input);
         loginSubmit = (Button) findViewById(R.id.login_btn_submit);
 
+
         /*
             Upon clicking the "check mark" on the keyboard after filling out the login form
          */
+        // TODO: can you even test this?? Leave as is for now
         passwordInput.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     loginSubmit.performClick();
+                    hideSoftKeyboard();
                     return true;
                 }
                 return false;
@@ -78,153 +90,80 @@ public class LoginActivity extends AppCompatActivity {
         loginSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(i);
-                finish();*/
-                String email = emailInput.getText().toString();
-                String password = passwordInput.getText().toString();
-
-                if (isValidLoginInput(email, password)) {
-                    if (isUser(email, password)) {
-                        makeToast("Welcome to OtterShare!", Toast.LENGTH_LONG);
-                    } else {
-                        makeToast("Invalid Login Credentials");
-                    }
-                } else {
-                    makeToast("Invalid Login Credentials");
+                int result = performClick(BTN_CODE_SUBMIT);
+                if (result == 0) {
+                    makeToast(R.string.login_toast_fatal_error);
+                } else if (result == 2) {
+                    makeToast(R.string.login_toast_fatal_error);
                 }
-
-
             }
         });
+
+
     }
 
-    private void makeToast(String message) {
+    //returns 0 if click fails, 1 if success, 2 if value error
+    protected int performClick(int value) {
+        boolean success;
+        switch(value) {
+            case 1: //main login submit button
+                String email = getEmailFromField();
+                String password = getPasswordFromField();
+
+                if (isValidLoginInput(email, password)) {
+                    runLoginTask(email, password);
+                } else {
+                    makeToast(R.string.login_toast_invalid);
+                }
+                hideSoftKeyboard();
+
+                success = true;
+                break;
+            case 2: //register button is pressed
+                success = true;
+                break;
+            default:
+                //do nothing by default
+                //return code 2 if the value is something that doesn't exist
+                return 2;
+        }
+        return success ? 1 : 0;
+    }
+
+
+    private void hideSoftKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    private void makeToast(int message) {
         makeToast(message, Toast.LENGTH_SHORT);
     }
 
-    private void makeToast(String message, int speed) {
+    private void makeToast(int message, int speed) {
         Toast.makeText(getApplicationContext(), message, speed).show();
     }
 
     boolean isValidLoginInput(String email, String pass) {
-        if (email.isEmpty() || pass.isEmpty()) {
-            return false;
-        }
-        return true;
+        return email.isEmpty() || pass.isEmpty() ? false : true;
     }
 
-    boolean isUser(String email, String pass) {
-        LoginTask loginTask = new LoginTask();
-        loginTask.execute(email, pass);
-        return false;
+    String getEmailFromField() {
+        return emailInput.getText().toString();
     }
 
-    // asynchronous call to log in and retreive key
-    public class LoginTask extends AsyncTask<String, Void, String> {
-        private final String LOG_TAG = LoginTask.class.getSimpleName();
-
-        @Override
-        protected String doInBackground(String... params) {
-            HttpURLConnection httpURLConnection = null;
-            BufferedReader bufferedReader = null;
-            String response = null;
-
-            String emailInput = params[0];
-            String passInput = params[1];
-            InputStream in = null;
-            try {
-                final String LOGIN_BASE_URL = "https://young-plains-98404.herokuapp.com/";
-                final String LOGIN_PARAM = "login";
-                final String EMAIL_PARAM = "email";
-                final String PASSWORD_PARAM = "password";
-
-                URL url = new URL(LOGIN_BASE_URL + LOGIN_PARAM);
-
-                httpURLConnection = (HttpURLConnection) url.openConnection();
-
-
-                httpURLConnection.setReadTimeout(10000);
-                httpURLConnection.setConnectTimeout(15000);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setDoOutput(true);
-
-                HashMap<String, String> postDataParams = new HashMap<>();
-
-                postDataParams.put(EMAIL_PARAM, "bchehraz@csumb.edu");
-                postDataParams.put(PASSWORD_PARAM, "password");
-
-                OutputStream os = httpURLConnection.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataParams));
-
-                writer.flush();
-                writer.close();
-                os.close();
-                int responseCode = httpURLConnection.getResponseCode();
-
-
-                Log.d(LOG_TAG, "Response code: " + responseCode);
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    String line;
-                    BufferedReader br=new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
-                    while ((line=br.readLine()) != null) {
-                        response += line;
-                    }
-                }
-                else {
-                    response="";
-                }
-                // now parse the response since it's in JSON format
-                // figure out how to read the output
-                //JSONObject jsonObject = new JSONObject().getJ;
-
-                Log.d(LOG_TAG, "RESULT 1 --> " + response);
-                Reader reader = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
-
-
-                JSONTokener jsonTokener = new JSONTokener(response);
-                JSONStringer jsonStringer = new JSONStringer();
-                jsonStringer.
-
-                Log.d(LOG_TAG, "RESULT 2 --> " + jsonTokener.toString());
-            } catch (Exception e) {
-                Log.e(LOG_TAG, e.getMessage(), e);
-                e.printStackTrace();
-            } finally {
-                if(httpURLConnection != null) // Make sure the connection is not null.
-                    httpURLConnection.disconnect();
-            }
-
-            return "hello";
-        }
-
-        protected void onPostExecute(String result) {
-            //Log.d(LOG_TAG, "RESULT --> "+result);
-        }
-
-        protected void onProgressUpdate(Void... progress) {
-
-        }
-
-        //put the data from hash map into POST format "this=this&this=that" since post data has be sent via a string
-        private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
-            StringBuilder result = new StringBuilder();
-            boolean first = true;
-            for(Map.Entry<String, String> entry : params.entrySet()){
-                if (first)
-                    first = false;
-                else
-                    result.append("&");
-
-                result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
-                result.append("=");
-                result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-            }
-
-            return result.toString();
-        }
+    String getPasswordFromField() {
+        return passwordInput.getText().toString();
     }
+
+    int runLoginTask(String email, String password) {
+        LoginTask loginTask = new LoginTask(getApplicationContext());
+        loginTask.execute(email, password);
+        return 1;
+    }
+
+
 }
