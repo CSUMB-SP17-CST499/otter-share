@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "node ./server.js",
-    "test": "mocha ./tests/*.unitTest.js"
+    "test": "mocha ./tests/*.unitTest.js --timeout 8000"
   },
   "engines": {
     "node": "7.2.0"

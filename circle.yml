@@ -10,7 +10,7 @@ dependencies:
 
 test:
   override:
-    - mocha ./tests/*.unitTest.js
+    - mocha ./tests/*.unitTest.js --timeout 8000
 deployment:
   staging:
     branch: master

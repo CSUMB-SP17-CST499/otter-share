@@ -8,6 +8,8 @@ const env = require('env2')('./.env');
 var testEmail = cryptoRandomString(8) + '@csumb.edu';
 var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
+var testCarMakeModel = 'Toyota Corolla';
+var testSchedule = 'Bunch of data !';
 
 // Tests root endpoint
 it('should return root response returning info about site', (done) => {
@@ -98,8 +100,35 @@ it('should not allow login with incorrect password', (done) => {
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
-                error: /Incorrect password/
+              error: /Code/
             });
         })
         .end(done);
 });
+// Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
+it('should retrieve another user\'s profile', (done) => {
+  request(app)
+    .post('/users')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        carMakeModel: /.*/
+      });
+    })
+    .end(done);
+
+})
+// Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
+it('should retrieve own personal profile', (done) => {
+  request(app)
+    .post('/myProfile')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        schedule: /.*/
+      });
+    })
+    .end(done);
+})
