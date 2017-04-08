@@ -13,6 +13,7 @@ var session = driver.session();
 var bcrypt = require('bcryptjs');
 var _ = require('lodash');
 const cryptoRandomString = require('crypto-random-string');
+var shortid = require('shortid');
 const env = require('env2')('./.env');
 const nodemailer = require('nodemailer');
 var fs = require('fs');
@@ -259,7 +260,7 @@ const verifyEmail = (verifyString, callback) => {
 
 }
 // Will return profile information of a user
-// NOTE: need to specify exactly what to return
+// NOTE: need to specify exactly what to return and update return values for if none found!
 const retrieveUser = (email, callback) => {
   session
     .run('MATCH (user:User {email:{email}}) RETURN user',
@@ -298,17 +299,95 @@ const retrieveMyProfile = (email, api_key, callback) => {
        return callback(null, JSON.stringify(myProfileObject));
      })
      .catch((e) => {
+       session.close();
        console.log({error:e});
      });
 }
+const registerPass = (email, api_key, lotLocation, price, notes, callback) => {
+// Regex for currency, tbd, need to speak to team about what is passed for price, regex --> ^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(\.[0-9][0-9])?$
+// Check to see if a pass node is in existence
+// If not create it, if so update it
+  session
+    .run('MATCH (pass:Pass) WHERE pass.ownerEmail = {ownerEmail} RETURN pass', {
+      ownerEmail: email
+    })
+    .then((pass) => {
+      session.close();
+      //if(typeof results.records[0]._fields[0].properties.carMakeModel == 'undefined'){
+
+      if(!_.isEmpty(pass.records[0])){
+        // update route
+        console.log('updating...');
+        //results.records[0]._fields[0].properties
+        session
+          .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
+                'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.notes = {notes} RETURN user.email AS email', {
+                  ownerEmail: email,
+                  price: price,
+                  lotLocation: lotLocation,
+                  notes: notes,
+                  api_key: api_key
+          })
+          .then((results) => {
+            session.close();
+            //do an if statement first
+            // console.log(results.records[0]._fields[0]);
+            console.log(results);
+            if(typeof results.records[0] == 'undefined')
+              return callback(false, {error:'Pass failed to update'});
+            else
+              return callback(null, {success:'Updated pass!'});
+          })
+          .catch((e) => {
+            session.close();
+            console.log(e);
+          })
+      } else {
+        // creation route
+        console.log('creating...');
+        session
+          .run ('CREATE (pass:Pass {id: {id}, ownerEmail: {ownerEmail}, lotLocation: {lotLocation},'+
+                ' price: {price}, notes:{notes}, forSale:{forSale}})', {
+            id: shortid.generate(),
+            ownerEmail: email,
+            lotLocation: lotLocation,
+            price: price,
+            notes: notes,
+            forSale: false
+          })//record.get("knight_id")
+          .subscribe({
+            onCompleted: () => {
+              session
+                .run('MATCH (user:User { email: {email}}),(pass:Pass { ownerEmail:{email}}) CREATE (user)-[r:OWNS]->(pass) RETURN r', {
+                  email: email
+                 })
+                 .then((result) => {
+                   console.log(result);
+                   console.log('Relationship created');
+                   return callback(null, {success:'created pass!'});
+                   session.close();
+                 })
+                 .catch((e)=> {
+                   console.log(JSON.stringify(e));
+                 });
+            },
+              onError: (e) => {
+                console.log('error in onError 362 -> '+ e)
+              }
+          });
+      }
+
+    })
+    .catch((e) => {
+      session.close();
+      console.log({error:e});
+    });
+}
 // if using reset, add variable below!
 module.exports = {
-    login,
-    createUser,
-    completeProfile,
-    authCheck,
-    verifyEmail,
-    resetDB,
-    retrieveUser,
-    retrieveMyProfile
+    login, createUser,
+    completeProfile, authCheck,
+    verifyEmail, resetDB,
+    retrieveUser,retrieveMyProfile,
+    registerPass
 };
