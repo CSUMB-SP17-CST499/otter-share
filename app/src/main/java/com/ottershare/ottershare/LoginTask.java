@@ -1,5 +1,6 @@
 package com.ottershare.ottershare;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,6 +35,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
 
     /* Context being passed in from main thread*/
     Context mContext;
+    Activity prevActivity;
 
     /* SharedPreferences to be modified */
     SharedPreferences prefs;
@@ -47,12 +49,13 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
 
 
 
-    public LoginTask(Context context) {
+    public LoginTask(Activity activity) {
         //name = "";
         email = "";
         api_key = "";
         status = 0;
-        mContext = context;
+        mContext = activity.getApplicationContext();
+        prevActivity = activity;
     }
 
     @Override
@@ -155,15 +158,21 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                 break;
             case (2):
 
+                /**
+                 * TODO: Find out what other data you need from the user upon logging in
+                 */
                 storeUserKey();
-                /*
-                    TODO: Start new activity once they've successfully logged in
-                    Include some message like "Welcome to OtterShare!"
-                */
-                /*Intent i = new Intent(mContext.getApplicationContext(), MainActivity.class);
+
+                /**
+                 * TODO: Edit welcome response for new and continuing users
+                 */
                 makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
-                mContext.startActivity(i);
-                */break;
+
+                //start next activity
+                Intent i = new Intent(prevActivity, MainActivity.class);
+                prevActivity.startActivity(i);
+
+                break;
             default:
                 Log.d(LOG_TAG, "case = ??" + " actual: " + result);
                 makeToast(R.string.login_toast_fatal_error, Toast.LENGTH_SHORT);
@@ -207,7 +216,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
         return (message.contains("does not exist") || message.contains("password"))? 1: 0;
     }
 
-    protected void storeUserKey() {
+    private void storeUserKey() {
         prefs = mContext.getSharedPreferences(OS_PREF_USER_INFO, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(mContext.getString(R.string.os_apikey), api_key);

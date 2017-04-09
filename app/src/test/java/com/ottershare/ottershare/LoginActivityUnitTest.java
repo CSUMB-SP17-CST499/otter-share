@@ -93,6 +93,14 @@ public class LoginActivityUnitTest {
         assertThat(loginActivity.isValidLoginInput(email, pass), is(true));
     }
 
+
+    /**
+     * TODO: Find out what other LOCAL tests are needed for LoginActivity
+     */
+
+    /**
+     * TODO: Find out if this test below even needs testing from here. Maybe the individual components need testing?
+     */
     @Test
     public void testPerformClickForLogin1() {
         email = "random@email.com";
@@ -105,32 +113,9 @@ public class LoginActivityUnitTest {
 
         //doReturn(1).when(mockLoginActivity.performClick(1));
         doCallRealMethod().when(mockLoginActivity.performClick(mockLoginActivity.BTN_CODE_SUBMIT));
-        //
 
-
-
-        /*final EditText emailInput = mock(EditText.class);
-        final EditText passwordInput = mock(EditText.class);
-
-        doCallRealMethod().when(emailInput).getText();
-        doCallRealMethod().when(passwordInput).getText();
-
-        when(emailInput.getText()).thenReturn(Editable.Factory.getInstance().newEditable(email));
-        when(passwordInput.getText()).thenReturn(Editable.Factory.getInstance().newEditable(pass));
-        when(emailInput.getText().toString()).thenReturn(email);
-        when(passwordInput.getText().toString()).thenReturn(pass);
-
-
-
-        /*doReturn(emailInput).when(loginActivity).findViewById(R.id.login_email_input);
-        doReturn(passwordInput).when(loginActivity).findViewById(R.id.login_password_input);*/
         btnResponse = mockLoginActivity.performClick(mockLoginActivity.BTN_CODE_SUBMIT);
         assertThat(btnResponse, is(1));
-
-        /*
-        *  TODO: Write local unit test for performing login button click and other login tasks...
-        *
-        * */
     }
 
 }

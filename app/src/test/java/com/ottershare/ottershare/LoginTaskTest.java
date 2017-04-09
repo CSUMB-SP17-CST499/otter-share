@@ -29,32 +29,6 @@ import junit.framework.TestCase;
 @RunWith(MockitoJUnitRunner.class)
 public class LoginTaskTest {
     /*
-        TODO: Test login functionality that makes sure sharedpreferences contains api_key and other info upon logging in
+        TODO: Find out what functionality needs local tests in LoginTask
      */
-
-    LoginTask loginTask;
-
-    @Mock
-    Context mMockContext;
-
-    @Mock
-    SharedPreferences mockPrefs;
-
-/*    @Before
-    public void init() {
-        mMockContext = mock(Context.class);
-        mockPrefs = mock(SharedPreferences.class);
-        when(mMockContext.getSharedPreferences(loginTask.OS_PREF_USER_INFO, Context.MODE_PRIVATE)).thenReturn(mockPrefs);
-        loginTask = new LoginTask(mMockContext);
-    }
-
-    @Test
-    public void testSharedPrefs() {
-        loginTask.api_key = "somerandomkey";
-
-        loginTask.storeUserKey();
-
-        assertThat("somerandomkey",loginTask.prefs.contains(mMockContext.getString(R.string.os_apikey)));
-
-    }*/
 }

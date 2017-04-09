@@ -58,6 +58,16 @@ public class LoginActivity extends AppCompatActivity {
     final static int BTN_CODE_SUBMIT = 1;
     final static int BTN_CODE_REGISTER = 2;
 
+    /**
+     * TODO: Add a "os_status" to SharedPreferences for first time logging in
+     */
+
+    /**
+     * TODO: Find out what login data you should clear (API KEY?)
+     * and perhaps what you should check for when it comes to checking for new user
+     * or someone who is already logged in
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +77,8 @@ public class LoginActivity extends AppCompatActivity {
         passwordInput = (EditText) findViewById(R.id.login_password_input);
         loginSubmit = (Button) findViewById(R.id.login_btn_submit);
 
-
+        //clear shared preferences
+        clearLoginData();
         /*
             Upon clicking the "check mark" on the keyboard after filling out the login form
          */
@@ -148,7 +159,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     boolean isValidLoginInput(String email, String pass) {
-        return email.isEmpty() || pass.isEmpty() ? false : true;
+        return !(email.isEmpty() || pass.isEmpty());
     }
 
     String getEmailFromField() {
@@ -160,10 +171,17 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     int runLoginTask(String email, String password) {
-        LoginTask loginTask = new LoginTask(getApplicationContext());
+        LoginTask loginTask = new LoginTask(this);
         loginTask.execute(email, password);
         return 1;
     }
 
+    /*
+    *  TODO: implement clearLoginData function to clear login data and save the state of whether they're new
+    */
+    //clears shared preferences of any login data since it's on the login screen
+    protected void clearLoginData() {
+
+    }
 
 }
