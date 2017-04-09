@@ -77,6 +77,7 @@ const completeProfile = (api_key, carMakeModel, schedule, callback) => {
         session.close();
         // accessing model of car by results.records[0]._fields[0].properties.carMakeModel
         // if api_key entered wrong, return error object
+        console.log(results);
         if(_.isEmpty(results.records)) return callback(null, {error:'incorrect api_key'});
         // if it exists, exit with callback error, else insert new values to current user node by api_key
         if(typeof results.records[0]._fields[0].properties.carMakeModel == 'undefined'){

@@ -56,8 +56,6 @@ it('should return fail on creation with bad format of password.', (done) => {
         .send('name=' + testName)
         .send('email=' + 'g' + testEmail)
         .send('password=' + 'bob')
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
         .expect((res) => {
             expect(res.body).toMatch({
                 error: /Incorrect password format/
@@ -71,8 +69,6 @@ it('should not allow login without email being verified!', (done) => {
         .post('/login')
         .send('email=' + testEmail)
         .send('password=' + testPassword)
-        .send('carMakeModel=' + testCarMakeModel)
-        .send('schedule=' + testSchedule)
         .expect((res) => {
             expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
