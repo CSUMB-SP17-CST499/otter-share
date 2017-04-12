@@ -10,6 +10,9 @@ var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
 var testSchedule = 'Bunch of data !';
+var testLocation = 'Dagobah'
+var testPrice = '2.50'
+var testNotes = 'My pass is better than yours, bro.'
 
 // Tests root endpoint
 it('should return root response returning info about site', (done) => {
@@ -128,6 +131,22 @@ it('should retrieve own personal profile', (done) => {
     .expect((res) => {
       expect(res.body).toMatch({
         schedule: /.*/
+      });
+    })
+    .end(done);
+})
+
+it('should update a pass node', (done) => {
+  request(app)
+    .post('/registerPass')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .send('lotLocation='+ testLocation)
+    .send('price='+ testPrice)
+    .send('notes='+ testNotes)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        success: /.*/
       });
     })
     .end(done);
