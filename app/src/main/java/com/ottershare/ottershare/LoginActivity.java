@@ -182,5 +182,9 @@ public class LoginActivity extends AppCompatActivity {
     */
     //clears shared preferences of any login data since it's on the login screen
     protected void clearLoginData() {
+        prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(this.getString(R.string.os_apikey));
+        editor.commit();
     }
 }

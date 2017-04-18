@@ -121,7 +121,6 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
 
 
             if (loginJsonResponse.has("error")) {
-                status = 0;
                 status = getErrorStatus(loginJsonResponse.getString("error"));
             } else {
                 getLoginDataFromJson(loginJsonResponse);
@@ -222,7 +221,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
     }
 
     private int getErrorStatus(String message) {
-        return (message.contains("does not exist") || message.contains("password"))? 1: 0;
+        return message.contains("Code 1") ? 1: 0;
     }
 
     private void storeUserKey() {
