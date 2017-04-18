@@ -27,7 +27,7 @@ public class SplashScreen extends AppCompatActivity {
      */
 
     /**
-     * TODO: Find out how to test a function that starts a new activity
+     * TODO: [CURRENT] Find out how to test a function that starts a new activity
      */
 
     @Override
@@ -43,12 +43,17 @@ public class SplashScreen extends AppCompatActivity {
 
                 String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
 
-                Class target = isValidApi(apikey) ? MainActivity.class : LoginActivity.class;
-
+                //Class target = isValidApi(apikey) ? MainActivity.class : LoginActivity.class;
+                Class target = LoginActivity.class;
                 Intent intent = new Intent(SplashScreen.this, target);
 
                 startActivity(intent);
                 finish();
+
+                // new
+                /*if (prefsContainsApiKey()) {
+
+                }*/
             }
         }, SPLASH_TIME_OUT);
     }
@@ -56,4 +61,9 @@ public class SplashScreen extends AppCompatActivity {
     protected boolean isValidApi(String api) {
         return api.equals(DEFAULT_API_KEY) ? false : true;
     }
+
+    protected boolean prefsContainsApiKey(SharedPreferences prefs) {
+        return false;
+    }
+
 }

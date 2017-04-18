@@ -17,6 +17,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.test.mock.MockContext;
 import android.text.Editable;
 import android.widget.EditText;
 
@@ -29,33 +30,16 @@ import junit.framework.TestCase;
 @RunWith(MockitoJUnitRunner.class)
 public class LoginActivityUnitTest {
 
-
-
     String email;
     String pass;
     int btnResponse;
     LoginActivity loginActivity;
+    SharedPreferences prefs;
 
-    @Mock
-    Context mMockContext;
-
-    @Mock
-    EditText emailInput;
-
-    @Mock
-    EditText passwordInput;
-
-    @Mock
-    LoginActivity mockLoginActivity;
 
     @Before
     public void init() {
-        loginActivity = spy(new LoginActivity());
-        mockLoginActivity = mock(LoginActivity.class);
-
-        emailInput = mock(EditText.class);
-        passwordInput = mock(EditText.class);
-
+        loginActivity = new LoginActivity();
         email = "";
         pass = "";
         btnResponse = 3;
@@ -98,24 +82,14 @@ public class LoginActivityUnitTest {
      * TODO: Find out what other LOCAL tests are needed for LoginActivity
      */
 
-    /**
-     * TODO: Find out if this test below even needs testing from here. Maybe the individual components need testing?
-     */
-    @Test
-    public void testPerformClickForLogin1() {
-        email = "random@email.com";
-        pass = "password";
-        when(mockLoginActivity.getEmailFromField()).thenReturn(email);
-        when(mockLoginActivity.getPasswordFromField()).thenReturn(pass);
-        when(mockLoginActivity.runLoginTask(email, pass)).thenReturn(1);
-        when(mockLoginActivity.isValidLoginInput(email, pass)).thenReturn(true);
-        when(mockLoginActivity.performClick(mockLoginActivity.BTN_CODE_SUBMIT)).thenReturn(1);
+    /*@Test - This is attempting to test clearLoginData which clears SharedPreferences. Not working... yet.
+    public void test() {
+        //at least make sure api key is removed when method is called
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(context.getString(R.string.os_apikey), "12345");
+        editor.commit();
+        loginActivity.clearLoginData();
 
-        //doReturn(1).when(mockLoginActivity.performClick(1));
-        doCallRealMethod().when(mockLoginActivity.performClick(mockLoginActivity.BTN_CODE_SUBMIT));
-
-        btnResponse = mockLoginActivity.performClick(mockLoginActivity.BTN_CODE_SUBMIT);
-        assertThat(btnResponse, is(1));
-    }
+    }*/
 
 }

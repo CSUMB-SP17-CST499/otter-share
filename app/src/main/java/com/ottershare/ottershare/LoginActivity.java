@@ -54,13 +54,11 @@ public class LoginActivity extends AppCompatActivity {
     EditText emailInput;
     EditText passwordInput;
     Button loginSubmit;
+    SharedPreferences prefs;
 
     final static int BTN_CODE_SUBMIT = 1;
     final static int BTN_CODE_REGISTER = 2;
-
-    /**
-     * TODO: Add a "os_status" to SharedPreferences for first time logging in
-     */
+    boolean STATUS_NEW;
 
     /**
      * TODO: Find out what login data you should clear (API KEY?)
@@ -76,6 +74,9 @@ public class LoginActivity extends AppCompatActivity {
         emailInput = (EditText) findViewById(R.id.login_email_input);
         passwordInput = (EditText) findViewById(R.id.login_password_input);
         loginSubmit = (Button) findViewById(R.id.login_btn_submit);
+
+        //initialize preferences to os_pref_user_info
+        prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
 
         //clear shared preferences
         clearLoginData();
@@ -181,7 +182,5 @@ public class LoginActivity extends AppCompatActivity {
     */
     //clears shared preferences of any login data since it's on the login screen
     protected void clearLoginData() {
-
     }
-
 }

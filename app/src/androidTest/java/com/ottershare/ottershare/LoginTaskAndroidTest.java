@@ -58,7 +58,7 @@ public class LoginTaskAndroidTest {
         //loginActivity.performClick(loginActivity.BTN_CODE_SUBMIT);
 
         mContext = activityRule.getActivity().getApplicationContext();
-        SharedPreferences prefs = mContext.getSharedPreferences(loginTask.OS_PREF_USER_INFO,Context.MODE_PRIVATE);
+        SharedPreferences prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
 
         assertThat(prefs.getString(mContext.getString(R.string.os_apikey), "default"), is(not("default")));
     }
@@ -82,7 +82,7 @@ public class LoginTaskAndroidTest {
         });
 
         mContext = activityRule.getActivity().getApplicationContext();
-        SharedPreferences prefs = mContext.getSharedPreferences(loginTask.OS_PREF_USER_INFO,Context.MODE_PRIVATE);
+        SharedPreferences prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
 
         assertThat(prefs.getString(mContext.getString(R.string.os_apikey), "default"), is("default"));
 

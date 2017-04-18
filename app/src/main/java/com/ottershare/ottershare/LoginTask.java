@@ -31,7 +31,6 @@ import javax.net.ssl.HttpsURLConnection;
 // asynchronous call to log in and retreive key
 public class LoginTask extends AsyncTask<String, String, Integer> {
     private final String LOG_TAG = LoginTask.class.getSimpleName();
-    protected final String OS_PREF_USER_INFO = "ottershare_user_info";
 
     /* Context being passed in from main thread*/
     Context mContext;
@@ -95,6 +94,10 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
             writer.flush();
             writer.close();
             os.close();
+
+            /**
+             * TODO: Create a handler for if the response code is a TIMED OUT
+             */
 
             int responseCode = httpURLConnection.getResponseCode();
 
@@ -163,10 +166,13 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                  */
                 storeUserKey();
 
-                /**
-                 * TODO: Edit welcome response for new and continuing users
-                 */
-                makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
+                if (prefs.getBoolean(mContext.getString(R.string.os_new_status),true)) {
+                    makeToast(R.string.login_toast_success_new, Toast.LENGTH_SHORT);
+                    updateUserStatus();
+                } else {
+                    makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
+                }
+
 
                 //start next activity
                 Intent i = new Intent(prevActivity, MainActivity.class);
@@ -203,6 +209,9 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
     }
 
     private void getLoginDataFromJson(JSONObject loginObject) throws JSONException {
+        /**
+         * TODO: Find out what other data needs to be collected from the server to be stored
+         */
         //this.name = loginObject.getString("name");
         //this.email = loginObject.getString("email");
         this.api_key = loginObject.getString("api_key");
@@ -217,9 +226,16 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
     }
 
     private void storeUserKey() {
-        prefs = mContext.getSharedPreferences(OS_PREF_USER_INFO, Context.MODE_PRIVATE);
+        prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(mContext.getString(R.string.os_apikey), api_key);
+        editor.commit();
+    }
+
+    private void updateUserStatus() {
+        prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(mContext.getString(R.string.os_new_status), false);
         editor.commit();
     }
 }
