@@ -58,13 +58,6 @@ public class LoginActivity extends AppCompatActivity {
 
     final static int BTN_CODE_SUBMIT = 1;
     final static int BTN_CODE_REGISTER = 2;
-    boolean STATUS_NEW;
-
-    /**
-     * TODO: Find out what login data you should clear (API KEY?)
-     * and perhaps what you should check for when it comes to checking for new user
-     * or someone who is already logged in
-     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,10 +73,12 @@ public class LoginActivity extends AppCompatActivity {
 
         //clear shared preferences
         clearLoginData();
+        prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
+        Log.d("LoginActivity.class", "" + prefs.getString(this.getString(R.string.os_apikey), "default"));
         /*
             Upon clicking the "check mark" on the keyboard after filling out the login form
          */
-        // TODO: can you even test this?? Leave as is for now
+        // TODO: (*) Create a UI test/integration test for this
         passwordInput.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -178,7 +173,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /*
-    *  TODO: implement clearLoginData function to clear login data and save the state of whether they're new
+    *  TODO: (*) Sanity Check: clearLoginData()
+    *  Should I clear anything other than just api key, upon entering the login screen?
     */
     //clears shared preferences of any login data since it's on the login screen
     protected void clearLoginData() {

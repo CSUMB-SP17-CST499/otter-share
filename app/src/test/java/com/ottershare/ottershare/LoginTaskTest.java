@@ -29,6 +29,6 @@ import junit.framework.TestCase;
 @RunWith(MockitoJUnitRunner.class)
 public class LoginTaskTest {
     /*
-        TODO: Find out what functionality needs local tests in LoginTask
+        TODO: (*) Find out what functionality needs local tests in LoginTask
      */
 }

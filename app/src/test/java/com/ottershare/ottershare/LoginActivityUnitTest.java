@@ -79,7 +79,7 @@ public class LoginActivityUnitTest {
 
 
     /**
-     * TODO: Find out what other LOCAL tests are needed for LoginActivity
+     * TODO: (*) Find out what other LOCAL tests are needed for LoginActivity
      */
 
     /*@Test - This is attempting to test clearLoginData which clears SharedPreferences. Not working... yet.

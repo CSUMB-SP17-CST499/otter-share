@@ -44,7 +44,7 @@ public class SplashScreenTest {
         mContext = mock(Context.class);
 
         /*
-        * TODO: Write tests for checking sharedpreferences in the splashscreen before writing the actual functionality
+        * TODO: (?) Write tests for checking sharedpreferences in the splashscreen before writing the actual functionality
         * */
         /*loginActivity = spy(new LoginActivity());
         mockLoginActivity = mock(LoginActivity.class);

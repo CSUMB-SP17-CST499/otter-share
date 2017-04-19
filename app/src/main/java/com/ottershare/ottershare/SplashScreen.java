@@ -24,10 +24,12 @@ public class SplashScreen extends AppCompatActivity {
 
     /**
      * TODO: Configure the code on this class to achieve 100% code coverage
+     * It's possible I think, but maybe need mostly integration tests.
      */
 
     /**
-     * TODO: [CURRENT] Find out how to test a function that starts a new activity
+     * TODO: (*) Find out how to test a function that starts a new activity
+     * Is this needed? Maybe has to be a UI test...
      */
 
     @Override
@@ -43,8 +45,8 @@ public class SplashScreen extends AppCompatActivity {
 
                 String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
 
-                Class target = isValidApi(apikey) ? MainActivity.class : LoginActivity.class;
-                //Class target = LoginActivity.class; //for testing, automatically go to LoginActivity
+                //Class target = isValidApi(apikey) ? MainActivity.class : LoginActivity.class;
+                Class target = LoginActivity.class; //for testing, automatically go to LoginActivity
                 Intent intent = new Intent(SplashScreen.this, target);
 
                 startActivity(intent);

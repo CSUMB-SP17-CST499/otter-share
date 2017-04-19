@@ -40,7 +40,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
     SharedPreferences prefs;
 
     /* Information needed from server response */
-    /*TODO: name is supposed to be their first and last name but it may be taken out*/
+    /*TODO: (*) Once you find out what other info you need from the user, update this*/
     //String name;
     String email;
     String api_key;
@@ -95,10 +95,6 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
             writer.close();
             os.close();
 
-            /**
-             * TODO: Create a handler for if the response code is a TIMED OUT
-             */
-
             int responseCode = httpURLConnection.getResponseCode();
 
 
@@ -113,7 +109,12 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                     Log.d(LOG_TAG, response);
                 }
             } else {
+                /**
+                 * TODO: find out how to test this for when there really is a bad response code
+                 * Perhaps test the next step where the result is returned to the Switch in onPostExecute...
+                 */
                 response = "";
+                return -1;
             }
 
             //Put data into a json object format
@@ -147,6 +148,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
     // 0 -> hasn't verified account
     // 1 -> incorrect email and password combination
     // 2 -> success
+    // -1 || any other value -> response code was not ok "200"
     protected void onPostExecute(Integer result) {
         switch (result) {
             case (0):
@@ -161,25 +163,20 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
             case (2):
 
                 /**
-                 * TODO: Find out what other data you need from the user upon logging in
+                 * TODO: (***) Find out what other data you need from the user upon logging in
                  */
                 storeUserKey();
 
-                if (prefs.getBoolean(mContext.getString(R.string.os_new_status),true)) {
-                    makeToast(R.string.login_toast_success_new, Toast.LENGTH_SHORT);
-                    updateUserStatus();
-                } else {
-                    makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
-                }
+                boolean isNew = prefs.getBoolean(mContext.getString(R.string.os_new_status), true);
+                displayWelcomeToast(isNew);
 
-
-                //start next activity
-                Intent i = new Intent(prevActivity, MainActivity.class);
-                prevActivity.startActivity(i);
+                //start next activity upon a successful login
+                //Intent i = new Intent(prevActivity, MainActivity.class);
+                //prevActivity.startActivity(i);
 
                 break;
             default:
-                Log.d(LOG_TAG, "case = ??" + " actual: " + result);
+                Log.d(LOG_TAG, "case = default" + " actual: " + result);
                 makeToast(R.string.login_toast_fatal_error, Toast.LENGTH_SHORT);
         }
     }
@@ -209,7 +206,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
 
     private void getLoginDataFromJson(JSONObject loginObject) throws JSONException {
         /**
-         * TODO: Find out what other data needs to be collected from the server to be stored
+         * TODO: (***) Find out what other data needs to be collected from the server to be stored
          */
         //this.name = loginObject.getString("name");
         //this.email = loginObject.getString("email");
@@ -231,10 +228,23 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
         editor.commit();
     }
 
+    /**
+     * This could potentially be on the server side where you can just check, upon logging in successfully, what that value returned is... and if it's 1, display welcome message, and if 2, different message
+     * The advantage
+     */
     private void updateUserStatus() {
         prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(mContext.getString(R.string.os_new_status), false);
         editor.commit();
+    }
+
+    void displayWelcomeToast(boolean isNew) {
+        if (isNew) {
+            makeToast(R.string.login_toast_success_new, Toast.LENGTH_SHORT);
+            updateUserStatus();
+        } else {
+            makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.ottershare.ottershare;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.test.InstrumentationRegistry;
@@ -12,6 +13,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -26,13 +30,13 @@ import static org.junit.Assert.*;
 public class LoginTaskAndroidTest {
 
     @Rule
-    public UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
-
-    @Rule
     public ActivityTestRule<LoginActivity> activityRule = new ActivityTestRule<>(LoginActivity.class);
 
+    //for waiting before asserting after an AsyncTask execution
+    final CountDownLatch signal = new CountDownLatch(1);
+    final static int WAIT_TIME = 5; //in seconds
+
     Context mContext;
-    LoginActivity loginActivity;
     LoginTask loginTask;
 
     @Before
@@ -55,12 +59,12 @@ public class LoginTaskAndroidTest {
             }
         });
 
-        //loginActivity.performClick(loginActivity.BTN_CODE_SUBMIT);
+        //loginTask.execute("bchehraz@csumb.edu", "password");
 
+        signal.await(WAIT_TIME, TimeUnit.SECONDS);
         mContext = activityRule.getActivity().getApplicationContext();
         SharedPreferences prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
-
-        assertThat(prefs.getString(mContext.getString(R.string.os_apikey), "default"), is(not("default")));
+        assertThat("Checking to see api key was saved upon a successful login", prefs.getString(mContext.getString(R.string.os_apikey), "default"), is(not("default")));
     }
 
     /***
@@ -69,10 +73,6 @@ public class LoginTaskAndroidTest {
      */
     @Test
     public void testLoginApiStoreWithInvalidLogin() throws Throwable {
-        /**
-         * TODO: Should the login clear api key from the shared preferences before trying for a login?
-         */
-
 
         activityRule.runOnUiThread(new Runnable() {
             @Override
@@ -81,12 +81,15 @@ public class LoginTaskAndroidTest {
             }
         });
 
-        mContext = activityRule.getActivity().getApplicationContext();
+        signal.await(WAIT_TIME, TimeUnit.SECONDS);
+        mContext = activityRule.getActivity();
         SharedPreferences prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
 
-        assertThat(prefs.getString(mContext.getString(R.string.os_apikey), "default"), is("default"));
 
-        //This test fails because the api_key should be empty before accessing the login screen.
-        //Should it delete shared preferences as the login screen is initializing?
+        assertThat(prefs.getString(mContext.getString(R.string.os_apikey), "default"), is("default"));
     }
+
+    /**
+     * TODO: (*) Are there any other tests you can think of for LoginTask?
+     */
 }
