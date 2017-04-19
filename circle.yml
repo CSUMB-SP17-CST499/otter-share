@@ -1,0 +1,18 @@
+machine:
+    node:
+      version: 7.2.0
+
+dependencies:
+    override:
+        - chmod +x gradlew
+        - ./gradlew dependencies
+        - npm install -g mocha
+
+test:
+  override:
+    - mocha ./tests/*.unitTest.js --timeout 8000
+deployment:
+  staging:
+    branch: master
+    heroku:
+      appname: young-plains-98404
