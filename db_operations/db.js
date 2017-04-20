@@ -195,7 +195,7 @@ const sendEmail = (name, email, verifyEmailKey) => {
             pass: process.env.EMAIL_PASS
         },
         tls: {
-            rejectUnauthorized: false
+          secureProtocol: "TLSv1_method"
         }
     });
 
@@ -210,7 +210,7 @@ const sendEmail = (name, email, verifyEmailKey) => {
     // send mail with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log('mailer error: ' + error);
+            return console.log('mailer error: ' + error + ' ' + process.env.EMAIL_USER + ' ' + process.env.EMAIL_PASS);
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
     });

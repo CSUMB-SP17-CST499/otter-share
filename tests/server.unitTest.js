@@ -4,8 +4,9 @@ const expect = require('expect');
 const app = require('../server.js').app;
 const cryptoRandomString = require('crypto-random-string');
 const env = require('env2')('./.env');
+const dummyFunctions = require('./dummyFunctions.js');
 
-var testEmail = cryptoRandomString(8) + '@csumb.edu';
+var testEmail = 'TEST' + cryptoRandomString(8) + '@csumb.edu';
 var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
@@ -121,7 +122,7 @@ it('should retrieve another user\'s profile', (done) => {
     })
     .end(done);
 
-})
+});
 // Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
 it('should retrieve own personal profile', (done) => {
   request(app)
@@ -134,8 +135,8 @@ it('should retrieve own personal profile', (done) => {
       });
     })
     .end(done);
-})
-
+});
+// Updates test users pass-node
 it('should update a pass node', (done) => {
   request(app)
     .post('/registerPass')
@@ -150,4 +151,44 @@ it('should update a pass node', (done) => {
       });
     })
     .end(done);
-})
+});
+// need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
+it('should create a pass node', (done) => {
+  const fakeApiKey = 'api-key-yo!';
+  dummyFunctions.createDummyUser("TESTjayjones7@csumb.edu", "Chris McJohnnsters", testPassword, testCarMakeModel, testSchedule, (succ, err) => {
+
+    request(app)
+      .post('/registerPass')
+      .send('email=' + "TESTjayjones7@csumb.edu")
+      .send('api_key=' + fakeApiKey)
+      .send('lotLocation='+ testLocation)
+      .send('price='+ testPrice)
+      .send('notes='+ testNotes)
+      .expect((res) => {
+        expect(res.body).toMatch({
+          success: /created/
+        });
+      })
+      .end(done);
+  });
+});
+
+it('should wipe the database of test users', (done) => {
+  const fakeApiKey = 'api-key-yo!';
+  dummyFunctions.wipeTestData((succ, err) => {
+
+    request(app)
+      .post('/registerPass')
+      .send('email=' + "TESTjayjones7@csumb.edu")
+      .send('api_key=' + fakeApiKey)
+      .send('lotLocation='+ testLocation)
+      .send('price='+ testPrice)
+      .send('notes='+ testNotes)
+      .expect((res) => {
+        expect(res.body).toMatch({
+          success: /created/
+        });
+      })
+      .end(done);
+  });
+});
