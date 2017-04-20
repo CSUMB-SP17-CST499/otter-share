@@ -1,5 +1,5 @@
 # OtterShare
-Welcome to OtterShare<br>
+Welcome to OtterShare <br>
 This repo houses both server and native files, in our case Android.
 
 # API Documentation
@@ -14,27 +14,27 @@ Eventually, when our development team has more time, we plan to serve up an acti
 ## POST /createUser <br>
 Creates a user with default fields <br>
 **JSON to post:** <br>
-"name": "name here",
-"email": "email-here",
+"name": "name here", <br>
+"email": "email-here", <br>
 "password": "password-here"<br>
 **Response**<br>
 Creation successful! To continue, check your email to verify account!
 
 ## POST /createUser/completeProfile <br>
-Completes a user profile with a few more fields
+Completes a user profile with a few more fields <br>
 **JSON to post** <br>
-"api-key" : "api-key-here",
-"schedule" : "schedule-here",
+"api-key" : "api-key-here", <br>
+"schedule" : "schedule-here", <br>
 "carMakeModel": "car-make-and-model-here"<br>
 **Response** <br>
 Success! Profile complete!
 
 ## POST /login <br>
-Takes username and email of registered user for login<br>
-**JSON to post:**<br>
+Takes username and email of registered user for login <br>
+**JSON to post:** <br>
 "email" : "enter-email-here",<br>
 "password" : "password-here" <br>
-**Response**<br>
+**Response** <br>
 Info on current user along with authentication key for requests.
 
 
@@ -47,18 +47,30 @@ Verification message response of true or false
 
 
 ## POST /myProfile <br>
-Takes api-key and email of current users account, and returns their profile as seen by themselves
+Takes api-key and email of current users account, and returns their profile as seen by themselves <br>
 **JSON to post:** <br>
-"email" : "csumb-email-here",
+"email" : "csumb-email-here",<br>
 "api_key" : "api-key-here"<br>
 **Response** <br>
 Returns json formatted profile information including schedule
 
 
 ## POST /users <br>
-Takes api-key of current user and email of a certain account, and returns their public profile information
+Takes api-key of current user and email of a certain account, and returns their public profile information <br>
 **JSON to post:** <br>
-"email" : "csumb-email-here",
+"email" : "csumb-email-here",<br>
 "api_key" : "api-key-here"<br>
 **Response** <br>
 Returns json formatted profile information excluding schedule
+
+
+## POST /registerPass <br>
+Creates a user with pass from given info (api_key, email-address, lotLocation, price and notes ) <br>
+**JSON to post:** <br>
+"api_key" : "api-key-here"<br>,
+"email": "email-here",<br>
+"lotLocation" : "lot-location-here"<br>,
+"price" : "price-here"<br>,
+"notes" : "notes-here"<br>
+**Response** <br>
+created pass!
