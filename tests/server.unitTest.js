@@ -6,7 +6,7 @@ const cryptoRandomString = require('crypto-random-string');
 const env = require('env2')('./.env');
 const dummyFunctions = require('./dummyFunctions.js');
 
-var testEmail = 'TEST' + cryptoRandomString(8) + '@csumb.edu';
+var testEmail = 'test' + cryptoRandomString(8) + '@csumb.edu';
 var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
@@ -155,11 +155,10 @@ it('should update a pass node', (done) => {
 // need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
 it('should create a pass node', (done) => {
   const fakeApiKey = 'api-key-yo!';
-  dummyFunctions.createDummyUser("TESTjayjones7@csumb.edu", "Chris McJohnnsters", testPassword, testCarMakeModel, testSchedule, (succ, err) => {
-
+  dummyFunctions.createDummyUser(testEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
     request(app)
       .post('/registerPass')
-      .send('email=' + "TESTjayjones7@csumb.edu")
+      .send('email=' + testEmail)
       .send('api_key=' + fakeApiKey)
       .send('lotLocation='+ testLocation)
       .send('price='+ testPrice)
@@ -172,23 +171,14 @@ it('should create a pass node', (done) => {
       .end(done);
   });
 });
-
+// clean up of test users.
 it('should wipe the database of test users', (done) => {
   const fakeApiKey = 'api-key-yo!';
-  dummyFunctions.wipeTestData((succ, err) => {
-
+  dummyFunctions.wipeTestData((err, succ) => {
+    if(err)
+      throw Error('err: ' + err);
     request(app)
-      .post('/registerPass')
-      .send('email=' + "TESTjayjones7@csumb.edu")
-      .send('api_key=' + fakeApiKey)
-      .send('lotLocation='+ testLocation)
-      .send('price='+ testPrice)
-      .send('notes='+ testNotes)
-      .expect((res) => {
-        expect(res.body).toMatch({
-          success: /created/
-        });
-      })
+      .post('/')
       .end(done);
   });
 });

@@ -12,9 +12,8 @@ var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphe
 
 const fakeApiKey = 'api-key-yo!';
 
-//
 var session = driver.session();
-//MATCH (n:User),(p:Pass) WHERE n.email = p.ownerEmail AND n.email STARTS WITH 'TEST' DETACH DELETE n,p;
+
 const createDummyUser = (email, name, password, carMakeModel, schedule, callback) => {
   session
       .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, " +
@@ -39,8 +38,17 @@ const createDummyUser = (email, name, password, carMakeModel, schedule, callback
       });
 }
 const wipeTestData = (callback) => {
-  session.
-      run()
+  session
+      .run("MATCH (n:User),(p:Pass) WHERE n.email = p.ownerEmail AND n.email STARTS WITH 'test' DETACH DELETE n,p")
+      .then(() => {
+        session.close();
+        return callback(null, 'Cleaned db');
+      })
+      .catch((e) => {
+          session.close();
+          var out = e;
+          return callback(null, out);
+      });
 }
 module.exports = {
     createDummyUser,

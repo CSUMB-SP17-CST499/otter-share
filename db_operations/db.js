@@ -79,7 +79,7 @@ const completeProfile = (api_key, carMakeModel, schedule, callback) => {
             session.close();
             // accessing model of car by results.records[0]._fields[0].properties.carMakeModel
             // if api_key entered wrong, return error object
-            console.log(results);
+            // console.log(results);
             if (_.isEmpty(results.records)) return callback(null, {
                 error: 'incorrect api_key'
             });
@@ -183,10 +183,7 @@ const sendEmail = (name, email, verifyEmailKey) => {
     var html = fs.readFileSync(__dirname + '/email.html', 'utf-8');
     html = _.toString(html);
     var compiled = _.template(html);
-    var modifiedHtml = compiled({
-        'user': name,
-        'url': verifyUrl
-    });
+    var modifiedHtml = compiled({'user' : name , 'url' : verifyUrl });
     // the following code blocks are what is needed to run nodemailer.
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -195,7 +192,7 @@ const sendEmail = (name, email, verifyEmailKey) => {
             pass: process.env.EMAIL_PASS
         },
         tls: {
-          secureProtocol: "TLSv1_method"
+            rejectUnauthorized: false
         }
     });
 
@@ -210,7 +207,7 @@ const sendEmail = (name, email, verifyEmailKey) => {
     // send mail with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log('mailer error: ' + error + ' ' + process.env.EMAIL_USER + ' ' + process.env.EMAIL_PASS);
+            return console.log('mailer error: '+ error);
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
     });
