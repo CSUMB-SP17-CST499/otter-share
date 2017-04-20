@@ -121,7 +121,6 @@ app.post('/createUser', (req, res) => {
     var name = req.body.name;
     var email = req.body.email;
     var password = req.body.password;
-
     // if all of these fields are not null, and email is in correct format then continue with creation.
     if (!!name && !!email && !!password) {
         // Store hash in password DB, as well as all other fields.
@@ -137,7 +136,7 @@ app.post('/createUser', (req, res) => {
         });
     }
 });
-
+// Completes the account creation process by taking in
 app.post('/createUser/completeProfile', (req,res) => {
   res.setHeader('Content-Type', 'application/json');
   var api_key = req.body.api_key;
@@ -157,17 +156,38 @@ app.post('/createUser/completeProfile', (req,res) => {
     res.send({error:'Please fill out all fields before sending a POST request'});
   }
 });
-// Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-app.get('/reset', (req, res, next) => {
-    db.resetDB((err, succ) => {
-        if (err) {
-            console.log(err);
-        } else {
+// registers a pass to a User, or updates existing pass node.
+app.post('/registerPass', (req, res) => {
+  // for security purposes
+  var api_key = req.body.api_key;
+  var email = req.body.email;
+  // for creation of the pass
+  let lotLocation = req.body.lotLocation;
+  let price = req.body.price;
+  let notes = req.body.notes;
+  if (!!api_key && !!email && !!lotLocation && !!price && !!notes) {
+      db.registerPass(email, api_key, lotLocation, price, notes, (err, succ) => {
+          if(err) {
+            res.send({error:err});
+          }
+          else
             res.send(succ);
-        }
-    });
-});
+      });
+  }
+  else
+    res.send({error:'Please send all required parking pass fields'});
 
+});
+// Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
+// app.get('/reset', (req, res, next) => {
+//     db.resetDB((err, succ) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.send(succ);
+//         }
+//     });
+// });
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log(`Started on port ${port}`);

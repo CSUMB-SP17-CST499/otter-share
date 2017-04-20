@@ -4,12 +4,16 @@ const expect = require('expect');
 const app = require('../server.js').app;
 const cryptoRandomString = require('crypto-random-string');
 const env = require('env2')('./.env');
+const dummyFunctions = require('./dummyFunctions.js');
 
-var testEmail = cryptoRandomString(8) + '@csumb.edu';
+var testEmail = 'test' + cryptoRandomString(8) + '@csumb.edu';
 var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
 var testSchedule = 'Bunch of data !';
+var testLocation = 'Dagobah'
+var testPrice = '2.50'
+var testNotes = 'My pass is better than yours, bro.'
 
 // Tests root endpoint
 it('should return root response returning info about site', (done) => {
@@ -118,7 +122,7 @@ it('should retrieve another user\'s profile', (done) => {
     })
     .end(done);
 
-})
+});
 // Tests the fetching of certain public profile NOTE: will need to update this if test user is removed from neo4j instance
 it('should retrieve own personal profile', (done) => {
   request(app)
@@ -131,4 +135,50 @@ it('should retrieve own personal profile', (done) => {
       });
     })
     .end(done);
-})
+});
+// Updates test users pass-node
+it('should update a pass node', (done) => {
+  request(app)
+    .post('/registerPass')
+    .send('email=' + process.env.TEST_EMAIL)
+    .send('api_key=' + process.env.TEST_API)
+    .send('lotLocation='+ testLocation)
+    .send('price='+ testPrice)
+    .send('notes='+ testNotes)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        success: /.*/
+      });
+    })
+    .end(done);
+});
+// need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
+it('should create a pass node', (done) => {
+  const fakeApiKey = 'api-key-yo!';
+  dummyFunctions.createDummyUser(testEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
+    request(app)
+      .post('/registerPass')
+      .send('email=' + testEmail)
+      .send('api_key=' + fakeApiKey)
+      .send('lotLocation='+ testLocation)
+      .send('price='+ testPrice)
+      .send('notes='+ testNotes)
+      .expect((res) => {
+        expect(res.body).toMatch({
+          success: /created/
+        });
+      })
+      .end(done);
+  });
+});
+// clean up of test users.
+it('should wipe the database of test users', (done) => {
+  const fakeApiKey = 'api-key-yo!';
+  dummyFunctions.wipeTestData((err, succ) => {
+    if(err)
+      throw Error('err: ' + err);
+    request(app)
+      .post('/')
+      .end(done);
+  });
+});
