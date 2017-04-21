@@ -22,14 +22,11 @@ public class SplashScreen extends AppCompatActivity {
     private final String LOG_TAG = SplashScreen.class.getSimpleName();
     final String DEFAULT_API_KEY = "empty";
 
-    /**
-     * TODO: Configure the code on this class to achieve 100% code coverage
-     * It's possible I think, but maybe need mostly integration tests.
-     */
 
     /**
      * TODO: (*) Find out how to test a function that starts a new activity
      * Is this needed? Maybe has to be a UI test...
+     * Later, find out how to test just everything in here except for the onCreate(....) itself
      */
 
     @Override
@@ -51,11 +48,6 @@ public class SplashScreen extends AppCompatActivity {
 
                 startActivity(intent);
                 finish();
-
-                // new
-                /*if (prefsContainsApiKey()) {
-
-                }*/
             }
         }, SPLASH_TIME_OUT);
     }

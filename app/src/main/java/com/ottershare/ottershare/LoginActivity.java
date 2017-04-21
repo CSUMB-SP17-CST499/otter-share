@@ -127,6 +127,7 @@ public class LoginActivity extends AppCompatActivity {
                 success = true;
                 break;
             case 2: //register button is pressed
+                // TODO: Implement REGISTER activity
                 success = true;
                 break;
             default:
