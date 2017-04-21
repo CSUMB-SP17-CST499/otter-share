@@ -67,16 +67,6 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
         }
     }
 
-    @Override
-    public void onDestroyView(){
-        super.onDestroyView();
-        Fragment fragment = (getFragmentManager().findFragmentById(R.id.map));
-        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-        ft.remove(fragment);
-        ft.commit();
-    }
-
-
     public void changeCameraLocation(double lat, double lon, float zoom){
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),zoom));
     }

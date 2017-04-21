@@ -12,4 +12,8 @@
     <color name="login_btn_submit">#002a4e</color><!--gold: 84754e-->
     <color name="login_btn_create">#84754e</color><!--green: 39645a-->
     <color name="login_btn_text">#fff</color>
+    <color name="red_cancel_button">#efb8a7</color>
+    <color name="red_cancel_button_boarder">#f45942</color>
+    <color name="green_go_button">#c6f7b7</color>
+    <color name="green_go_button_boarder">#559962</color>
 </resources>

@@ -11,8 +11,7 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <!-- Pre Parking Activity Demensions -->
-    <dimen name="swipe_when_parked_prompt_size_small">15sp</dimen>
-    <dimen name="swipe_when_parked_prompt_size_large">60sp</dimen>
+    <dimen name="swipe_when_parked_prompt_size_large">40sp</dimen>
 
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="nav_header_vertical_spacing">16dp</dimen>

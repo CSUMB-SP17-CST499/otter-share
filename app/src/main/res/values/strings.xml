@@ -10,10 +10,11 @@
     <string name="action_settings">Settings</string>
 
     <!--Parking activity-->
-    <string name="swipe_when_parked_prompt_1">Please</string>
-    <string name="swipe_when_parked_prompt_2">Swipe\nwhen\nparked</string>
+    <string name="swipe_when_parked_prompt">Swipe when parked</string>
     <string name="parking_conformation_prompt"> Is this where you parked?</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!--Notification string for fusedGpsService-->
+    <string name="local_service_started">fusedGpsStart/Stop</string>
+    <string name="title_activity_user_profile">UserProfile</string>
+
 </resources>
