@@ -39,9 +39,11 @@ const createDummyUser = (email, name, password, carMakeModel, schedule, callback
 }
 const wipeTestData = (callback) => {
   session
-      .run("MATCH (n:User),(p:Pass) WHERE n.email = p.ownerEmail AND n.email STARTS WITH 'test' DETACH DELETE n,p")
+      .run("MATCH (n:User),(p:Pass) WHERE n.email = p.ownerEmail AND n.email STARTS WITH 'test' DETACH DELETE n,p ")
       .then(() => {
         session.close();
+        session.run("MATCH (x:User) WHERE x.email STARTS WITH 'test' DETACH DELETE x");
+
         return callback(null, 'Cleaned db');
       })
       .catch((e) => {

@@ -17,6 +17,7 @@ var shortid = require('shortid');
 const env = require('env2')('./.env');
 const nodemailer = require('nodemailer');
 var fs = require('fs');
+var moment = require('moment');
 
 // Takes email and password, searches neo4j db for them, if found, returns user data
 const login = (email, password, callback) => {
@@ -52,7 +53,9 @@ const login = (email, password, callback) => {
                 var result_string = JSON.stringify(userObj);
                 // compares entered password with stored_pw in database.
                 bcrypt.compare(password, stored_pw, (err, res) => {
-                    if (res == true) {
+                    if (res == true) { // sets status to a timestamp, allowing us to find last time user active
+                        session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
+                                .catch((e) => {console.log(e)});
                         return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
@@ -83,30 +86,29 @@ const completeProfile = (api_key, carMakeModel, schedule, callback) => {
             if (_.isEmpty(results.records)) return callback(null, {
                 error: 'incorrect api_key'
             });
-            // if it exists, exit with callback error, else insert new values to current user node by api_key
-            if (typeof results.records[0]._fields[0].properties.carMakeModel == 'undefined') {
-                session
-                    .run('MATCH (user:User {api_access_key:{api_access_key}})' +
-                        'SET user.carMakeModel = {carMakeModel}, user.schedule = {schedule}' +
-                        'RETURN user', {
-                            api_access_key: api_key,
-                            carMakeModel: carMakeModel,
-                            schedule: schedule
-                        })
-                    .then((results) => {
-                        session.close();
-                        if (!_.isEmpty(results.records)) {
-                            return callback(null, { success: 'Profile creation complete!!'});
-                        } else {
-                            return callback(null, { error: 'error'});
-                        }
+            // Removed the update once feature, now able to update as much as they want.
+            session
+                .run('MERGE (user:User {api_access_key:{api_access_key}})' +
+                    'SET user.carMakeModel = {carMakeModel}, user.schedule = {schedule}, user.completeProfile = {completeProfile}' +
+                    'RETURN user', {
+                        api_access_key: api_key,
+                        carMakeModel: carMakeModel,
+                        schedule: schedule,
+                        completeProfile: true
                     })
-                    .catch((e) => {
-                        session.close();
-                        return callback(null, { error: e });
-                    });
-            } else
-                return callback(null, { error: 'Looks like you have already created a profile...' });
+                .then((results) => {
+                    session.close();
+                    if (!_.isEmpty(results.records)) {
+                        return callback(null, { success: 'Profile creation / update complete!!'});
+                    } else {
+                        return callback(null, { error: 'error'});
+                    }
+                })
+                .catch((e) => {
+                    session.close();
+                    return callback(null, { error: e });
+                });
+
         })
         .catch((e) => {
             session.close();
@@ -142,18 +144,21 @@ const createUser = (email, name, password, callback) => {
                 return callback(null, { error: 'This email is in use! Try to login instead'});
             } else {
                 // this key will be sent to users emails to verify they are csumb students!
-                // it will first store a key, then a boolean value of TRUE when account has been verified
+                // it will first store a key, then a boolean value of TRUE when account has
+                // been verified, status  has a value of 0, 1, 2, init, verified and logged in
                 var verifyEmailKey = cryptoRandomString(60);
                 bcrypt.hash(password, 10, (err, hash) => {
                     session
-                        .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, " +
-                            "api_access_key: {api_access_key}, verify_email_key: {verify_email_key}})", {
+                        .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, completeProfile:{completeProfile}," +
+                            "api_access_key: {api_access_key}, status:{status}, emailTime:timestamp(), verify_email_key: {verify_email_key}})", {
                                 name: name,
                                 email: email,
                                 password: hash,
                                 api_access_key: cryptoRandomString(60),
-                                verify_email_key: verifyEmailKey
-                            })
+                                verify_email_key: verifyEmailKey,
+                                status: 0,
+                                completeProfile:false
+                          })
                         .then(() => {
                             session.close();
                             var successObject = new Object();
@@ -176,9 +181,51 @@ const createUser = (email, name, password, callback) => {
             return callback(null, { error: out });
         });
 }
+const resendVerify = (email, callback) => {
+  // need to implement a verify email cooldown, maybe once a day?
+  const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
+  if (!emailRegex.test(email)) {
+      return callback(null, { error: 'Incorrect email format, it must be from CSUMB!'});
+  }
+  session
+    .run("MATCH (u:User) WHERE u.email = {email} AND u.verify_email_key <> true RETURN u.emailTime, u.verify_email_key, u.name ", {
+      email:email
+    })
+    .then((user) => {
+      session.close();
+      if (!_.isEmpty(user.records)) {
+        let unix_time = '', verify_key = '', name ='';
+        _.forEach(user.records, (record) => {
+            unix_time += record._fields[0];
+            verify_key += record._fields[1];
+            name += record._fields[2];
+        });
+        var past_date = moment(parseInt(unix_time)).format("YYYY-MM-DD HH:mm");
+        var now = moment();
+        var difference = now.diff(past_date,'minutes');
+        if(difference < 30) {
+          // console.log(`You cannot resend verifcation for another ${30 - difference} minutes, please try again later.`);
+          return callback(null,`You cannot resend verifcation for another ${30 - difference} minutes, please try again later.`);
+        }
+        // update timestamp in database, send another email with verify_key
+        session
+          .run("MATCH (u:User) WHERE u.email = {email} SET u.emailTime = timestamp()", {email:email})
+          .then(() => { sendEmail(name,email,verify_key); return callback(true,"Success, check your email again!"); })
+          .catch((e) => { console.log(e); return callback(null, {error:e}); });
+      } else {
+        console.log('Incorrect credentials');
+        return callback(null, "Incorrect credentials entered");
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+      callback(null,e);
+    });
+
+}
 // send's an email to given user, as well as the email verification key required to activate an account
 const sendEmail = (name, email, verifyEmailKey) => {
-    // loads my custom html, converts to String, use Lodash function that inserts user info into html (lodash is freaken awesome!)
+    // Loads my custom html, converts to String, use Lodash function that inserts user info into html (lodash is freaken awesome!)
     let verifyUrl = process.env.AUTH_URL + verifyEmailKey;
     var html = fs.readFileSync(__dirname + '/email.html', 'utf-8');
     html = _.toString(html);
@@ -246,7 +293,7 @@ const authCheck = (api_key, callback) => {
 // which we need to check for when accessing api
 const verifyEmail = (verifyString, callback) => {
     session
-        .run('MATCH (user:User {verify_email_key: {verify_email_key}}) SET user.verify_email_key = true RETURN user.verify_email_key', {
+        .run('MATCH (user:User {verify_email_key: {verify_email_key}}) SET user.verify_email_key = true, user.status = 1 RETURN user.verify_email_key', {
             verify_email_key: verifyString
         })
         .then((verify_email_key) => {
@@ -311,7 +358,7 @@ const retrieveMyProfile = (email, api_key, callback) => {
             console.log({ error: e });
         });
 }
-const registerPass = (email, api_key, lotLocation, price, notes, callback) => {
+const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, callback) => {
     // Regex for currency, tbd, need to speak to team about what is passed for price, regex --> ^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(\.[0-9][0-9])?$
     // Check to see if a pass node is in existence
     // If not create it, if so update it
@@ -327,13 +374,15 @@ const registerPass = (email, api_key, lotLocation, price, notes, callback) => {
                 // Match user with their pass node, update information.
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.notes = {notes} RETURN user.email AS email', {
+                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
                             lotLocation: lotLocation,
+                            gpsLocation: gpsLocation,
                             notes: notes,
-                            api_key: api_key
-                        })
+                            api_key: api_key,
+                            forSale: true
+                     })
                     .then((results) => {
                         session.close();
                         // console.log(results);
@@ -361,20 +410,19 @@ const registerPass = (email, api_key, lotLocation, price, notes, callback) => {
                         // Create the pass node with given information, then create a relationship between pass and node, returning relationship
                         session
                             .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) ' +
-                                  'CREATE (pass:Pass {id: {id}, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
+                                  'CREATE (pass:Pass {id: {id}, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
                                     'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                 email: email,
                                 api_key: api_key,
                                 id: shortid.generate(),
                                 ownerEmail: email,
                                 lotLocation: lotLocation,
+                                gpsLocation: gpsLocation,
                                 price: price,
                                 notes: notes,
-                                forSale: false
+                                forSale: true
                             })
                             .then((result) => {
-                                // console.log(result);
-                                // console.log('Relationship created');
                                 return callback(null, { success: 'created pass!' });
                                 session.close();
                             })
@@ -390,7 +438,6 @@ const registerPass = (email, api_key, lotLocation, price, notes, callback) => {
             console.log({ error: e });
         });
 }
-// if using reset, add variable below!
 module.exports = {
     login,
     createUser,
@@ -400,5 +447,6 @@ module.exports = {
     resetDB,
     retrieveUser,
     retrieveMyProfile,
-    registerPass
+    registerPass,
+    resendVerify
 };

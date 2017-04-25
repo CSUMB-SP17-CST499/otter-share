@@ -14,6 +14,7 @@ var testSchedule = 'Bunch of data !';
 var testLocation = 'Dagobah'
 var testPrice = '2.50'
 var testNotes = 'My pass is better than yours, bro.'
+var testGPS = "198.367.258.150"
 
 // Tests root endpoint
 it('should return root response returning info about site', (done) => {
@@ -145,6 +146,7 @@ it('should update a pass node', (done) => {
     .send('lotLocation='+ testLocation)
     .send('price='+ testPrice)
     .send('notes='+ testNotes)
+    .send('gpsLocation=' + testGPS)
     .expect((res) => {
       expect(res.body).toMatch({
         success: /.*/
@@ -161,6 +163,7 @@ it('should create a pass node', (done) => {
       .send('email=' + testEmail)
       .send('api_key=' + fakeApiKey)
       .send('lotLocation='+ testLocation)
+      .send('gpsLocation='+ testGPS)
       .send('price='+ testPrice)
       .send('notes='+ testNotes)
       .expect((res) => {
@@ -171,6 +174,18 @@ it('should create a pass node', (done) => {
       .end(done);
   });
 });
+it('should limit user\'s from sending multiple verification emails', (done) => {
+  request(app)
+    .post('/resendEmail')
+    .send('email=' + testEmail)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        error: /later/
+      })
+    })
+    .end(done);
+});
+
 // clean up of test users.
 it('should wipe the database of test users', (done) => {
   const fakeApiKey = 'api-key-yo!';

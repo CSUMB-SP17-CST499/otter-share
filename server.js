@@ -136,7 +136,7 @@ app.post('/createUser', (req, res) => {
         });
     }
 });
-// Completes the account creation process by taking in
+// Completes the account creation process (also updates) by taking in requested properties
 app.post('/createUser/completeProfile', (req,res) => {
   res.setHeader('Content-Type', 'application/json');
   var api_key = req.body.api_key;
@@ -163,10 +163,11 @@ app.post('/registerPass', (req, res) => {
   var email = req.body.email;
   // for creation of the pass
   let lotLocation = req.body.lotLocation;
+  let gpsLocation = req.body.gpsLocation;
   let price = req.body.price;
   let notes = req.body.notes;
-  if (!!api_key && !!email && !!lotLocation && !!price && !!notes) {
-      db.registerPass(email, api_key, lotLocation, price, notes, (err, succ) => {
+  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price && !!notes) {
+      db.registerPass(email, api_key, lotLocation, gpsLocation , price, notes, (err, succ) => {
           if(err) {
             res.send({error:err});
           }
@@ -176,18 +177,38 @@ app.post('/registerPass', (req, res) => {
   }
   else
     res.send({error:'Please send all required parking pass fields'});
-
 });
+// Resends verification email
+app.post('/resendEmail', (req,res) => {
+  var email = req.body.email;
+  if(!!email){
+    db.resendVerify(email, (status,response) => {
+      //if status true, return success message, if null, return message, if false, return why
+      if(status){
+        res.send({success:response});
+        return;
+      }
+      if(status == null){
+        res.send({error:response});
+        return;
+      }
+      if(!status){
+        res.send({error:response});
+        return;
+      }
+    })
+  }
+})
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-// app.get('/reset', (req, res, next) => {
-//     db.resetDB((err, succ) => {
-//         if (err) {
-//             console.log(err);
-//         } else {
-//             res.send(succ);
-//         }
-//     });
-// });
+app.get('/reset', (req, res) => {
+    db.resetDB((err, succ) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.send(succ);
+        }
+    });
+});
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
