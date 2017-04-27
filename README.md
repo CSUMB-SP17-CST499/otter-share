@@ -83,4 +83,4 @@ Returns active passes based on given lot location : api_key, keyword (Either 'al
 "keyword": "keyword-here"<br>
 
 **Response** <br>
-created pass!
+Pass(es) information
