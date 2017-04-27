@@ -60,16 +60,11 @@ app.post('/users', (req,res) => {
   var email = req.body.email;
   var api_key = req.body.api_key;
   if(!!email && !!api_key){
-    db.authCheck(api_key.trim(), (err, user) => {
-      if(err){
-        res.send({error:"callback error"});
-      }
-      db.retrieveUser(email.trim(), (err, payload) => {
+      db.retrieveUser(email.trim(), api_key.trim(), (err, payload) => {
         if(err){
           res.send({error:"callback error"});
         }
         res.send(payload);
-      });
     });
   } else {
     res.send({error:'Unauthorized'});
@@ -156,6 +151,28 @@ app.post('/createUser/completeProfile', (req,res) => {
     res.send({error:'Please fill out all fields before sending a POST request'});
   }
 });
+// Gets active users in specific parking lots or all parking lots at CSUMB
+app.post('/activeUsers', (req, res) => {
+  var keyword = req.body.keyword;
+  var api_key = req.body.api_key;
+  if(!!keyword && !!api_key){
+    db.activeUsers(keyword, api_key, (status,data) => {
+      if(status){
+        res.send(data);
+        return;
+      }
+      if(!status){
+        res.send({error:"Something went wrong!"});
+        return;
+      }
+      if(!!status) {
+        res.send({error:"Something Went Wrong!!"});
+        return;
+      }
+    });
+  }
+
+});
 // registers a pass to a User, or updates existing pass node.
 app.post('/registerPass', (req, res) => {
   // for security purposes
@@ -200,15 +217,15 @@ app.post('/resendEmail', (req,res) => {
   }
 })
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
-app.get('/reset', (req, res) => {
-    db.resetDB((err, succ) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.send(succ);
-        }
-    });
-});
+// app.get('/reset', (req, res) => {
+//     db.resetDB((err, succ) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.send(succ);
+//         }
+//     });
+// });
 //begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log(`Started on port ${port}`);

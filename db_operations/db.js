@@ -210,14 +210,15 @@ const resendVerify = (email, callback) => {
         // update timestamp in database, send another email with verify_key
         session
           .run("MATCH (u:User) WHERE u.email = {email} SET u.emailTime = timestamp()", {email:email})
-          .then(() => { sendEmail(name,email,verify_key); return callback(true,"Success, check your email again!"); })
-          .catch((e) => { console.log(e); return callback(null, {error:e}); });
+          .then(() => { session.close(); sendEmail(name,email,verify_key); return callback(true,"Success, check your email again!"); })
+          .catch((e) => { session.close(); console.log(e); return callback(null, {error:e}); });
       } else {
         console.log('Incorrect credentials');
         return callback(null, "Incorrect credentials entered");
       }
     })
     .catch((e) => {
+      session.close();
       console.log(e);
       callback(null,e);
     });
@@ -272,23 +273,6 @@ const resetDB = (callback) => {
             return callback(null, e);
         });
 }
-// if Authentication key exists, grant access
-const authCheck = (api_key, callback) => {
-    session
-        .run('MATCH (user:User {api_access_key: {api_key}}) RETURN user', {
-            api_key: api_key
-        })
-        .then((user) => {
-            session.close();
-            if (!_.isEmpty(user)) {
-                return callback(null, user);
-            }
-            return callback(null, false);
-        })
-        .catch((e) => {
-            return callback(null, JSON.stringify(e));
-        });
-}
 // Will verify email by searching for it in neo4j instance, if found, we set activated to TRUE,
 // which we need to check for when accessing api
 const verifyEmail = (verifyString, callback) => {
@@ -313,14 +297,19 @@ const verifyEmail = (verifyString, callback) => {
         });
 
 }
-// Will return profile information of a user
-// NOTE: need to specify exactly what to return and update return values for if none found!
-const retrieveUser = (email, callback) => {
+// Will return profile information of a user (for a public version of a profile )
+const retrieveUser = (email, api_key, callback) => {
+
     session
-        .run('MATCH (user:User {email:{email}}) RETURN user', {
-            email: email
+        .run('MATCH (user:User {api_access_key: { api_key } }),(userProfile:User {email: { email } })'+
+        'RETURN userProfile', {
+            email: email,
+            api_key: api_key
         })
         .then((user) => {
+          if(_.isEmpty(user.records)){
+            return callback(null, {error:'No match found.'});
+          }
             var profileObject = new Object();
             session.close();
             _.forEach(user.records, (record) => {
@@ -333,7 +322,8 @@ const retrieveUser = (email, callback) => {
         })
         .catch((e) => {
             session.close();
-            return callback(null, JSON.stringify(e));
+            console.log(e);
+            return callback(null, 'error! See logs');
         });
 }
 const retrieveMyProfile = (email, api_key, callback) => {
@@ -344,6 +334,8 @@ const retrieveMyProfile = (email, api_key, callback) => {
         })
         .then((user) => {
             session.close();
+            if(_.isEmpty(user.records))
+              return callback(null,{error:'No records found!'});
             var myProfileObject = new Object();
             _.forEach(user.records, (record) => {
                 myProfileObject.email = (record._fields[0].properties.email);
@@ -402,8 +394,9 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                     .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) RETURN user.email AS email', {
                             email: email,
                             api_key: api_key
-                    }) //record.get("knight_id
+                    })
                     .then ((results) => {
+                        session.close();
                         if (typeof results.records[0] == 'undefined')
                           return callback(false, { error: 'Pass failed to create'});
                         // Match email and api_key for finding user node to create relationship with,
@@ -438,11 +431,61 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
             console.log({ error: e });
         });
 }
+const activeUsers = (keyword,api_key,callback) => {
+  keyword = keyword.trim();
+  // NOTE: All will return active users FROM ALL LOTS!
+  // Whereas anything else will return a specific lot (by number) if found, we should probably implement stricter fields here
+  if(keyword == 'all'){
+    session
+      .run('MATCH (user:User {api_access_key:{api_key}}),(pass:Pass {forSale: {forSale}}) RETURN pass', {
+        forSale: true,
+        api_key: api_key
+      })
+      .then((results) => {
+        if(_.isEmpty(results.records)){
+          return callback(false, {error: 'No active users at this moment, try again later!'});
+        }
+        // stores
+        let passArray = new Array();
+        _.forEach(results.records, (record) => {
+          passArray.push(record._fields[0].properties);
+        });
+        return callback(true, {success:passArray});
+      })
+      .catch((e) => {
+        console.log(e);
+        return callback(null, {error:'Something went wrong..'});
+      })
+  } else {
+    session
+      .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {forSale: {forSale}}) ' +
+          'WHERE pass.lotLocation CONTAINS {lotLocation} RETURN pass', {
+            forSale: true,
+            api_key: api_key,
+            lotLocation: keyword
+        })
+        .then((results) => {
+          if(_.isEmpty(results.records)){
+            return callback(false, {error: 'No active users in this lot or no lot match, try again later!'});
+          }
+          // stores
+          let passArray = new Array();
+          _.forEach(results.records, (record) => {
+            passArray.push(record._fields[0].properties);
+          });
+          return callback(true, {success:passArray});
+        })
+        .catch((e) => {
+          console.log(e);
+          return callback(null, {error:'Something went wrong..'});
+        })
+  }
+}
 module.exports = {
+    activeUsers,
     login,
     createUser,
     completeProfile,
-    authCheck,
     verifyEmail,
     resetDB,
     retrieveUser,
