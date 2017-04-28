@@ -48,7 +48,7 @@
         <com.ottershare.ottershare.SwipeButton
             android:id="@+id/swipe_when_parked_slider"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="70dp"
             android:text="Slide" />
 
     </RelativeLayout>
@@ -56,7 +56,7 @@
     <RelativeLayout
         android:id="@+id/parking_btn_layout"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="70dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="10dp">

@@ -21,6 +21,11 @@
             android:theme="@style/generalNoTitle" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <meta-data
@@ -34,13 +39,16 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".UserProfile">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <activity android:name=".UserProfile" />
+        <activity android:name=".RateInteraction" />
+        <activity android:name=".SellPassConfirm" />
+        <activity android:name=".WaitForSell" />
+        <activity android:name=".PassView">
         </activity>
+        <activity android:name=".WaitForBuyer" />
+        <activity android:name=".CompleteTransactonSeller" />
+        <activity android:name=".CompleteTransactionBuyer" />
+        <activity android:name=".CompleteUserProfile"></activity>
     </application>
 
 </manifest>

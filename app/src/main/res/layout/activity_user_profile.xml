@@ -14,23 +14,57 @@
 
 
     <ScrollView
+        android:id="@+id/user_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/linearLayout1"
+            android:id="@+id/user_info_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_gravity="top"
             android:gravity="center">
 
+            <RelativeLayout
+                android:id="@+id/uesr_profile_exit_btn_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right">
+
+                    <ImageButton
+                        android:id="@+id/cancel_sell_upper_btn"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="5dp"
+                        android:background="@android:drawable/ic_menu_close_clear_cancel"/>
+
+                </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/user_name_Layout"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:gravity="center"
+                android:background="@drawable/rounded_corners_primary">
+
+                <TextView
+                    android:id="@+id/user_name_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="50sp"
+                    android:text="User Name"/>
+            </RelativeLayout>
+
                 <RelativeLayout
                     android:id="@+id/main_Layout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
+
                     <fragment
-                        android:id="@+id/user_photo_circle_frame"
+                        android:id="@+id/user_profile_photo_circle_frame"
                         class="com.ottershare.ottershare.CircleFrameWithFade"
                         android:layout_width="200dp"
                         android:layout_height="200dp"
@@ -38,14 +72,15 @@
                         tools:layout="@layout/fragment_circle_frame_with_fade" />
 
                     <RelativeLayout
+                        android:id="@+id/user_profile_rating_loayout"
                         android:layout_width="300dp"
                         android:layout_height="70dp"
-                        android:background="@drawable/go_button_draw"
-                        android:layout_centerInParent="true"
-                        android:layout_below="@+id/user_photo_circle_frame">
+                        android:background="@drawable/rounded_corners_primary"
+                        android:paddingTop="10dp"
+                        android:layout_below="@+id/user_profile_photo_circle_frame">
 
                         <RatingBar
-                            android:id="@+id/rating"
+                            android:id="@+id/user_profile_rating_bar"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:numStars="5"
@@ -54,120 +89,30 @@
                             android:secondaryProgressTint="@color/colorPrimary"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
-                            android:isIndicator="true"/>
+                            android:isIndicator="true"
+                            android:rating="2.5"/>
 
                     </RelativeLayout>
 
             </RelativeLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/user_profile_rating_bar_layout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
+                android:background="@color/colorsecondDarker"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
+                <TableLayout
+                    android:id="@+id/user_info_table"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
+                </TableLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="thing"
-                android:textSize="30sp"/>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

@@ -36,7 +36,7 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sellPassBtn = (ImageView) findViewById(R.id.sell_pass_btn);
+        sellPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
         sellPassBtn.setOnClickListener(listener);
 
 

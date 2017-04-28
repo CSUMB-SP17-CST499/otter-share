@@ -16,5 +16,9 @@
     <!--Notification string for fusedGpsService-->
     <string name="local_service_started">fusedGpsStart/Stop</string>
     <string name="title_activity_user_profile">UserProfile</string>
+    <string name="waiting_seller_response">Waiting seller response</string>
+    <string name="complete_transaction_seller_swipe_when_transation_is_completed">swipe when transation is completed</string>
+    <string name="complete_transaction_seller_meet_text">meet them at your car</string>
+    <string name="complete_transaction_seller_agreed_text">has agreed to buy your pass</string>
 
 </resources>

@@ -14,7 +14,8 @@
         android:id="@+id/map"
         class="com.ottershare.ottershare.MapOSFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_map" />
 
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -32,13 +33,22 @@
             android:weightSum="1">
 
             <ImageView
+                android:id="@+id/register_pass_btn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/register_pass"/>
+
+            <ImageView
                 android:id="@+id/sell_pass_btn"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_alignParentRight="true"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/share_pass_btn" />
+                android:background="@drawable/sell_pass"/>
 
         </RelativeLayout>
 
