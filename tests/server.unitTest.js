@@ -14,6 +14,9 @@ var testSchedule = 'Bunch of data !';
 var testLocation = 'Dagobah'
 var testPrice = '2.50'
 var testNotes = 'My pass is better than yours, bro.'
+var testGPS = "198.367.258.150"
+const fakeApiKey = 'api-key-yo!';
+
 
 // Tests root endpoint
 it('should return root response returning info about site', (done) => {
@@ -142,9 +145,10 @@ it('should update a pass node', (done) => {
     .post('/registerPass')
     .send('email=' + process.env.TEST_EMAIL)
     .send('api_key=' + process.env.TEST_API)
-    .send('lotLocation='+ testLocation)
+    .send('lotLocation='+ '201')
     .send('price='+ testPrice)
     .send('notes='+ testNotes)
+    .send('gpsLocation=' + testGPS)
     .expect((res) => {
       expect(res.body).toMatch({
         success: /.*/
@@ -154,13 +158,13 @@ it('should update a pass node', (done) => {
 });
 // need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
 it('should create a pass node', (done) => {
-  const fakeApiKey = 'api-key-yo!';
   dummyFunctions.createDummyUser(testEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
     request(app)
       .post('/registerPass')
       .send('email=' + testEmail)
       .send('api_key=' + fakeApiKey)
       .send('lotLocation='+ testLocation)
+      .send('gpsLocation='+ testGPS)
       .send('price='+ testPrice)
       .send('notes='+ testNotes)
       .expect((res) => {
@@ -171,9 +175,72 @@ it('should create a pass node', (done) => {
       .end(done);
   });
 });
+it('should limit user\'s from sending multiple verification emails', (done) => {
+  request(app)
+    .post('/resendEmail')
+    .send('email=' + testEmail)
+    .expect((res) => {
+      expect(res.body).toMatch({
+        error: /later/
+      })
+    })
+    .end(done);
+});
+
+// Retrieves all actives sellers of passes
+it('should retrieve all active passes', (done) => {
+  request(app)
+    .post('/activeUsers')
+    .send('api_key='+ fakeApiKey)
+    .send('keyword=' + 'all')
+    .expect((res) => {
+      expect(res.body).toMatch({
+        success: /.*/
+      })
+    })
+    .end(done);
+});
+// Retireves sellers from a particular parking lot
+it('should retrieve all active passes in a specific lot', (done) => {
+  request(app)
+    .post('/activeUsers')
+    .send('api_key='+ fakeApiKey)
+    .send('keyword=' + '201')
+    .expect((res) => {
+      expect(res.body).toMatch({
+        success: /201/
+      })
+    })
+    .end(done);
+});
+// Tests with random api key
+it('should return with an error with incorrect api-key', (done) => {
+  request(app)
+    .post('/activeUsers')
+    .send('api_key='+ fakeApiKey + fakeApiKey)
+    .send('keyword=' + '201')
+    .expect((res) => {
+      expect(res.body).toMatch({
+        error: /.*/
+      })
+    })
+    .end(done);
+});
+// Tests with fake lot location
+it('should return with an error with non-existant lot location', (done) => {
+  request(app)
+    .post('/activeUsers')
+    .send('api_key='+ fakeApiKey)
+    .send('keyword=' + 'hjgj65')
+    .expect((res) => {
+      expect(res.body).toMatch({
+        error: /.*/
+      })
+    })
+    .end(done);
+});
 // clean up of test users.
 it('should wipe the database of test users', (done) => {
-  const fakeApiKey = 'api-key-yo!';
   dummyFunctions.wipeTestData((err, succ) => {
     if(err)
       throw Error('err: ' + err);
