@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#B9D6F2</color>
+    <color name="colorPrimaryDark">#006DAA</color>
+    <color name="colorSecond">#FBFBF2</color>
+    <color name="colorsecondDark">#FAF8D4</color>
+    <color name="colorsecondDarker">#FFDDA1</color>
     <color name="Color_AppBackground">#fff</color>
     <color name="main_text">#000</color>
     <color name="login_input_back">#39645a</color><!--ocean blu: 002a4e-->
@@ -10,4 +12,8 @@
     <color name="login_btn_submit">#002a4e</color><!--gold: 84754e-->
     <color name="login_btn_create">#84754e</color><!--green: 39645a-->
     <color name="login_btn_text">#fff</color>
+    <color name="red_cancel_button">#efb8a7</color>
+    <color name="red_cancel_button_boarder">#f45942</color>
+    <color name="green_go_button">#c6f7b7</color>
+    <color name="green_go_button_boarder">#559962</color>
 </resources>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_pre_parking"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp"
+    android:background="@color/colorPrimaryDark"
+    tools:context="com.ottershare.ottershare.ParkingActivity">
+
+    <RelativeLayout
+        android:id="@+id/parking_activity_circle_frame_container"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:weightSum="1"
+        android:layout_below="@+id/swipe_when_parked_prompt_container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="44dp">
+
+        <fragment
+            android:id="@+id/parking_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            class="com.ottershare.ottershare.MapOSFragment"
+            tools:layout="@layout/fragment_map" />
+
+        <fragment
+            android:id="@+id/parking_activity_circle_frame"
+            class="com.ottershare.ottershare.CircleFrameWithFade"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/fragment_circle_frame_with_fade" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/swipe_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp">
+
+        <com.ottershare.ottershare.SwipeButton
+            android:id="@+id/swipe_when_parked_slider"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:text="Slide" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/parking_btn_layout"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp">
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="20dp"
+            android:text="Re-do"
+            android:background="@drawable/cancel_btn_draw"/>
+
+        <Button
+            android:id="@+id/accept_btn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginRight="10dp"
+            android:layout_toRightOf="@id/cancel_btn"
+            android:text="confirm parking spot"
+            android:background="@drawable/go_button_draw"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/swipe_when_parked_prompt_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:layout_centerHorizontal="true">
+
+    <TextView
+        android:id="@+id/swipe_when_parked_prompt_tv"
+        android:textColor="@color/colorSecond"
+        android:textSize="@dimen/swipe_when_parked_prompt_size_large"
+        android:textIsSelectable="false"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"/>
+    </RelativeLayout>
+
+</RelativeLayout>
