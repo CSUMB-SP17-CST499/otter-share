@@ -65,12 +65,22 @@ Returns json formatted profile information excluding schedule
 
 
 ## POST /registerPass <br>
-Creates a user with pass from given info (api_key, email-address, lotLocation, price and notes ) <br>
+Creates a pass for a user from given info (api_key, email-address, lotLocation, price and notes ) <br>
 **JSON to post:** <br>
-"api_key" : "api-key-here"<br>,
+"api_key" : "api-key-here",<br>
 "email": "email-here",<br>
-"lotLocation" : "lot-location-here"<br>,
-"price" : "price-here"<br>,
+"lotLocation" : "lot-location-here",<br>
+"price" : "price-here",<br>
 "notes" : "notes-here"<br>
 **Response** <br>
 created pass!
+
+
+## POST /activeUsers <br>
+Returns active passes based on given lot location : api_key, keyword (Either 'all' or a specific lot) <br>
+**JSON to post:** <br>
+"api_key" : "api-key-here",<br>
+"keyword": "keyword-here"<br>
+
+**Response** <br>
+Pass(es) information
