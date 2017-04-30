@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wait_for_sell_main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp"
+    android:background="@color/colorPrimaryDark"
+    tools:context="com.ottershare.ottershare.WaitForSell">
+
+    <ImageButton
+        android:id="@+id/cancel_sell_upper_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@android:drawable/ic_menu_close_clear_cancel"/>
+
+    <TextView
+        android:id="@+id/wait_for_sell_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="30sp"
+        android:text="Finding buyer"
+        android:layout_marginTop="50dp"
+        android:gravity="center"/>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/wait_for_sell_text_view">
+
+        <RelativeLayout
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginTop="30dp"
+            android:layout_centerHorizontal="true">
+
+            <RelativeLayout
+                android:id="@+id/wait_for_sell_frame_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="45dp"
+                android:layout_marginLeft="46dp"
+                android:layout_marginRight="47dp">
+
+                <fragment
+                    android:id="@+id/finding_buyer_fading_frame"
+                    class="com.ottershare.ottershare.CircleFrameWithFade"
+                    tools:layout="@layout/fragment_circle_frame_with_fade"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"/>
+
+            </RelativeLayout>
+
+            <ProgressBar
+                android:id="@+id/wait_for_sell_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:indeterminateDrawable="@drawable/progress"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/wait_for_sell_button_layout"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_alignParentBottom="true"
+            android:paddingBottom="10dp">
+
+            <Button
+                android:id="@+id/cancel_sell_lower_btn"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="20dp"
+                android:text="cancel sell"
+                android:background="@drawable/cancel_btn_draw"/>
+
+            <Button
+                android:id="@+id/accept_sell_btn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginRight="10dp"
+                android:layout_toRightOf="@id/cancel_sell_lower_btn"
+                android:text="confirm buyer"
+                android:background="@drawable/go_button_draw"/>
+
+        </RelativeLayout>
+    </RelativeLayout>
+
+
+</RelativeLayout>
