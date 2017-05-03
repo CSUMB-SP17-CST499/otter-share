@@ -66,9 +66,23 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
         }
     }
 
+    //jumps camera to location
     public void changeCameraLocation(double lat, double lon, float zoom){
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),zoom));
     }
 
-    
+    //anamates camera to location
+
+    //adds a marker to the map
+    public void makeMarker(double lat, double lon, String passID){
+        mGoogleMap.addMarker(new MarkerOptions()
+        .position(new LatLng(lat,lon)));
+    }
+
+
+    //removes all markers,overlays and shapes
+    public void removeAllFormatiing(){
+        mGoogleMap.clear();
+    }
+
 }
