@@ -81,7 +81,7 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
 
 
     //removes all markers,overlays and shapes
-    public void removeAllFormatiing(){
+    public void removeAllFormating(){
         mGoogleMap.clear();
     }
 
