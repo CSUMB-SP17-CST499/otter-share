@@ -1,7 +1,5 @@
 package com.ottershare.ottershare;
 
-
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
@@ -16,6 +14,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class MapOSFragment extends Fragment implements OnMapReadyCallback{
@@ -71,5 +70,5 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),zoom));
     }
 
-
+    
 }
