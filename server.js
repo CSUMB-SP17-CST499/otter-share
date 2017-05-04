@@ -183,7 +183,7 @@ app.post('/registerPass', (req, res) => {
   let gpsLocation = req.body.gpsLocation;
   let price = req.body.price;
   let notes = req.body.notes;
-  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price && !!notes) {
+  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price) {
       db.registerPass(email, api_key, lotLocation, gpsLocation , price, notes, (err, succ) => {
           if(err) {
             res.send({error:err});
@@ -215,7 +215,26 @@ app.post('/resendEmail', (req,res) => {
       }
     })
   }
-})
+});
+// Buying a pass from a user, takes buyer's api key, the passes's current owner email and ID
+// This should be invoked after a payment has been processed, changes ownership of parking pass
+app.post('/purchasePass', (req,res) => {
+  var api_key = req.body.api_key;
+  var currentOwnerEmail = req.body.currentOwnerEmail;
+  var passId = req.body.passId;
+  if(!!api_key && !!currentOwnerEmail && !!passId){
+    // console.log(`Data passed: ${api_key} ${currentOwnerEmail} ${passId}`);
+    db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
+      if(err){
+        return res.send(err);
+      }
+      return res.send(response);
+    });
+  }
+  else {
+    return res.send({error:'error, incorrect parameters received.'});
+  }
+});
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res) => {
 //     db.resetDB((err, succ) => {
@@ -226,7 +245,7 @@ app.post('/resendEmail', (req,res) => {
 //         }
 //     });
 // });
-//begins listening on port 3000 or instance given port .
+// begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
 });

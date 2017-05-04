@@ -354,6 +354,9 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
     // Regex for currency, tbd, need to speak to team about what is passed for price, regex --> ^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(\.[0-9][0-9])?$
     // Check to see if a pass node is in existence
     // If not create it, if so update it
+    if(notes ==  null)
+      notes = '(empty)';
+
     session
         .run('MATCH (pass:Pass) WHERE pass.ownerEmail = {ownerEmail} RETURN pass', {
             ownerEmail: email
@@ -363,16 +366,18 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
             if (!_.isEmpty(pass.records[0])) {
                 // update route
                 // console.log('updating...');
-                // Match user with their pass node, update information.
+                // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale} RETURN user.email AS email', {
+                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},'+
+                        'pass.id = {id} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
                             lotLocation: lotLocation,
                             gpsLocation: gpsLocation,
                             notes: notes,
                             api_key: api_key,
+                            id: shortid.generate(),
                             forSale: true
                      })
                     .then((results) => {
@@ -403,7 +408,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                         // Create the pass node with given information, then create a relationship between pass and node, returning relationship
                         session
                             .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) ' +
-                                  'CREATE (pass:Pass {id: {id}, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
+                                  'CREATE (pass:Pass {id: {id}, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
                                     'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                 email: email,
                                 api_key: api_key,
@@ -481,6 +486,68 @@ const activeUsers = (keyword,api_key,callback) => {
         })
   }
 }
+const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
+  // Increments the amount of times the pass has been sold by 1
+  session
+    .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail}, id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
+          'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
+              api_key:api_key,
+              currentOwnerEmail:currentOwnerEmail,
+              passId: passId
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0])){
+          return callback(null,{record:'Record not found 503'});
+        }
+        // Finds the newOwner of the pass, the pass to be sold, and the current owner of the pass (before it is transfered)
+        // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
+        // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
+        session
+          .run('MATCH (newOwner:User {api_access_key:{api_key} }),(pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
+              'WHERE pass.id = {passId} DELETE r '+
+              'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
+                '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
+                  'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
+                    currentOwnerEmail: currentOwnerEmail,
+                    api_key: api_key,
+                    passId: passId
+            })
+            .then((results) => {
+                session.close();
+                // Finds newOwner of pass, updates the soldPass to reflect newOwners email.
+                if(_.isEmpty(results.records[0]))
+                  return callback(null,{error:'Record not found 524'});
+                session
+                  .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id:{passId} })' +
+                        'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner',
+                          {passId:passId, api_key:api_key})
+                  .then((results) => {
+                    if(_.isEmpty(results.records[0])){
+                        return callback(null,{record:'Record not found 531'});
+                    }
+                    else {
+                      return callback(null, {success:'You\'ve just bought this users pass!'});
+                    }
+                  })
+                  .catch((e) => {
+                    session.close();
+                    console.log(e);
+                    return callback(null,'error');
+                  });
+            })
+            .catch((e)=> {
+                session.close();
+                console.log(e);
+                return callback({error:e});
+             });
+      })
+      .catch((e) => {
+        session.close();
+        console.log(e);
+        return callback(null,'error');
+      });
+}
 module.exports = {
     activeUsers,
     login,
@@ -491,5 +558,6 @@ module.exports = {
     retrieveUser,
     retrieveMyProfile,
     registerPass,
-    resendVerify
+    resendVerify,
+    purchasePass
 };
