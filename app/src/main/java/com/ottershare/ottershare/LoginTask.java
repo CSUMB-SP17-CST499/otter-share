@@ -171,8 +171,8 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                 displayWelcomeToast(isNew);
 
                 //start next activity upon a successful login
-                //Intent i = new Intent(prevActivity, MainActivity.class);
-                //prevActivity.startActivity(i);
+                Intent i = new Intent(prevActivity, MainActivity.class);
+                prevActivity.startActivity(i);
 
                 break;
             default:
