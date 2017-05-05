@@ -53,7 +53,10 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText emailInput;
     EditText passwordInput;
+
     Button loginSubmit;
+    Button regBtn; //register button
+
     SharedPreferences prefs;
 
     final static int BTN_CODE_SUBMIT = 1;
@@ -67,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
         emailInput = (EditText) findViewById(R.id.login_email_input);
         passwordInput = (EditText) findViewById(R.id.login_password_input);
         loginSubmit = (Button) findViewById(R.id.login_btn_submit);
+        regBtn = (Button) findViewById(R.id.login_btn_create);
 
         //initialize preferences to os_pref_user_info
         prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info),Context.MODE_PRIVATE);
@@ -106,7 +110,12 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-
+        regBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int result = performClick(BTN_CODE_REGISTER);
+            }
+        });
     }
 
     //returns 0 if click fails, 1 if success, 2 if value error
@@ -128,6 +137,13 @@ public class LoginActivity extends AppCompatActivity {
                 break;
             case 2: //register button is pressed
                 // TODO: Implement REGISTER activity
+
+
+                //TODO: Start register activity
+
+                Intent i = new Intent(this, MainActivity.class);
+                startActivity(i);
+
                 success = true;
                 break;
             default:

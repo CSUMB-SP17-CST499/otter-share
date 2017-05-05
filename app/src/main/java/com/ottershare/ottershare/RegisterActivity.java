@@ -11,4 +11,10 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
     }
+
+    /**
+     * TODO: Add "I verified" button .
+     *
+     * TODO: Resend verification button
+     */
 }

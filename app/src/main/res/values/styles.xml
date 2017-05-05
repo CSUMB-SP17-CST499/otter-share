@@ -8,7 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColor">@color/main_text</item>
     </style>
-
+    <!--parent="Theme.AppCompat.NoActionBar">-->
     <style name="generalNoTitle" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="android:textColor">@color/main_text</item>
