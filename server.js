@@ -4,121 +4,231 @@
     Purpose: Communication between Android App and Neo4j DB, using Express, Node and neo4j drivers.
 
     @author Mason Lopez
-    @version 1.1 4/10/16
-*/
+    @version 1.1 3/15/2017
+**/
+"use strict";
 var express = require('express');
 var bodyParser = require('body-parser');
-var neo4j = require('neo4j-driver').v1;
-
-//---> Credentials for connecting to GRAPHENEDB with Heroku!
- var graphenedbURL = process.env.GRAPHENEDB_BOLT_URL;
- var graphenedbUser = process.env.GRAPHENEDB_BOLT_USER;
- var graphenedbPass = process.env.GRAPHENEDB_BOLT_PASSWORD;
- var driver = neo4j.driver(graphenedbURL, neo4j.auth.basic(graphenedbUser, graphenedbPass));
-//
+var db = require('./db_operations/db');
+var bcrypt = require('bcryptjs');
+var _ = require('lodash');
 
 const port = process.env.PORT || 3000;
-//----> Local credentials
-// var driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "root"));
-//
-var session = driver.session();
+
 var app = express();
 app.use(bodyParser.json()); //uses bodyParser middleware for reading body
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
 
+//routes
 app.get('/', (req, res) => {
     //may serve up OtterShare website later.
     res.status(200).send("Welcome to OtterShare, nothing to GET, though");
 });
 
-// Tests a fake email hard-coded in source.
-app.get('/emailGet', (req, res, next) => {
-    session
-        .run("MATCH (a:Person) WHERE a.email <> {email} RETURN a.name AS name, a.email AS email, a.location AS location", {
-            email: "Test e-mail90"
-        })
-        .then(function(result) {
-            //let jsonMsg = result.records[0].get("title") + " " + result.records[0].get("name");
-            //var obj = JSON.parse('{ "name":"' + jsonMsg + '"}');
-            if (!result) {
-                return res.send("No match!");
+// Verification of email address via email sent to user
+app.get('/verify/:key', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    //check to see if key is in db, if so, authenticate user it matches with!
+    if (req.params.key) {
+        db.verifyEmail(req.params.key, (err, verify_email_key) => {
+            if (err) {
+                console.log(err);
             }
-            let store = '';
-            for (x in result.records) {
-                store += JSON.stringify(result.records[x]);
-            }
-            res.send(store);
-            console.log(result.records);
-        })
-        .catch((e) => {
-            console.log('--- error below ---' + (JSON.stringify(e)));
+            res.send(`Verification? ${verify_email_key}`);
         });
-});
-
-// Essentially DROPS data from database ! For testing purposes only!!!
-app.get('/reset', (req, res, next) => {
-    session
-        .run("MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r")
-        .then(res.send('Succceeeessss!'))
-        .catch((e) => {
-            res.send('fail: ' + JSON.stringify(e));
-        });
-});
-
-// adds certain strings POSTING to db.
-app.post('/insert', (req, res, next) => {
-    // access body fields, if not null we create/insert data!
-    var name = null;
-    var email = null;
-    var location = null;
-
-    name = req.body.name;
-    email = req.body.email;
-    location = req.body.location;
-
-    if (!!name && !!email && !!location) {
-        session
-            .run("CREATE (a:Person {name: {name}, email: {email}, location: {location} })", {
-                name: name,
-                email: email,
-                location: location
-            })
-            .then(() => {
-                res.send("Success! ---> " + name + ' ' + email + ' ' + location);
-            })
-            .catch((e) => {
-                console.log('error: ' + JSON.stringify(e));
-            });
-    } else {
-        res.send('Fail, yo!');
     }
 });
-// Searches for user by email, returns email, name and location .
-app.post('/findByEmail', (req, res, next) => {
-    var email = null;
-    email = req.body.email;
+// For viewing a users own private profile, generates a little more.
+// NOTE: Must have matching API key to view this
+app.post('/myProfile', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  var api_key = req.body.api_key;
+  var email = req.body.email;
+  if(!!email && !!api_key){
+    db.retrieveMyProfile(email.trim(),api_key.trim(), (err,payload) => {
+      res.send(payload);
+    });
+  }
 
-    if (!!email) {
-        session
-            .run("MATCH (a:Person) WHERE a.email = {email} RETURN a.name AS name, a.email AS email, a.location AS location", {
-                email: email
-            })
-            .then((result) => {
-                let result_string = '';
+});
 
-                result.records.forEach((record) => {
-                    console.log(record._fields);
-                    result_string += record._fields + ' ';
-                    //delimits by comma
+// For receiving public profile of another user, requires an api_key and target email address
+app.post('/users', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  var email = req.body.email;
+  var api_key = req.body.api_key;
+  if(!!email && !!api_key){
+      db.retrieveUser(email.trim(), api_key.trim(), (err, payload) => {
+        if(err){
+          res.send({error:"callback error"});
+        }
+        res.send(payload);
+    });
+  } else {
+    res.send({error:'Unauthorized'});
+  }
+});
+// Login requires an email from CSUMB and password of a user, password must be minimum of 8 characters
+app.post('/login', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    // Search for name in db
+    if (!!req.body.email && !!req.body.password) {
+        // Run login callback function, if found w/ matching pw, retrieve login info
+        // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
+        db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
+            if (err) {
+                res.send(err);
+            }
+            if (!!user) {
+                // If email is not verified, then we send an error back describing what to do next
+                if (!JSON.parse(user).email_verified) {
+                    res.json({
+                        error: 'Code 0'
+                    })
+                } else {
+                    // If email is verified, we return logged in users info
+                    res.send(user);
+                }
+            }
+            // Pw is wrong
+            else if (user == false) {
+                res.json({
+                    error: 'Code 1'
                 });
-                res.send(result_string);
-            })
-            .catch((e) => {
-                console.log('error : ' + JSON.stringify(e));
-            })
+            }
+            // User does not exist
+            else {
+                res.json({
+                    error: 'Code 1'
+                });
+            }
+        });
+
     } else {
-        res.status(400).send("Email must be in correct format!!!");
+        console.log(req.body.email);
     }
 });
-app.listen(port, () => {
-    console.log("Started on port " + port);
+// Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.
+app.post('/createUser', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    var name = req.body.name;
+    var email = req.body.email;
+    var password = req.body.password;
+    // if all of these fields are not null, and email is in correct format then continue with creation.
+    if (!!name && !!email && !!password) {
+        // Store hash in password DB, as well as all other fields.
+        db.createUser(email.trim(), name.trim(), password.trim(), (err, response) => {
+            if (err) {
+                res.send(err);
+            }
+            res.send(response);
+        });
+    } else {
+        res.json({
+            error: 'incorrect field format'
+        });
+    }
 });
+// Completes the account creation process (also updates) by taking in requested properties
+app.post('/createUser/completeProfile', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  var api_key = req.body.api_key;
+  var carMakeModel = req.body.carMakeModel;
+  var schedule = req.body.schedule;
+  if(!!api_key && !!carMakeModel && !!schedule){
+    db.completeProfile(api_key, carMakeModel, schedule, (err, response) => {
+        if(response){
+          res.send(response);
+        }
+        else {
+          res.send(err);
+        }
+    });
+  }
+  else {
+    res.send({error:'Please fill out all fields before sending a POST request'});
+  }
+});
+// Gets active users in specific parking lots or all parking lots at CSUMB
+app.post('/activeUsers', (req, res) => {
+  var keyword = req.body.keyword;
+  var api_key = req.body.api_key;
+  if(!!keyword && !!api_key){
+    db.activeUsers(keyword, api_key, (status,data) => {
+      if(status){
+        res.send(data);
+        return;
+      }
+      if(!status){
+        res.send({error:"Something went wrong!"});
+        return;
+      }
+      if(!!status) {
+        res.send({error:"Something Went Wrong!!"});
+        return;
+      }
+    });
+  }
+
+});
+// registers a pass to a User, or updates existing pass node.
+app.post('/registerPass', (req, res) => {
+  // for security purposes
+  var api_key = req.body.api_key;
+  var email = req.body.email;
+  // for creation of the pass
+  let lotLocation = req.body.lotLocation;
+  let gpsLocation = req.body.gpsLocation;
+  let price = req.body.price;
+  let notes = req.body.notes;
+  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price && !!notes) {
+      db.registerPass(email, api_key, lotLocation, gpsLocation , price, notes, (err, succ) => {
+          if(err) {
+            res.send({error:err});
+          }
+          else
+            res.send(succ);
+      });
+  }
+  else
+    res.send({error:'Please send all required parking pass fields'});
+});
+// Resends verification email
+app.post('/resendEmail', (req,res) => {
+  var email = req.body.email;
+  if(!!email){
+    db.resendVerify(email, (status,response) => {
+      //if status true, return success message, if null, return message, if false, return why
+      if(status){
+        res.send({success:response});
+        return;
+      }
+      if(status == null){
+        res.send({error:response});
+        return;
+      }
+      if(!status){
+        res.send({error:response});
+        return;
+      }
+    })
+  }
+})
+// Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
+// app.get('/reset', (req, res) => {
+//     db.resetDB((err, succ) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.send(succ);
+//         }
+//     });
+// });
+//begins listening on port 3000 or instance given port .
+app.listen(port, () => {
+    console.log(`Started on port ${port}`);
+});
+
+module.exports.app = app;

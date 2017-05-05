@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wait_for_sell_main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp"
+    android:background="@color/colorPrimaryDark"
+    tools:context="com.ottershare.ottershare.WaitForBuyer">
+
+    <ImageButton
+        android:id="@+id/cancel_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@android:drawable/ic_menu_close_clear_cancel"/>
+
+    <TextView
+        android:id="@+id/wait_seller_response_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="30sp"
+        android:text="@string/waiting_seller_response"
+        android:layout_marginTop="50dp"
+        android:gravity="center"/>
+
+
+    <RelativeLayout
+        android:id="@+id/frame_layout_layer_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/wait_seller_response_text_view">
+
+        <RelativeLayout
+            android:id="@+id/frame_layout_layer_2"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginTop="30dp"
+            android:layout_centerHorizontal="true">
+
+            <RelativeLayout
+                android:id="@+id/frame_layout_actual"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="45dp"
+                android:layout_marginLeft="46dp"
+                android:layout_marginRight="47dp">
+
+                <fragment
+                    android:id="@+id/fading_frame"
+                    class="com.ottershare.ottershare.CircleFrameWithFade"
+                    tools:layout="@layout/fragment_circle_frame_with_fade"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"/>
+
+            </RelativeLayout>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:indeterminateDrawable="@drawable/progress"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

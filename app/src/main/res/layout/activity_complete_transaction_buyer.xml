@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
+    tools:context="com.ottershare.ottershare.CompleteTransactionBuyer">
+
+    <ImageButton
+        android:id="@+id/cancel_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="@android:drawable/ic_menu_close_clear_cancel"/>
+
+    <LinearLayout
+        android:id="@+id/complete_user_transaction_seller_title_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/colorPrimary"
+        android:layout_below="@+id/cancel_btn">
+
+        <TextView
+            android:id="@+id/user_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            android:text="user"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/agreed_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            android:text="has agreed to sell to you"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/meet_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            android:text="meet them at their car"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/fading_frame_layout"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_below="@+id/complete_user_transaction_seller_title_layout"
+        android:layout_centerHorizontal="true">
+
+        <fragment
+            android:id="@+id/fading_frame"
+            class="com.ottershare.ottershare.CircleFrameWithFade"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            tools:layout="@layout/fragment_circle_frame_with_fade"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/swipe_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:text="@string/complete_transaction_seller_swipe_when_transation_is_completed"
+        android:gravity="center"
+        android:layout_above="@+id/complete_slider"
+        android:background="@color/colorPrimary"/>
+
+    <com.ottershare.ottershare.SwipeButton
+        android:id="@+id/complete_slider"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="Slide"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
