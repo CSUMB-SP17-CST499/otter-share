@@ -1,6 +1,8 @@
 package com.ottershare.ottershare;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -16,6 +18,9 @@ public class MainActivity extends FragmentActivity{
     FragmentManager fragManager;
     MapOSFragment frag;
     ImageView sellPassBtn;
+
+    final String DEFAULT_API_KEY = "empty";
+
     View.OnClickListener listener = new View.OnClickListener()
     {
         @Override
@@ -42,7 +47,7 @@ public class MainActivity extends FragmentActivity{
         sellPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
         sellPassBtn.setOnClickListener(listener);
 
-
+        runMainTask();
     }
 
     @Override
@@ -62,5 +67,14 @@ public class MainActivity extends FragmentActivity{
         */
     }
 
+    private void runMainTask() {
+        Context context = MainActivity.this.getApplicationContext();
+        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
+        String keyword = "all";
 
+
+        MainTask mainTask = new MainTask(this);
+        mainTask.execute(apikey, keyword);
+    }
 }
