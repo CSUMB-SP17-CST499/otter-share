@@ -75,6 +75,7 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     }
 
     //jumps camera to location
+
     public void changeCameraLocation(double lat, double lon, float zoom){
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),zoom));
     }
