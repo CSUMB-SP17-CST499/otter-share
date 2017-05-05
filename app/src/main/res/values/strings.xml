@@ -1,11 +1,30 @@
 <resources>
     <string name="app_name">OtterShare</string>
+
+    <!--Login Strings-->
     <string name="login_label_email">Email</string>
     <string name="login_label_password">Password</string>
     <string name="login_btn_submit">Login</string>
     <string name="login_btn_create">Create Account</string>
     <string name="login_btn_create_label">Not a member?</string>
     <string name="reg_hint_email">example@csumb.edu</string>
+
+    <string name="login_heading">Sign in</string>
+
+    <!--Login toasts-->
+    <string name="login_toast_unverified">Unverified\nCheck your CSUMB email to verify</string>
+    <string name="login_toast_invalid">Invalid login\nEmail or password was entered incorrectly</string>
+    <string name="login_toast_fatal_error">An unexpected error occurred. Try again.</string>
+    <string name="login_toast_success">Signed into OtterShare</string>
+    <string name="login_toast_success_new">Success\nWelcome to OtterShare!</string>
+
+    <!--Strings regarding SharedPreferences data-->
+    <string name="os_pref_user_info">ottershare_user_info</string>
+    <string name="os_new_status">ottershare_user_status</string>
+    <string name="os_name">ottershare_user_name</string>
+    <string name="os_email">ottershare_user_email</string>
+    <string name="os_apikey">ottershare_user_api_key</string>
+
     <string name="title_activity_main_map">MainMap</string>
     <string name="action_settings">Settings</string>
 
@@ -20,5 +39,6 @@
     <string name="complete_transaction_seller_swipe_when_transation_is_completed">swipe when transation is completed</string>
     <string name="complete_transaction_seller_meet_text">meet them at your car</string>
     <string name="complete_transaction_seller_agreed_text">has agreed to buy your pass</string>
+
 
 </resources>
