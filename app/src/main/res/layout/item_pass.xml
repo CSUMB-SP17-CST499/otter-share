@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp">
+
+    <TextView
+        android:id="@+id/price_lable_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$"
+        android:textSize="40sp"
+        android:textColor="@color/colorPrimaryDark"/>
+
+    <TextView
+        android:id="@+id/price_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.00"
+        android:textSize="40sp"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/price_lable_tv"
+        android:layout_toEndOf="@+id/price_lable_tv"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_marginRight="10dp"/>
+    
+    <TextView
+        android:id="@+id/user_lable_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:text="User : "
+        android:textSize="20sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_toRightOf="@+id/price_tv"/>
+
+    <TextView
+        android:id="@+id/user_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="user@csumb.edu"
+        android:textSize="20sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_toRightOf="@+id/user_lable_tv"/>
+
+    <TextView
+        android:id="@+id/lot_lable_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lot : "
+        android:textSize="20sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_below="@+id/user_lable_tv"
+        android:layout_toRightOf="@+id/price_tv"/>
+
+    <TextView
+        android:id="@+id/lot_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="###"
+        android:textSize="20sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_below="@+id/user_lable_tv"
+        android:layout_toRightOf="@+id/lot_lable_tv"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimaryDark"
+        android:layout_alignParentBottom="true"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"/>
+
+</RelativeLayout>

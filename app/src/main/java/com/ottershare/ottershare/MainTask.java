@@ -5,9 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -20,10 +26,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+import android.support.v4.app.Fragment;
 
 /**
  * Created by User on 3/25/2017.
@@ -41,13 +49,19 @@ public class MainTask extends AsyncTask<String, String, Integer> {
 
     /* Information needed from server response */
     int status;
+    private MapOSFragment frag;
+
+    ArrayList<ParkingPassInfo> parkingPassInfoArray;
+    ArrayList<LatLng> locations;
 
 
 
-    public MainTask(Activity activity) {
+    public MainTask(Activity activity,MapOSFragment frag) {
         status = 0;
         mContext = activity.getApplicationContext();
         prevActivity = activity;
+        locations = new ArrayList<LatLng>();
+        this.frag = frag;
     }
 
     @Override
@@ -111,7 +125,40 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             }
 
             //Put data into a json object format
-            JSONObject jsonResponse = new JSONObject(response);
+            JSONObject jsonResponseObject = new JSONObject(response);
+            JSONArray jsonResponse = jsonResponseObject.getJSONArray("success");
+            //todo : change if statement to eventually distinguish sucsess and failures.
+            if(true) {
+                parkingPassInfoArray = new ArrayList<ParkingPassInfo>();
+                for (int i = 0; i < jsonResponse.length(); i++) {
+                    JSONObject parkingPass = jsonResponse.getJSONObject(i);
+
+                    String id = parkingPass.getString("id");
+                    String gpsLocationString = parkingPass.getString("gpsLocation");
+                    if ((gpsLocationString.length() - gpsLocationString.replace(",", "").length()) == 1) {
+                        String[] gpsLocationStringSplit = gpsLocationString.split(",");
+                        try {
+                            double lat = Double.parseDouble(gpsLocationStringSplit[0]);
+                            double lon = Double.parseDouble(gpsLocationStringSplit[1]);
+                            LatLng gpsLocation = new LatLng(lat, lon);
+                            String notes = parkingPass.getString("notes");
+                            Boolean forSale = Boolean.valueOf(parkingPass.getString("forSale"));
+                            float price = (float) parkingPass.getDouble("price");
+                            int lotLocation = parkingPass.getInt("lotLocation");
+                            String email = parkingPass.getString("ownerEmail");
+                            parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email));
+                            locations.add(gpsLocation);
+
+                        }catch(NumberFormatException e){
+                        Log.i("number format exeption", id);
+                    }
+                }else{
+                        Log.i("Main Task", "not a latlon format");
+                    }
+
+                }
+
+            }
 
             Log.d(LOG_TAG, api_key);
             /*if (jsonResponse.has("error")) {
@@ -145,15 +192,28 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     protected void onPostExecute(Integer result) {
         switch (result) {
             case (0):
+                Log.d(LOG_TAG, "case = 0: " + result);
                 break;
             case (1):
+                Log.d(LOG_TAG, "case = 1: " + result);
                 break;
             case (2):
+                Log.d(LOG_TAG, "case = 2: " + result);
+                break;
+            case (3):
+                parkingPassInfoArray = testdata();
+                final PassAdapter adapter = new PassAdapter(prevActivity,parkingPassInfoArray);
+                final ListView passList = (ListView) prevActivity.findViewById(R.id.pass_list);
+                passList.setAdapter(adapter);
+                adapter.add(parkingPassInfoArray.get(0));
+                frag.addHeatMap(locations);
+                Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);
                 makeToast(R.string.login_toast_fatal_error, Toast.LENGTH_SHORT);
         }
+
     }
 
     protected void onProgressUpdate(Integer... progress) {
@@ -175,7 +235,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             result.append("=");
             result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
         }
-
         return result.toString();
     }
 
@@ -206,5 +265,32 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         } else {
             makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
         }
+    }
+
+    // to set up dummy data remove when needed.
+    private ArrayList<ParkingPassInfo> testdata(){
+        ArrayList<ParkingPassInfo> returnData = new ArrayList<>();
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
+        locations.add(new LatLng(36.652324, -121.798293));
+        locations.add(new LatLng(36.652348, -121.798682));
+        locations.add(new LatLng(36.651795, -121.800519));
+        locations.add(new LatLng(36.652477, -121.800111));
+        locations.add(new LatLng(36.652129, -121.804482));
+
+        return returnData;
     }
 }

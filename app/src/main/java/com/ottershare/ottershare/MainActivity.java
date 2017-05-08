@@ -8,6 +8,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ListView;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -17,7 +19,11 @@ public class MainActivity extends FragmentActivity{
 
     FragmentManager fragManager;
     MapOSFragment frag;
+    ImageView regPassBtn;
     ImageView sellPassBtn;
+    ArrayList <ParkingPassInfo> testdataarray = new ArrayList<>();
+    ListView topLotList;
+    ListView bottomPassList;
 
     final String DEFAULT_API_KEY = "empty";
 
@@ -28,10 +34,12 @@ public class MainActivity extends FragmentActivity{
         {
             switch (v.getId())
             {
-                case R.id.sell_pass_btn:
+                case R.id.register_pass_btn:
                     Intent intent = new Intent(MainActivity.this, ParkingActivity.class);
                     MainActivity.this.startActivity(intent);
                     break;
+                case R.id.sell_pass_btn:
+
                 default:
                     break;
             }
@@ -44,10 +52,15 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sellPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
-        sellPassBtn.setOnClickListener(listener);
+        regPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
+        regPassBtn.setOnClickListener(listener);
 
-        runMainTask();
+        sellPassBtn = (ImageView) findViewById(R.id.sell_pass_btn);
+        regPassBtn.setOnClickListener(listener);
+
+        topLotList = (ListView) findViewById(R.id.top_pannel_list_view);
+       // bottomPassList = (ListView) findViewById(R.id.bottom_pannel_list_view);
+
         //runParkingTask();
     }
 
@@ -57,10 +70,10 @@ public class MainActivity extends FragmentActivity{
 
         fragManager = getSupportFragmentManager();
         frag = (MapOSFragment)fragManager.findFragmentById(R.id.map);
-
         frag.changeCameraLocation(Double.parseDouble(getString(R.string.all_csumb_lat)),Double.parseDouble(getString(R.string.all_csumb_lon)),Float.parseFloat(getString(R.string.all_csumb_zoom)));
-
         ArrayList<LatLng> locations = new ArrayList<LatLng>();
+
+        runMainTask();
 
         /*
         todo: there should eventualy be a function to get all of the points from the backend and store it into a array list and then pass it to the below function
@@ -75,8 +88,9 @@ public class MainActivity extends FragmentActivity{
         String keyword = "all";
 
 
-        MainTask mainTask = new MainTask(this);
+        MainTask mainTask = new MainTask(this , frag);
         mainTask.execute(apikey, keyword);
+        sellPassBtn.setVisibility(View.GONE);
     }
 
     private void runParkingTask() {
@@ -87,5 +101,8 @@ public class MainActivity extends FragmentActivity{
 
         ParkingTask parkingTask = new ParkingTask(this);
         parkingTask.execute(apikey, "bchehraz@csumb.edu", "0", "1", "4", "1");
+
     }
+
+    // delete this after testing.
 }
