@@ -2,8 +2,10 @@ package com.ottershare.ottershare;
 
 import android.animation.ObjectAnimator;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -68,6 +70,7 @@ public class ParkingActivity extends AppCompatActivity{
     private Button cancelBtn;
     private Button acceptBtn;
 
+    final String DEFAULT_API_KEY = "empty";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -248,7 +251,7 @@ public class ParkingActivity extends AppCompatActivity{
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //// TODO: 4/20/17 Start New Activity
+                runParkingTask();
             }
         });
 
@@ -323,4 +326,17 @@ public class ParkingActivity extends AppCompatActivity{
             boundToFusedGpsService = false;
         }
     };
+
+    //start parking task to register the pass
+    private void runParkingTask() {
+        Context context = ParkingActivity.this.getApplicationContext();
+        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
+
+
+        ParkingTask parkingTask = new ParkingTask(this);
+        //pass in some sample data but real key and email
+        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", new LatLng(36.652129, -121.804482).toString(), "4", "This pass is the best one");
+
+    }
 }

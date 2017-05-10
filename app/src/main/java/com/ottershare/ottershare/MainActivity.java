@@ -93,16 +93,5 @@ public class MainActivity extends FragmentActivity{
         sellPassBtn.setVisibility(View.GONE);
     }
 
-    private void runParkingTask() {
-        Context context = MainActivity.this.getApplicationContext();
-        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
-        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
-
-
-        ParkingTask parkingTask = new ParkingTask(this);
-        parkingTask.execute(apikey, "bchehraz@csumb.edu", "0", "1", "4", "1");
-
-    }
-
     // delete this after testing.
 }

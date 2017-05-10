@@ -126,12 +126,12 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
             JSONObject jsonResponse = new JSONObject(response);
 
             Log.d(LOG_TAG, api_key);
-            /*if (jsonResponse.has("error")) {
-                status = getErrorStatus(jsonResponse.getString("error"));
-            } else {
-                getLoginDataFromJson(jsonResponse);
+            if (jsonResponse.has("success")) {
                 status = 2;
-            }*/
+            } else {
+                status = getErrorStatus(jsonResponse.getString("error"));
+                status = 1;
+            }
 
             //Log.d(LOG_TAG, "\"name\" --> " + name);
             //Log.d(LOG_TAG, "\"email\" --> " + email);
@@ -146,21 +146,24 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
                 httpURLConnection.disconnect();
         }
 
-        return 3;
+        return status;
     }
 
     //assuming response 200...
-    // 0 -> hasn't verified account
-    // 1 -> incorrect email and password combination
+    // 0 ->
+    // 1 ->
     // 2 -> success
     // -1 || any other value -> response code was not ok "200"
     protected void onPostExecute(Integer result) {
         switch (result) {
             case (0):
+
                 break;
             case (1):
                 break;
-            case (2):
+            case (2)://success, start main activity
+                Intent i = new Intent(prevActivity,MainActivity.class);
+                prevActivity.startActivity(i);
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);

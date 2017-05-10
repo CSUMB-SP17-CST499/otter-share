@@ -165,7 +165,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                 /**
                  * TODO: (***) Find out what other data you need from the user upon logging in
                  */
-                storeUserKey();
+                storeUserKeyAndEmail();
 
                 boolean isNew = prefs.getBoolean(mContext.getString(R.string.os_new_status), true);
                 displayWelcomeToast(isNew);
@@ -209,7 +209,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
          * TODO: (***) Find out what other data needs to be collected from the server to be stored
          */
         //this.name = loginObject.getString("name");
-        //this.email = loginObject.getString("email");
+        this.email = loginObject.getString("email");
         this.api_key = loginObject.getString("api_key");
     }
 
@@ -221,10 +221,11 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
         return message.contains("Code 1") ? 1: 0;
     }
 
-    private void storeUserKey() {
+    private void storeUserKeyAndEmail() {
         prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(mContext.getString(R.string.os_apikey), api_key);
+        editor.putString(mContext.getString(R.string.os_email), email);
         editor.commit();
     }
 
