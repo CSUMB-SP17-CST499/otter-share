@@ -19,13 +19,22 @@
         android:background="@color/colorPrimary">
 
         <TextView
-            android:id="@+id/pass_view_text_view"
+            android:id="@+id/pass_id_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="30sp"
             android:textColor="@color/colorPrimaryDark"
             android:gravity="center"
             android:text="Pass ID : "/>
+
+        <TextView
+            android:id="@+id/pass_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:textColor="@color/colorPrimaryDark"
+            android:gravity="center"
+            android:text="#####"/>
 
     </RelativeLayout>
 
@@ -38,12 +47,13 @@
         android:layout_centerHorizontal="true">
 
         <fragment
-            android:id="@+id/pass_view_map"
+            android:id="@+id/map"
             class="com.ottershare.ottershare.MapOSFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
         <fragment
+            android:id="@+id/circle_frame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             class="com.ottershare.ottershare.CircleFrameWithFade"
@@ -58,7 +68,7 @@
         android:layout_below="@+id/pass_view_frame_layout"
         android:background="@color/colorPrimary">
         <RatingBar
-            android:id="@+id/pass_view_rating_bar"
+            android:id="@+id/rating_bar"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_centerHorizontal="true"
@@ -87,6 +97,7 @@
         <TableRow>
 
             <TextView
+                android:id="@+id/user_lable_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
@@ -94,6 +105,7 @@
                 android:text="User : "/>
 
             <TextView
+                android:id="@+id/user_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
@@ -106,7 +118,7 @@
         <TableRow>
 
             <Button
-                android:id="@+id/pass_view_visit_user_btn"
+                android:id="@+id/visit_user_btn"
                 android:layout_height="40dp"
                 android:layout_width="wrap_content"
                 android:background="@drawable/rounded_corners_primary"
@@ -129,13 +141,15 @@
                 android:text="Price : "/>
 
             <TextView
-                android:id="@+id/pass_view_price_actual"
+                android:id="@+id/price_tv"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="20sp"
                 android:textColor="@color/colorPrimaryDark"
                 android:text="Price"/>
         </TableRow>
+
+
 
         <TableRow>
 
@@ -148,32 +162,12 @@
                 android:text="Parking Lot : "/>
 
             <TextView
-                android:id="@+id/pass_view_lot_actual"
+                android:id="@+id/lot_tv"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="20sp"
                 android:textColor="@color/colorPrimaryDark"
                 android:text="Lot"/>
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:id="@+id/pass_view_lon_label"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimaryDark"
-                android:text="Parking lon : "/>
-
-            <TextView
-                android:id="@+id/pass_view_lon_actual"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimaryDark"
-                android:text="000.000"
-                android:layout_span="2"/>
         </TableRow>
 
         <TableRow>
@@ -187,7 +181,7 @@
                 android:text="Parking lat : "/>
 
             <TextView
-                android:id="@+id/pass_view_lat_actual"
+                android:id="@+id/lat_tv"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="20sp"
@@ -196,6 +190,27 @@
                 android:layout_span="2"/>
 
         </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/pass_view_lon_label"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimaryDark"
+                android:text="Parking lon : "/>
+
+            <TextView
+                android:id="@+id/lon_tv"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimaryDark"
+                android:text="000.000"
+                android:layout_span="2"/>
+        </TableRow>
+
     </TableLayout>
 
     <RelativeLayout
@@ -237,7 +252,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginLeft="10dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginRight="10dp"
             android:text="Back"
             android:background="@drawable/cancel_btn_draw"/>
 

@@ -42,6 +42,7 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
 
         mMapView = (MapView) view.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
+
         mMapView.onResume();
         mMapView.getMapAsync(this);
 
@@ -70,6 +71,7 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
+        mGoogleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         if (mGoogleMap != null){
         }
     }
@@ -83,7 +85,7 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     //anamates camera to location
 
     //adds a marker to the map
-    public void makeMarker(double lat, double lon, String passID){
+    public void makeMarker(double lat, double lon){
         mGoogleMap.addMarker(new MarkerOptions()
         .position(new LatLng(lat,lon)));
     }

@@ -5,8 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -22,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -31,11 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
-import android.support.v4.app.Fragment;
 
-/**
- * Created by User on 3/25/2017.
- */
 // asynchronous call to log in and retreive key
 public class MainTask extends AsyncTask<String, String, Integer> {
     private final String LOG_TAG = MainTask.class.getSimpleName();
@@ -138,6 +139,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                     if ((gpsLocationString.length() - gpsLocationString.replace(",", "").length()) == 1) {
                         String[] gpsLocationStringSplit = gpsLocationString.split(",");
                         try {
+
                             double lat = Double.parseDouble(gpsLocationStringSplit[0]);
                             double lon = Double.parseDouble(gpsLocationStringSplit[1]);
                             LatLng gpsLocation = new LatLng(lat, lon);
@@ -204,6 +206,17 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 parkingPassInfoArray = testdata();
                 final PassAdapter adapter = new PassAdapter(prevActivity,parkingPassInfoArray);
                 final ListView passList = (ListView) prevActivity.findViewById(R.id.pass_list);
+                passList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Intent nextIntent = new Intent(prevActivity,PassView.class);
+                        ParkingPassInfo currentpass = parkingPassInfoArray.get(position);
+                        Bundle b = new Bundle();
+                        b.putParcelable("pass", currentpass);
+                        nextIntent.putExtras(b);
+                        prevActivity.startActivity(nextIntent);
+                    }
+                });
                 passList.setAdapter(adapter);
                 adapter.add(parkingPassInfoArray.get(0));
                 frag.addHeatMap(locations);
@@ -290,7 +303,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         locations.add(new LatLng(36.651795, -121.800519));
         locations.add(new LatLng(36.652477, -121.800111));
         locations.add(new LatLng(36.652129, -121.804482));
-
         return returnData;
     }
+
 }
