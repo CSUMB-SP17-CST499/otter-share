@@ -36,7 +36,7 @@ app.get('/verify/:key', (req, res) => {
             if (err) {
                 console.log(err);
             }
-            res.send(`Verification? ${verify_email_key}`);
+            res.send(`Verifified (true\/false): ${verify_email_key}`);
         });
     }
 });
@@ -78,8 +78,9 @@ app.post('/login', (req, res) => {
         // Run login callback function, if found w/ matching pw, retrieve login info
         // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
         db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
+
             if (err) {
-                res.send(err);
+                res.send(err );
             }
             if (!!user) {
                 // If email is not verified, then we send an error back describing what to do next
@@ -108,6 +109,9 @@ app.post('/login', (req, res) => {
 
     } else {
         console.log(req.body.email);
+        res.json({
+          error:'Incorrect properties POSTed'
+        });
     }
 });
 // Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.

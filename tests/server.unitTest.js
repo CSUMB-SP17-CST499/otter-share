@@ -11,10 +11,10 @@ var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
 var testSchedule = 'Bunch of data !';
-var testLocation = 'Dagobah'
-var testPrice = '2.50'
-var testNotes = 'My pass is better than yours, bro.'
-var testGPS = "198.367.258.150"
+var testLocation = 'Dagobah';
+var testPrice = '2.50';
+var testNotes = 'My pass is better than yours, bro.';
+var testGPS = "198.367.258.150";
 const fakeApiKey = 'api-key-yo!';
 
 
@@ -156,7 +156,7 @@ it('should update a pass node', (done) => {
     })
     .end(done);
 });
-// need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
+// Registers a pass
 it('should create a pass node', (done) => {
   dummyFunctions.createDummyUser(testEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
     request(app)
@@ -175,6 +175,7 @@ it('should create a pass node', (done) => {
       .end(done);
   });
 });
+// Demonstrates email verification limit
 it('should limit user\'s from sending multiple verification emails', (done) => {
   request(app)
     .post('/resendEmail')
@@ -213,7 +214,7 @@ it('should retrieve all active passes in a specific lot', (done) => {
     })
     .end(done);
 });
-// Tests with random api key
+// Tests for active users with random api key
 it('should return with an error with incorrect api-key', (done) => {
   request(app)
     .post('/activeUsers')
@@ -239,7 +240,31 @@ it('should return with an error with non-existant lot location', (done) => {
     })
     .end(done);
 });
-// clean up of test users.
+// Take (purchases) a pass from another user
+it('should take a bass from another user (this user has a pass and purchases another from a seperate user)', (done) => {
+  let secondTestEmail  = testEmail + '1';
+  let secondFakeApiKey = fakeApiKey + '1';
+  let fakePassId = 'abc123';
+  dummyFunctions.createDummyUser(secondTestEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
+    dummyFunctions.registerDummyPasses(secondTestEmail, secondFakeApiKey, fakePassId,  (response,error) => {
+
+      request(app)
+        .post('/purchasePass')
+        .send('currentOwnerEmail=' + secondTestEmail)
+        .send('api_key=' + secondFakeApiKey)
+        .send('passId=' + fakePassId)
+        .expect((res) => {
+          expect(res.body).toMatch({
+            success: /created/
+          });
+        })
+        .end(done);
+
+    });
+  });
+});
+
+// Clean up of test users.
 it('should wipe the database of test users', (done) => {
   dummyFunctions.wipeTestData((err, succ) => {
     if(err)

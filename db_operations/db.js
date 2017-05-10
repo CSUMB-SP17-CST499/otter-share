@@ -1,3 +1,4 @@
+
 /*
   Handles all db operations
 */
@@ -53,12 +54,15 @@ const login = (email, password, callback) => {
                 var result_string = JSON.stringify(userObj);
                 // compares entered password with stored_pw in database.
                 bcrypt.compare(password, stored_pw, (err, res) => {
-                    if (res == true) { // sets status to a timestamp, allowing us to find last time user active
+                    if (res == true) {
+                    // sets status to a timestamp, allowing us to find last time user active
                         session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
-                                .catch((e) => {console.log(e)});
+                               .catch((e) => {console.log(e)});
+                        session.close();
                         return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
+                    session.close();
                     return callback(null, false);
                 });
             } else {
@@ -95,7 +99,7 @@ const completeProfile = (api_key, carMakeModel, schedule, callback) => {
                         carMakeModel: carMakeModel,
                         schedule: schedule,
                         completeProfile: true
-                    })
+                  })
                 .then((results) => {
                     session.close();
                     if (!_.isEmpty(results.records)) {
@@ -138,9 +142,9 @@ const createUser = (email, name, password, callback) => {
               email: email
         })
         .then((results) => {
+          session.close();
             if (!_.isEmpty(results.records)) {
                 // if we have records that return, this shows that email is in use, therefore fail with null
-                session.close();
                 return callback(null, { error: 'This email is in use! Try to login instead'});
             } else {
                 // this key will be sent to users emails to verify they are csumb students!
@@ -157,7 +161,9 @@ const createUser = (email, name, password, callback) => {
                                 api_access_key: cryptoRandomString(60),
                                 verify_email_key: verifyEmailKey,
                                 status: 0,
-                                completeProfile:false
+                                completeProfile: false,
+                                ratingCount: 1.0,
+                                userRating: 5.0
                           })
                         .then(() => {
                             session.close();
@@ -182,7 +188,7 @@ const createUser = (email, name, password, callback) => {
         });
 }
 const resendVerify = (email, callback) => {
-  // need to implement a verify email cooldown, maybe once a day?
+  // Resends a verification email.
   const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
   if (!emailRegex.test(email)) {
       return callback(null, { error: 'Incorrect email format, it must be from CSUMB!'});
@@ -257,7 +263,8 @@ const sendEmail = (name, email, verifyEmailKey) => {
         if (error) {
             return console.log('mailer error: '+ error);
         }
-        console.log('Message %s sent: %s', info.messageId, info.response);
+        //console.log('Message %s sent: %s', info.messageId, info.response);
+        console.log('Sent successfully');
     });
 }
 // Clears db FOR TESTING PURPOSES ONLY
@@ -307,11 +314,11 @@ const retrieveUser = (email, api_key, callback) => {
             api_key: api_key
         })
         .then((user) => {
+          session.close();
           if(_.isEmpty(user.records)){
             return callback(null, {error:'No match found.'});
           }
             var profileObject = new Object();
-            session.close();
             _.forEach(user.records, (record) => {
                 // places each part of user properties into Object for jsonification
                 profileObject.email = (record._fields[0].properties.email);
@@ -335,7 +342,7 @@ const retrieveMyProfile = (email, api_key, callback) => {
         .then((user) => {
             session.close();
             if(_.isEmpty(user.records))
-              return callback(null,{error:'No records found!'});
+              return callback(null, {error:'No records found!'});
             var myProfileObject = new Object();
             _.forEach(user.records, (record) => {
                 myProfileObject.email = (record._fields[0].properties.email);
@@ -364,8 +371,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
         .then((pass) => {
             session.close();
             if (!_.isEmpty(pass.records[0])) {
-                // update route
-                // console.log('updating...');
+                // Update route
                 // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
@@ -382,7 +388,6 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                      })
                     .then((results) => {
                         session.close();
-                        // console.log(results);
                         if (typeof results.records[0] == 'undefined')
                             return callback(false, { error: 'Pass failed to update'});
                         else
@@ -394,7 +399,6 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                     })
             } else {
                 // creation route
-                // console.log('creating...');
                 session
                     .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) RETURN user.email AS email', {
                             email: email,
@@ -421,12 +425,12 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                 forSale: true
                             })
                             .then((result) => {
-                                return callback(null, { success: 'created pass!' });
                                 session.close();
+                                return callback(null, { success: 'created pass!' });
                             })
                             .catch((e) => {
-                                console.log(JSON.stringify(e));
                                 session.close();
+                                console.log(JSON.stringify(e));
                             });
                     });
             }
@@ -436,9 +440,9 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
             console.log({ error: e });
         });
 }
-const activeUsers = (keyword,api_key,callback) => {
+const activeUsers = (keyword, api_key, callback) => {
   keyword = keyword.trim();
-  // NOTE: All will return active users FROM ALL LOTS!
+  // NOTE: keyword 'all' will return active users FROM ALL LOTS!
   // Whereas anything else will return a specific lot (by number) if found, we should probably implement stricter fields here
   if(keyword == 'all'){
     session
@@ -447,10 +451,10 @@ const activeUsers = (keyword,api_key,callback) => {
         api_key: api_key
       })
       .then((results) => {
+        session.close();
         if(_.isEmpty(results.records)){
           return callback(false, {error: 'No active users at this moment, try again later!'});
         }
-        // stores
         let passArray = new Array();
         _.forEach(results.records, (record) => {
           passArray.push(record._fields[0].properties);
@@ -458,6 +462,7 @@ const activeUsers = (keyword,api_key,callback) => {
         return callback(true, {success:passArray});
       })
       .catch((e) => {
+        session.close();
         console.log(e);
         return callback(null, {error:'Something went wrong..'});
       })
@@ -470,6 +475,7 @@ const activeUsers = (keyword,api_key,callback) => {
             lotLocation: keyword
         })
         .then((results) => {
+          session.close();
           if(_.isEmpty(results.records)){
             return callback(false, {error: 'No active users in this lot or no lot match, try again later!'});
           }
@@ -481,9 +487,10 @@ const activeUsers = (keyword,api_key,callback) => {
           return callback(true, {success:passArray});
         })
         .catch((e) => {
+          session.close();
           console.log(e);
           return callback(null, {error:'Something went wrong..'});
-        })
+        });
   }
 }
 const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
@@ -504,7 +511,7 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
         // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
         // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
         session
-          .run('MATCH (newOwner:User {api_access_key:{api_key} }),(pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
+          .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
               'WHERE pass.id = {passId} DELETE r '+
               'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
                 '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
@@ -523,8 +530,9 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
                         'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner',
                           {passId:passId, api_key:api_key})
                   .then((results) => {
+                    session.close();
                     if(_.isEmpty(results.records[0])){
-                        return callback(null,{record:'Record not found 531'});
+                        return callback(null, {record:'Record not found 531'});
                     }
                     else {
                       return callback(null, {success:'You\'ve just bought this users pass!'});
@@ -533,19 +541,19 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
                   .catch((e) => {
                     session.close();
                     console.log(e);
-                    return callback(null,'error');
+                    return callback(null,'error!?');
                   });
             })
             .catch((e)=> {
                 session.close();
                 console.log(e);
-                return callback({error:e});
+                return callback({error:'error!?'});
              });
       })
       .catch((e) => {
         session.close();
         console.log(e);
-        return callback(null,'error');
+        return callback(null,'error!?');
       });
 }
 module.exports = {
