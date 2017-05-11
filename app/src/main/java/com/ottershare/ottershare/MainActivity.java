@@ -35,7 +35,7 @@ public class MainActivity extends FragmentActivity{
             switch (v.getId())
             {
                 case R.id.register_pass_btn:
-                    Intent intent = new Intent(MainActivity.this, ParkingActivity.class);
+                    Intent intent = new Intent(MainActivity.this, WaitForSell.class);
                     MainActivity.this.startActivity(intent);
                     break;
                 case R.id.sell_pass_btn:
@@ -58,7 +58,7 @@ public class MainActivity extends FragmentActivity{
         sellPassBtn = (ImageView) findViewById(R.id.sell_pass_btn);
         regPassBtn.setOnClickListener(listener);
 
-        topLotList = (ListView) findViewById(R.id.top_pannel_list_view);
+        //topLotList = (ListView) findViewById(R.id.top_pannel_list_view);
        // bottomPassList = (ListView) findViewById(R.id.bottom_pannel_list_view);
 
         //runParkingTask();
