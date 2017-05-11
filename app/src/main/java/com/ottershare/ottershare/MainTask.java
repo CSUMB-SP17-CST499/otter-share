@@ -202,7 +202,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
-                parkingPassInfoArray = testdata();
+                parkingPassInfoArray = testData();
                 final PassAdapter adapter = new PassAdapter(prevActivity,parkingPassInfoArray);
                 final ListView passList = (ListView) prevActivity.findViewById(R.id.pass_list);
                 passList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -280,20 +280,10 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     }
 
     // to set up dummy data remove when needed.
-    private ArrayList<ParkingPassInfo> testdata(){
+    private ArrayList<ParkingPassInfo> testData(){
         ArrayList<ParkingPassInfo> returnData = new ArrayList<>();
         returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
-        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
-        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,200,"fake1@email.com"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",false,(float)1.00,200,"fake1@email.com"));
         returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
         returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
         returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));

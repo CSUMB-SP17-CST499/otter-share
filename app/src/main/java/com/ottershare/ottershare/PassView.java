@@ -35,6 +35,7 @@ public class PassView extends AppCompatActivity {
     private TextView parkingLot;
     private TextView parkingLat;
     private TextView parkingLon;
+    private boolean passForSale;
     ParkingPassInfo pass;
     String passOwnerEmail;
 
@@ -49,9 +50,12 @@ public class PassView extends AppCompatActivity {
         if(b != null){
             pass = b.getParcelable("pass");
             passOwnerEmail = pass.getEmail();
+            passForSale = pass.isForSale();
         }
 
     }
+
+
     @Override
     public void onResume(){
         super.onResume();
@@ -67,7 +71,7 @@ public class PassView extends AppCompatActivity {
         visitUser.setOnClickListener(listener);
         backButtonAvailable.setOnClickListener(listener);
         backButtonNotAvailable.setOnClickListener(listener);
-        acceptBtnAvailable.findViewById(R.id.accept_btn_available);
+        acceptBtnAvailable.setOnClickListener(listener);
 
         userRating = (RatingBar) findViewById(R.id.rating_bar);
         user = (TextView) findViewById(R.id.user_tv);
@@ -76,8 +80,10 @@ public class PassView extends AppCompatActivity {
         parkingLat = (TextView) findViewById(R.id.lat_tv);
         parkingLon = (TextView) findViewById(R.id.lon_tv);
 
-        //setting attributes
 
+
+
+        //setting attributes of text views
         user.setText(pass.getEmail());
         price.setText(Double.toString(pass.getPrice()));
         parkingLat.setText(Double.toString(pass.getGpsLoction().latitude));
@@ -96,6 +102,19 @@ public class PassView extends AppCompatActivity {
         mapOSFragment.makeMarker(pass.getGpsLoction().latitude,pass.getGpsLoction().longitude);
 
         circleFrame.fadeOutAnimation();
+        setPassState();
+
+    }
+
+    private void setPassState() {
+
+        if(passForSale){
+            passNotAvailableBtn.setVisibility(View.GONE);
+            passAvailableBtn.setVisibility(View.VISIBLE);
+        }else{
+            passNotAvailableBtn.setVisibility(View.VISIBLE);
+            passAvailableBtn.setVisibility(View.GONE);
+        }
 
     }
 
@@ -108,12 +127,17 @@ public class PassView extends AppCompatActivity {
             {
                 case R.id.back_btn_available:
                 case R.id.back_btn_not_available:{
-                    //todo go back to mainActivity.
+                    Intent newIntent = new Intent(PassView.this,MainActivity.class);
+                    startActivity(newIntent);
                     Log.i("backBtn","look");
                  break;
                 }
-                case R.id.accept_btn:
-                    //todo go to purchase pass view.
+                case R.id.accept_btn_available:
+                    Intent newIntent = new Intent(PassView.this,WaitForSell.class);
+
+                    //todo :need to start a task here and send the proper info !! need to do this asap.
+
+                    startActivity(newIntent);
                     Log.i("acceptBtn","look");
                     break;
                 case R.id.visit_user_btn:
@@ -124,6 +148,8 @@ public class PassView extends AppCompatActivity {
 
         }
     };
+
+
     //run the FetchProfileTask for public and private profiles
     private void runFetchProfileTask() {
         Context context = PassView.this.getApplicationContext();
