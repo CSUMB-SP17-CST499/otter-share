@@ -68,10 +68,18 @@
                 android:background="@drawable/main_menu_pannel_rounded_corners"
                 android:orientation="vertical">
 
-                <ListView
-                    android:id="@+id/top_pannel_list_view"
+                <!--<TextView
+                    android:id="@+id/top_pannel_label"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:gravity="center|top"
+                    android:textSize="20sp"/>-->
+
+                <ListView
+                    android:id="@+id/top_pannel_filters"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"/>
 
             </LinearLayout>
 

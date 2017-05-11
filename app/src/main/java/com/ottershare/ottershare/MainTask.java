@@ -11,7 +11,9 @@ import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.SupportMapFragment;
@@ -33,6 +35,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -219,7 +222,35 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 passList.setAdapter(adapter);
                 adapter.add(parkingPassInfoArray.get(0));
                 frag.addHeatMap(locations);
-                Log.d(LOG_TAG, "case = 2: " + result);
+
+                //For top part of the list view
+                HashMap<Integer, Integer> lotMap = new HashMap<>();
+                for (int i = 0; i < parkingPassInfoArray.size(); ++i) {
+                    int currentLot = parkingPassInfoArray.get(i).getLotLocation();
+                    if (lotMap.containsKey(currentLot)) {
+                        lotMap.put(currentLot, lotMap.get(currentLot) + 1);
+                    } else {
+                        lotMap.put(currentLot, 1);
+                    }
+                }
+
+                //iterate through lotMap keys
+                Iterator it = lotMap.entrySet().iterator();
+                int count = 0;
+                ArrayList<String> filterList = new ArrayList<>();
+                String lotCounts = "";
+                while (it.hasNext()) {
+                    Map.Entry pair = (Map.Entry)it.next();
+                    filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes") + "\n");
+                    count++;
+                    it.remove(); // avoids a ConcurrentModificationException
+                }
+                showFiltersList(filterList);
+                //tried to get a label to show up but the LinearLayout only shows 1 thing max for some reason
+                //TextView topLotLabel = (TextView) prevActivity.findViewById(R.id.top_pannel_label);
+               // topLotLabel.setText("Passes available in: " + count + ((count == 1) ? " lot" : " lots"));
+
+                Log.d(LOG_TAG, "case = 3: " + result);
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);
@@ -255,30 +286,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         Toast.makeText(mContext, message, length).show();
     }
 
-    private int getErrorStatus(String message) {
-        return message.contains("Code 1") ? 1: 0;
-    }
-
-    /**
-     * This could potentially be on the server side where you can just check, upon logging in successfully, what that value returned is... and if it's 1, display welcome message, and if 2, different message
-     * The advantage
-     */
-    private void updateUserStatus() {
-        prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(mContext.getString(R.string.os_new_status), false);
-        editor.commit();
-    }
-
-    void displayWelcomeToast(boolean isNew) {
-        if (isNew) {
-            makeToast(R.string.login_toast_success_new, Toast.LENGTH_SHORT);
-            updateUserStatus();
-        } else {
-            makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
-        }
-    }
-
     // to set up dummy data remove when needed.
     private ArrayList<ParkingPassInfo> testdata(){
         ArrayList<ParkingPassInfo> returnData = new ArrayList<>();
@@ -305,4 +312,16 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         return returnData;
     }
 
+    public void showFiltersList(ArrayList<String> filtersList) {
+        final ListView lotFilterList = (ListView) prevActivity.findViewById(R.id.top_pannel_filters);
+
+        FilterAdapter adapter = new FilterAdapter(mContext, filtersList);
+        lotFilterList.setAdapter(adapter);
+        lotFilterList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //do something here about filtering the list.
+            }
+        });
+    }
 }
