@@ -99,7 +99,7 @@ const completeProfile = (api_key, carMakeModel, schedule, callback) => {
                         carMakeModel: carMakeModel,
                         schedule: schedule,
                         completeProfile: true
-                  })
+                    })
                 .then((results) => {
                     session.close();
                     if (!_.isEmpty(results.records)) {
@@ -161,9 +161,9 @@ const createUser = (email, name, password, callback) => {
                                 api_access_key: cryptoRandomString(60),
                                 verify_email_key: verifyEmailKey,
                                 status: 0,
-                                completeProfile: false,
-                                ratingCount: 1.0,
-                                userRating: 5.0
+                                completeProfile:false,
+                                totalStars: 5.0,
+                                numberOfRatings: 1.0
                           })
                         .then(() => {
                             session.close();
@@ -384,7 +384,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             notes: notes,
                             api_key: api_key,
                             id: shortid.generate(),
-                            forSale: true
+                            forSale: true,
+                            saleAccepted: 0
                      })
                     .then((results) => {
                         session.close();
@@ -412,8 +413,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                         // Create the pass node with given information, then create a relationship between pass and node, returning relationship
                         session
                             .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) ' +
-                                  'CREATE (pass:Pass {id: {id}, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
-                                    'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
+                                 'CREATE (pass:Pass {id: {id}, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
+                                 'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                 email: email,
                                 api_key: api_key,
                                 id: shortid.generate(),
@@ -422,7 +423,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                 gpsLocation: gpsLocation,
                                 price: price,
                                 notes: notes,
-                                forSale: true
+                                forSale: true,
+                                saleAccepted: 0
                             })
                             .then((result) => {
                                 session.close();
@@ -446,7 +448,7 @@ const activeUsers = (keyword, api_key, callback) => {
   // Whereas anything else will return a specific lot (by number) if found, we should probably implement stricter fields here
   if(keyword == 'all'){
     session
-      .run('MATCH (user:User {api_access_key:{api_key}}),(pass:Pass {forSale: {forSale}}) RETURN pass', {
+      .run('MATCH (user:User {api_access_key:{api_key}}), (pass:Pass {forSale: {forSale}}) RETURN pass', {
         forSale: true,
         api_key: api_key
       })
@@ -459,7 +461,7 @@ const activeUsers = (keyword, api_key, callback) => {
         _.forEach(results.records, (record) => {
           passArray.push(record._fields[0].properties);
         });
-        return callback(true, {success:passArray});
+        return callback(true, {success: passArray});
       })
       .catch((e) => {
         session.close();
@@ -495,25 +497,26 @@ const activeUsers = (keyword, api_key, callback) => {
 }
 const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
   // Increments the amount of times the pass has been sold by 1
+  // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
   session
     .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail}, id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
           'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
-              api_key:api_key,
-              currentOwnerEmail:currentOwnerEmail,
+              api_key: api_key,
+              currentOwnerEmail: currentOwnerEmail,
               passId: passId
       })
       .then((results) => {
         session.close();
         if(_.isEmpty(results.records[0])){
-          return callback(null,{record:'Record not found 503'});
+          return callback(null,{error:'Record not found 503'});
         }
         // Finds the newOwner of the pass, the pass to be sold, and the current owner of the pass (before it is transfered)
         // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
         // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
         session
           .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
-              'WHERE pass.id = {passId} DELETE r '+
-              'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
+               'WHERE pass.id = {passId} DELETE r '+
+               'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
                 '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
                   'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
                     currentOwnerEmail: currentOwnerEmail,
@@ -532,7 +535,7 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
                   .then((results) => {
                     session.close();
                     if(_.isEmpty(results.records[0])){
-                        return callback(null, {record:'Record not found 531'});
+                        return callback(null, {error:'Record not found 531'});
                     }
                     else {
                       return callback(null, {success:'You\'ve just bought this users pass!'});

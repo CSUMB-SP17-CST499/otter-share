@@ -187,7 +187,6 @@ it('should limit user\'s from sending multiple verification emails', (done) => {
     })
     .end(done);
 });
-
 // Retrieves all actives sellers of passes
 it('should retrieve all active passes', (done) => {
   request(app)
@@ -241,30 +240,31 @@ it('should return with an error with non-existant lot location', (done) => {
     .end(done);
 });
 // Take (purchases) a pass from another user
-it('should take a bass from another user (this user has a pass and purchases another from a seperate user)', (done) => {
-  let secondTestEmail  = testEmail + '1';
-  let secondFakeApiKey = fakeApiKey + '1';
-  let fakePassId = 'abc123';
-  dummyFunctions.createDummyUser(secondTestEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
-    dummyFunctions.registerDummyPasses(secondTestEmail, secondFakeApiKey, fakePassId,  (response,error) => {
+// it('should take a pass from another user (this user has a pass and purchases another from a seperate user)', (done) => {
+//   let secondTestEmail  = `test${cryptoRandomString(4)}@csumb.edu`;
+//   let secondFakeApiKey = fakeApiKey + '1';
+//   let fakePassId = 'abc123';
+// //  dummyFunctions.createDummyUser(secondTestEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
+//     dummyFunctions.registerDummyPasses(secondTestEmail, secondFakeApiKey, fakePassId, testName, testPassword, testCarMakeModel, testSchedule, (response,error) => {
+//       if(response === false)
+//         console.log('failed');
+//
+//       request(app)
+//         .post('/purchasePass')
+//         .send('currentOwnerEmail=' + secondTestEmail)
+//         .send('passId=' + fakePassId)
+//         .send('api_key=' + fakeApiKey + 'randomstuff')
+//         .expect((res) => {
+//           expect(res.body).toMatch({
+//             error: /not found/
+//           });
+//         })
+//         .end(done);
+//     });
+// //  });
+// });
 
-      request(app)
-        .post('/purchasePass')
-        .send('currentOwnerEmail=' + secondTestEmail)
-        .send('api_key=' + secondFakeApiKey)
-        .send('passId=' + fakePassId)
-        .expect((res) => {
-          expect(res.body).toMatch({
-            success: /created/
-          });
-        })
-        .end(done);
-
-    });
-  });
-});
-
-// Clean up of test users.
+//Clean up of test users.
 it('should wipe the database of test users', (done) => {
   dummyFunctions.wipeTestData((err, succ) => {
     if(err)

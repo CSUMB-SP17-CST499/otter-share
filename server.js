@@ -80,7 +80,7 @@ app.post('/login', (req, res) => {
         db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
 
             if (err) {
-                res.send(err );
+                res.send('oi!'+err );
             }
             if (!!user) {
                 // If email is not verified, then we send an error back describing what to do next
@@ -229,7 +229,7 @@ app.post('/purchasePass', (req,res) => {
   if(!!api_key && !!currentOwnerEmail && !!passId){
     // console.log(`Data passed: ${api_key} ${currentOwnerEmail} ${passId}`);
     db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
-      if(err){
+      if(err) {
         return res.send(err);
       }
       return res.send(response);
