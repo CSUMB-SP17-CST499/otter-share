@@ -121,7 +121,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                  * TODO: find out how to test this for when there really is a bad response code
                  * Perhaps test the next step where the result is returned to the Switch in onPostExecute...
                  */
-                response = "";
                 return -1;
             }
 

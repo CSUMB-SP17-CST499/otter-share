@@ -123,6 +123,8 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
 
             if (loginJsonResponse.has("error")) {
                 status = getErrorStatus(loginJsonResponse.getString("error"));
+            } else if (loginJsonResponse.has("code")) {
+                status = -1;
             } else {
                 getLoginDataFromJson(loginJsonResponse);
                 status = 2;
