@@ -1,6 +1,8 @@
 package com.ottershare.ottershare;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,16 +36,21 @@ public class PassView extends AppCompatActivity {
     private TextView parkingLat;
     private TextView parkingLon;
     ParkingPassInfo pass;
+    String passOwnerEmail;
 
+    final String DEFAULT_API_KEY = "empty";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pass_view);
         Bundle b = getIntent().getExtras();
+        passOwnerEmail = "";
         if(b != null){
-         pass = b.getParcelable("pass");
+            pass = b.getParcelable("pass");
+            passOwnerEmail = pass.getEmail();
         }
+
     }
     @Override
     public void onResume(){
@@ -109,12 +116,26 @@ public class PassView extends AppCompatActivity {
                     //todo go to purchase pass view.
                     Log.i("acceptBtn","look");
                     break;
+                case R.id.visit_user_btn:
+                    runFetchProfileTask();
                 default:
                     break;
             }
 
         }
     };
+    //run the FetchProfileTask for public and private profiles
+    private void runFetchProfileTask() {
+        Context context = PassView.this.getApplicationContext();
+        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
 
+
+        FetchProfileTask fetchMovieTask = new FetchProfileTask(this);
+        //pass in some sample data but real key and email
+        //fetchMovieTask.execute(passOwnerEmail, apikey);
+        fetchMovieTask.execute("bchehraz@csumb.edu", apikey);
+
+    }
 
 }
