@@ -40,7 +40,6 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-// asynchronous call to log in and retreive key
 public class MainTask extends AsyncTask<String, String, Integer> {
     private final String LOG_TAG = MainTask.class.getSimpleName();
 
@@ -236,15 +235,21 @@ public class MainTask extends AsyncTask<String, String, Integer> {
 
                 //iterate through lotMap keys
                 Iterator it = lotMap.entrySet().iterator();
-                int count = 0;
                 ArrayList<String> filterList = new ArrayList<>();
-                String lotCounts = "";
+
+                filterList.add("Filter by all (" + parkingPassInfoArray.size() + ((parkingPassInfoArray.size() == 1) ? " pass" : " passes") + " in " + lotMap.size() + ((lotMap.size() == 1) ? " lot" : " lots") + ")");
                 while (it.hasNext()) {
                     Map.Entry pair = (Map.Entry)it.next();
                     filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes") + "\n");
-                    count++;
                     it.remove(); // avoids a ConcurrentModificationException
                 }
+
+                while (it.hasNext()) {
+                    Map.Entry pair = (Map.Entry)it.next();
+                    filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes") + "\n");
+                    it.remove(); // avoids a ConcurrentModificationException
+                }
+
                 showFiltersList(filterList);
                 //tried to get a label to show up but the LinearLayout only shows 1 thing max for some reason
                 //TextView topLotLabel = (TextView) prevActivity.findViewById(R.id.top_pannel_label);
