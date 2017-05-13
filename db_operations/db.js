@@ -475,7 +475,7 @@ const activeUsers = (keyword, api_key, callback) => {
           passObject.lotLocation = record.get('lotLocation');
           passObject.passId = record.get('passId');
           passObject.ownerEmail = record.get('ownerEmail');
-          passObject.ownerCount = record.get('ownerCount');
+          // passObject.ownerCount = record.get('ownerCount');
 
           passArray.push(passObject);
         });
@@ -514,7 +514,7 @@ const activeUsers = (keyword, api_key, callback) => {
             passObject.lotLocation = record.get('lotLocation');
             passObject.passId = record.get('passId');
             passObject.ownerEmail = record.get('ownerEmail');
-            passObject.ownerCount = record.get('ownerCount');
+            // passObject.ownerCount = record.get('ownerCount');
             passArray.push(passObject);
           });
           return callback(true, {success:passArray});
