@@ -385,7 +385,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             api_key: api_key,
                             id: shortid.generate(),
                             forSale: true,
-                            saleAccepted: 0
+                            saleState: 0
                      })
                     .then((results) => {
                         session.close();
@@ -424,7 +424,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                 price: price,
                                 notes: notes,
                                 forSale: true,
-                                saleAccepted: 0
+                                saleState: 0
                             })
                             .then((result) => {
                                 session.close();
@@ -475,7 +475,7 @@ const activeUsers = (keyword, api_key, callback) => {
           passObject.lotLocation = record.get('lotLocation');
           passObject.passId = record.get('passId');
           passObject.ownerEmail = record.get('ownerEmail');
-          passObject.ownerCount = record.get('ownerCount');
+          // passObject.ownerCount = record.get('ownerCount');
 
           passArray.push(passObject);
         });
@@ -591,6 +591,94 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
         return callback(null,'error!?');
       });
 }
+const passListener = (api_key, passId, customerType, requestCount, callback) => {
+  // two branches here 1. Buyer branch 2. Seller branches
+  if(customerType == 'buyer'){
+    if(requestCount === 1) {
+      // if it is the buyers first visit to this pass, set status of pass to salePending
+      // also need to check to see if the user is first one to attempt to buy the pass (buyer will remove property pass.interestedUser once rejected!)
+      let saleState = 1;
+      session
+        .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}})'+
+              'WHERE NOT exists(pass.interestedUser)'+
+              'SET pass.saleState = {saleState}, pass.interestedUser = y.email RETURN pass.saleState AS saleState', {
+               api_key: api_key,
+               passId: passId,
+               saleState: saleState
+        })
+        .then((results) => {
+          if(_.isEmpty(results.records[0]))
+            return callback(false, {error:'Record not found 611'});
+          return callback(true, {pending: 'Pass sale state changed, please wait for owner to respond!'});
+        })
+        .catch((e) => {
+          console.log(`Line 608: ${e}`);
+          return callback(false, {error:'Sys error 616'});
+        });
+    }
+    // NOTE: should set limitations, maybe 300 requests? (300 minutes)
+    // If greater that 1, second or later requests, we constantly check for a change in the status until it is:
+    // 0 == Which means the exchange is cancelled, or 2 == Which means that exchange is accepted, then we make exchange (call purchasePass function)
+    if(requestCount > 1){
+      session
+        .run('MATCH (y:User {api_access_key: { api_key }})' +
+             'MATCH (pass:Pass {id: {passId}})' +
+             'WHERE exists(pass.saleState) AND pass.interestedUser = y.email RETURN pass.ownerEmail AS ownerEmail , pass.saleState AS saleState', {
+                  api_key: api_key,
+                  passId: passId
+        })
+        .then((results) => {
+          session.close();
+          if(_.isEmpty(results.records[0]))
+            return callback(false, {error:'Record not found 632'});
+
+          _.forEach(results.records, (record) => {
+              if(parseInt(record.get('saleState')) == 1) // if pass owner has yet to respond to request to exchange pass
+                return callback(true, {pending:'Pass has not yet updated...'});
+              if(parseInt(record.get('saleState')) == 0){ // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
+                session
+                  .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser RETURN pass.ownerEmail AS ownerEmail',
+                      {passId: passId, api_key: api_key})
+                  .then((results) => {
+                    session.close();
+                    if(_.isEmpty(results.records[0]))
+                      return callback(false, {error:'Record not found 644'});
+                    return callback(true, {rejected:'Sorry, looks like your exchange has been rejected by the owner!'});
+                  })
+                  .catch((e) => {
+                    console.log(`Line 649: ${e}`);
+                    return callback(false, {error:'Sys error 649'});
+                  });
+              }
+              if(parseInt(record.get('saleState')) == 2){ // if pass owner accepts your offer to exchange, invoke exchange method!
+                  //purchasePass(api_key, record.get('ownerEmail'), passId, )
+                  // Instead of invocation of
+              }
+          });
+        })
+        .catch((e) => {
+          console.log(`Line 608: ${e}`);
+          return callback(false, {error:'Sys error 636'});
+        });
+    }
+  }
+////// Seller section
+  else if(customerType == 'seller'){
+    session
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass)')
+      .then((records) => {
+        session.close();
+      })
+      .catch((e) => {
+        session.close();
+
+      });
+  }
+  else {
+    callback(false, {error:'Looks like you are sending incorrect parameters'});
+  }
+
+}
 module.exports = {
     activeUsers,
     login,
@@ -602,5 +690,6 @@ module.exports = {
     retrieveMyProfile,
     registerPass,
     resendVerify,
-    purchasePass
+    purchasePass,
+    passListener
 };

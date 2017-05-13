@@ -1,7 +1,7 @@
 /**
     CST 499 - Final Capstone Project
     server.js
-    Purpose: Communication between Android App and Neo4j DB, using Express, Node and neo4j drivers.
+    Purpose: Communication between Android App and Neo4j DB, using Express, Node and Neo4j drivers.
 
     @author Mason Lopez
     @version 1.1 3/15/2017
@@ -20,7 +20,11 @@ app.use(bodyParser.json()); //uses bodyParser middleware for reading body
 app.use(bodyParser.urlencoded({
     extended: false
 }));
-
+function executeOrder66 (x) {
+  // kills process every 10 minutes, forcing heroku to restart application.
+  console.log(x);
+  process.exit(0);
+}
 //routes
 app.get('/', (req, res) => {
     //may serve up OtterShare website later.
@@ -218,22 +222,40 @@ app.post('/resendEmail', (req,res) => {
     })
   }
 });
-// Buying a pass from a user, takes buyer's api key, the passes's current owner email and ID
-// This should be invoked after a payment has been processed, changes ownership of parking pass
-app.post('/purchasePass', (req,res) => {
+// // Buying a pass from a user, takes buyer's api key, the passes's current owner email and ID
+// // This should be invoked after a payment has been processed, changes ownership of parking pass
+// app.post('/purchasePass', (req,res) => {
+//   var api_key = req.body.api_key;
+//   var currentOwnerEmail = req.body.currentOwnerEmail;
+//   var passId = req.body.passId;
+//   if(!!api_key && !!currentOwnerEmail && !!passId){
+//     db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
+//       if(err) {
+//         return res.send(err);
+//       }
+//       return res.send(response);
+//     });
+//   }
+//   else {
+//     return res.send({error:'error, incorrect parameters received.'});
+//   }
+// });
+//
+app.post('/passListener', (req,res) => {
   var api_key = req.body.api_key;
-  var currentOwnerEmail = req.body.currentOwnerEmail;
   var passId = req.body.passId;
-  if(!!api_key && !!currentOwnerEmail && !!passId){
-    db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
-      if(err) {
-        return res.send(err);
-      }
-      return res.send(response);
+  var customerType = req.body.customerType;
+  var requestCount = req.body.requestCount;
+  // maybe I can ask if they are buying or selling?
+  // On front end, keep count of requests.. if count = 0,  AND custType = Buyer we change the sale to pending
+  // if count greater than 0 but less than 300? (1 req a minute, idk what our limit is..) then we should no longer accept them
+  if(!!api_key && !!passId && !!customerType && !!requestCount){
+    db.passListener(api_key, passId, customerType, requestCount, (status, data) => {
+        res.send(data);
     });
   }
   else {
-    return res.send({error:'error, incorrect parameters received.'});
+    res.send({error:'Incorrect parameters received'});
   }
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
@@ -246,8 +268,9 @@ app.post('/purchasePass', (req,res) => {
 //         }
 //     });
 // });
-// begins listening on port 3000 or instance given port .
+// begins listening on port 3000 or instance given port.
 app.listen(port, () => {
+    setTimeout(executeOrder66, 624000, 'Killing Server to prevent session expiration!? (this is temporary)');
     console.log(`Started on port ${port}`);
 });
 
