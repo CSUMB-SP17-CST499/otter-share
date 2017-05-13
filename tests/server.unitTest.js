@@ -34,7 +34,6 @@ it('should return success on creation.', (done) => {
         .send('email=' + testEmail)
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 success: /successful/
             })
@@ -49,7 +48,6 @@ it('should return fail on creation.', (done) => {
         .send('email=' + 'cjone45s847728@gmail.com')
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 error: /Incorrect email format/
             })
@@ -77,7 +75,6 @@ it('should not allow login without email being verified!', (done) => {
         .send('email=' + testEmail)
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 error: /.*/
             });
@@ -91,7 +88,6 @@ it('should allow login with verified email address !', (done) => {
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 email_verified: true
             });
@@ -105,7 +101,6 @@ it('should not allow login with incorrect password', (done) => {
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS + 'y')
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
               error: /Code/
             });

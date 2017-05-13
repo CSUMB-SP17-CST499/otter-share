@@ -108,7 +108,7 @@ app.post('/login', (req, res) => {
         });
 
     } else {
-        console.log(req.body.email);
+        // console.log(req.body.email);
         res.json({
           error:'Incorrect properties POSTed'
         });
@@ -137,7 +137,6 @@ app.post('/createUser', (req, res) => {
 });
 // Completes the account creation process (also updates) by taking in requested properties
 app.post('/createUser/completeProfile', (req,res) => {
-  res.setHeader('Content-Type', 'application/json');
   var api_key = req.body.api_key;
   var carMakeModel = req.body.carMakeModel;
   var schedule = req.body.schedule;
@@ -175,7 +174,6 @@ app.post('/activeUsers', (req, res) => {
       }
     });
   }
-
 });
 // registers a pass to a User, or updates existing pass node.
 app.post('/registerPass', (req, res) => {
@@ -227,7 +225,6 @@ app.post('/purchasePass', (req,res) => {
   var currentOwnerEmail = req.body.currentOwnerEmail;
   var passId = req.body.passId;
   if(!!api_key && !!currentOwnerEmail && !!passId){
-    // console.log(`Data passed: ${api_key} ${currentOwnerEmail} ${passId}`);
     db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
       if(err) {
         return res.send(err);

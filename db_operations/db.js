@@ -447,19 +447,37 @@ const activeUsers = (keyword, api_key, callback) => {
   // NOTE: keyword 'all' will return active users FROM ALL LOTS!
   // Whereas anything else will return a specific lot (by number) if found, we should probably implement stricter fields here
   if(keyword == 'all'){
+    // search for each element of pass(rename each?), return as something else, pickup with 'get' and place into json array!
     session
-      .run('MATCH (user:User {api_access_key:{api_key}}), (pass:Pass {forSale: {forSale}}) RETURN pass', {
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (user:User), (pass:Pass {forSale: true})'+
+            'WHERE user.email=pass.ownerEmail AND EXISTS(user.totalStars) '+
+            'RETURN pass.gpsLocation AS gpsLocation, user.totalStars AS totalStars, user.numberOfRatings AS numberOfRatings,' +
+            'pass.notes AS notes, pass.forSale AS forSale, pass.price AS price, toFloat(pass.ownerCount) AS ownerCount, pass.lotLocation AS lotLocation,'+
+            'pass.id AS passId, pass.ownerEmail AS ownerEmail', {
         forSale: true,
         api_key: api_key
       })
       .then((results) => {
         session.close();
+
         if(_.isEmpty(results.records)){
           return callback(false, {error: 'No active users at this moment, try again later!'});
         }
         let passArray = new Array();
+        // console.log(results.records)
         _.forEach(results.records, (record) => {
-          passArray.push(record._fields[0].properties);
+          var passObject = new Object();
+          passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+          passObject.gpsLocation = record.get('gpsLocation');
+          passObject.notes = record.get('notes');
+          passObject.forSale = record.get('forSale');
+          passObject.price = record.get('price');
+          passObject.lotLocation = record.get('lotLocation');
+          passObject.passId = record.get('passId');
+          passObject.ownerEmail = record.get('ownerEmail');
+          passObject.ownerCount = record.get('ownerCount');
+
+          passArray.push(passObject);
         });
         return callback(true, {success: passArray});
       })
@@ -470,8 +488,11 @@ const activeUsers = (keyword, api_key, callback) => {
       })
   } else {
     session
-      .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {forSale: {forSale}}) ' +
-          'WHERE pass.lotLocation CONTAINS {lotLocation} RETURN pass', {
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (user:User), (pass:Pass {forSale: true})'+
+            'WHERE user.email=pass.ownerEmail AND EXISTS(user.totalStars) AND pass.lotLocation CONTAINS {lotLocation}'+
+            'RETURN pass.gpsLocation AS gpsLocation, user.totalStars AS totalStars, user.numberOfRatings AS numberOfRatings,' +
+            'pass.notes AS notes, pass.forSale AS forSale, pass.price AS price, toFloat(pass.ownerCount) AS ownerCount, pass.lotLocation AS lotLocation,'+
+            'pass.id AS passId, pass.ownerEmail AS ownerEmail, y.email AS api_email', {
             forSale: true,
             api_key: api_key,
             lotLocation: keyword
@@ -484,7 +505,17 @@ const activeUsers = (keyword, api_key, callback) => {
           // stores
           let passArray = new Array();
           _.forEach(results.records, (record) => {
-            passArray.push(record._fields[0].properties);
+            var passObject = new Object();
+            passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+            passObject.gpsLocation = record.get('gpsLocation');
+            passObject.notes = record.get('notes');
+            passObject.forSale = record.get('forSale');
+            passObject.price = record.get('price');
+            passObject.lotLocation = record.get('lotLocation');
+            passObject.passId = record.get('passId');
+            passObject.ownerEmail = record.get('ownerEmail');
+            passObject.ownerCount = record.get('ownerCount');
+            passArray.push(passObject);
           });
           return callback(true, {success:passArray});
         })
@@ -499,7 +530,8 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
   // Increments the amount of times the pass has been sold by 1
   // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
   session
-    .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail}, id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
+    .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail},'+
+          'id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
           'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
               api_key: api_key,
               currentOwnerEmail: currentOwnerEmail,
@@ -515,7 +547,7 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
         // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
         session
           .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
-               'WHERE pass.id = {passId} DELETE r '+
+               'WHERE pass.id = {passId} AND NOT (newOwner)-[:OWNS]->() DELETE r '+
                'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
                 '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
                   'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
@@ -538,7 +570,7 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
                         return callback(null, {error:'Record not found 531'});
                     }
                     else {
-                      return callback(null, {success:'You\'ve just bought this users pass!'});
+                        return callback(null, {success:'You\'ve just bought this users pass!'});
                     }
                   })
                   .catch((e) => {
