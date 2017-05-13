@@ -1,7 +1,5 @@
 package com.ottershare.ottershare;
 
-
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
@@ -16,6 +14,13 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapOSFragment extends Fragment implements OnMapReadyCallback{
@@ -23,6 +28,8 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     MapView mMapView;
     private GoogleMap mGoogleMap;
     private CameraUpdateFactory camUpdate;
+    private HeatmapTileProvider mProvider;
+    private TileOverlay mOverlay;
 
     public MapOSFragment() {
         // Required empty public constructor
@@ -67,9 +74,34 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
         }
     }
 
+    //jumps camera to location
+
     public void changeCameraLocation(double lat, double lon, float zoom){
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),zoom));
     }
 
+    //anamates camera to location
+
+    //adds a marker to the map
+    public void makeMarker(double lat, double lon, String passID){
+        mGoogleMap.addMarker(new MarkerOptions()
+        .position(new LatLng(lat,lon)));
+    }
+
+
+    //removes all markers,overlays and shapes
+    public void removeAllFormating(){
+        mGoogleMap.clear();
+    }
+
+    //turnes current markers into a heat map
+    public void addHeatMap(ArrayList<LatLng> locations){
+
+        mProvider = new HeatmapTileProvider.Builder()
+                .data(locations)
+                .build();
+
+        mOverlay = mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+    }
 
 }
