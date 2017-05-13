@@ -11,10 +11,10 @@ var testName = 'Bobby Brown';
 var testPassword = cryptoRandomString(10);
 var testCarMakeModel = 'Toyota Corolla';
 var testSchedule = 'Bunch of data !';
-var testLocation = 'Dagobah'
-var testPrice = '2.50'
-var testNotes = 'My pass is better than yours, bro.'
-var testGPS = "198.367.258.150"
+var testLocation = 'Dagobah';
+var testPrice = '2.50';
+var testNotes = 'My pass is better than yours, bro.';
+var testGPS = "198.367.258.150";
 const fakeApiKey = 'api-key-yo!';
 
 
@@ -34,7 +34,6 @@ it('should return success on creation.', (done) => {
         .send('email=' + testEmail)
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 success: /successful/
             })
@@ -49,7 +48,6 @@ it('should return fail on creation.', (done) => {
         .send('email=' + 'cjone45s847728@gmail.com')
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 error: /Incorrect email format/
             })
@@ -77,7 +75,6 @@ it('should not allow login without email being verified!', (done) => {
         .send('email=' + testEmail)
         .send('password=' + testPassword)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 error: /.*/
             });
@@ -91,7 +88,6 @@ it('should allow login with verified email address !', (done) => {
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS)
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
                 email_verified: true
             });
@@ -105,7 +101,6 @@ it('should not allow login with incorrect password', (done) => {
         .send('email=' + process.env.TEST_EMAIL)
         .send('password=' + process.env.TEST_PASS + 'y')
         .expect((res) => {
-            expect(res.header['content-type']).toEqual('application/json; charset=utf-8');
             expect(res.body).toMatch({
               error: /Code/
             });
@@ -156,7 +151,7 @@ it('should update a pass node', (done) => {
     })
     .end(done);
 });
-// need to implement clean up function that deletes all TEST users, test for actual creation of pass, will need a dummy users
+// Registers a pass
 it('should create a pass node', (done) => {
   dummyFunctions.createDummyUser(testEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
     request(app)
@@ -175,6 +170,7 @@ it('should create a pass node', (done) => {
       .end(done);
   });
 });
+// Demonstrates email verification limit
 it('should limit user\'s from sending multiple verification emails', (done) => {
   request(app)
     .post('/resendEmail')
@@ -186,7 +182,6 @@ it('should limit user\'s from sending multiple verification emails', (done) => {
     })
     .end(done);
 });
-
 // Retrieves all actives sellers of passes
 it('should retrieve all active passes', (done) => {
   request(app)
@@ -213,7 +208,7 @@ it('should retrieve all active passes in a specific lot', (done) => {
     })
     .end(done);
 });
-// Tests with random api key
+// Tests for active users with random api key
 it('should return with an error with incorrect api-key', (done) => {
   request(app)
     .post('/activeUsers')
@@ -239,7 +234,32 @@ it('should return with an error with non-existant lot location', (done) => {
     })
     .end(done);
 });
-// clean up of test users.
+// Take (purchases) a pass from another user
+// it('should take a pass from another user (this user has a pass and purchases another from a seperate user)', (done) => {
+//   let secondTestEmail  = `test${cryptoRandomString(4)}@csumb.edu`;
+//   let secondFakeApiKey = fakeApiKey + '1';
+//   let fakePassId = 'abc123';
+// //  dummyFunctions.createDummyUser(secondTestEmail, testName, testPassword, testCarMakeModel, testSchedule, (succ, err) => {
+//     dummyFunctions.registerDummyPasses(secondTestEmail, secondFakeApiKey, fakePassId, testName, testPassword, testCarMakeModel, testSchedule, (response,error) => {
+//       if(response === false)
+//         console.log('failed');
+//
+//       request(app)
+//         .post('/purchasePass')
+//         .send('currentOwnerEmail=' + secondTestEmail)
+//         .send('passId=' + fakePassId)
+//         .send('api_key=' + fakeApiKey + 'randomstuff')
+//         .expect((res) => {
+//           expect(res.body).toMatch({
+//             error: /not found/
+//           });
+//         })
+//         .end(done);
+//     });
+// //  });
+// });
+
+//Clean up of test users.
 it('should wipe the database of test users', (done) => {
   dummyFunctions.wipeTestData((err, succ) => {
     if(err)

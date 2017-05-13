@@ -36,7 +36,7 @@ app.get('/verify/:key', (req, res) => {
             if (err) {
                 console.log(err);
             }
-            res.send(`Verification? ${verify_email_key}`);
+            res.send(`Verifified (true\/false): ${verify_email_key}`);
         });
     }
 });
@@ -78,8 +78,9 @@ app.post('/login', (req, res) => {
         // Run login callback function, if found w/ matching pw, retrieve login info
         // Send in pw/email, for comparison, trim any whitespace leading or before email and pw
         db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
+
             if (err) {
-                res.send(err);
+                res.send('oi!'+err );
             }
             if (!!user) {
                 // If email is not verified, then we send an error back describing what to do next
@@ -107,7 +108,10 @@ app.post('/login', (req, res) => {
         });
 
     } else {
-        console.log(req.body.email);
+        // console.log(req.body.email);
+        res.json({
+          error:'Incorrect properties POSTed'
+        });
     }
 });
 // Client creates an account by sending JSON with name, email and password. Creates IF account has Csumb email, and email is not in our system.
@@ -133,7 +137,6 @@ app.post('/createUser', (req, res) => {
 });
 // Completes the account creation process (also updates) by taking in requested properties
 app.post('/createUser/completeProfile', (req,res) => {
-  res.setHeader('Content-Type', 'application/json');
   var api_key = req.body.api_key;
   var carMakeModel = req.body.carMakeModel;
   var schedule = req.body.schedule;
@@ -171,7 +174,6 @@ app.post('/activeUsers', (req, res) => {
       }
     });
   }
-
 });
 // registers a pass to a User, or updates existing pass node.
 app.post('/registerPass', (req, res) => {
@@ -183,7 +185,7 @@ app.post('/registerPass', (req, res) => {
   let gpsLocation = req.body.gpsLocation;
   let price = req.body.price;
   let notes = req.body.notes;
-  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price && !!notes) {
+  if (!!api_key && !!email && !!lotLocation && !!gpsLocation && !!price) {
       db.registerPass(email, api_key, lotLocation, gpsLocation , price, notes, (err, succ) => {
           if(err) {
             res.send({error:err});
@@ -215,7 +217,25 @@ app.post('/resendEmail', (req,res) => {
       }
     })
   }
-})
+});
+// Buying a pass from a user, takes buyer's api key, the passes's current owner email and ID
+// This should be invoked after a payment has been processed, changes ownership of parking pass
+app.post('/purchasePass', (req,res) => {
+  var api_key = req.body.api_key;
+  var currentOwnerEmail = req.body.currentOwnerEmail;
+  var passId = req.body.passId;
+  if(!!api_key && !!currentOwnerEmail && !!passId){
+    db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
+      if(err) {
+        return res.send(err);
+      }
+      return res.send(response);
+    });
+  }
+  else {
+    return res.send({error:'error, incorrect parameters received.'});
+  }
+});
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res) => {
 //     db.resetDB((err, succ) => {
@@ -226,7 +246,7 @@ app.post('/resendEmail', (req,res) => {
 //         }
 //     });
 // });
-//begins listening on port 3000 or instance given port .
+// begins listening on port 3000 or instance given port .
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
 });

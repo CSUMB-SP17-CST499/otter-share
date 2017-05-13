@@ -1,3 +1,4 @@
+
 /*
   Handles all db operations
 */
@@ -53,12 +54,15 @@ const login = (email, password, callback) => {
                 var result_string = JSON.stringify(userObj);
                 // compares entered password with stored_pw in database.
                 bcrypt.compare(password, stored_pw, (err, res) => {
-                    if (res == true) { // sets status to a timestamp, allowing us to find last time user active
+                    if (res == true) {
+                    // sets status to a timestamp, allowing us to find last time user active
                         session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
-                                .catch((e) => {console.log(e)});
+                               .catch((e) => {console.log(e)});
+                        session.close();
                         return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
+                    session.close();
                     return callback(null, false);
                 });
             } else {
@@ -138,9 +142,9 @@ const createUser = (email, name, password, callback) => {
               email: email
         })
         .then((results) => {
+          session.close();
             if (!_.isEmpty(results.records)) {
                 // if we have records that return, this shows that email is in use, therefore fail with null
-                session.close();
                 return callback(null, { error: 'This email is in use! Try to login instead'});
             } else {
                 // this key will be sent to users emails to verify they are csumb students!
@@ -157,7 +161,9 @@ const createUser = (email, name, password, callback) => {
                                 api_access_key: cryptoRandomString(60),
                                 verify_email_key: verifyEmailKey,
                                 status: 0,
-                                completeProfile:false
+                                completeProfile:false,
+                                totalStars: 5.0,
+                                numberOfRatings: 1.0
                           })
                         .then(() => {
                             session.close();
@@ -182,7 +188,7 @@ const createUser = (email, name, password, callback) => {
         });
 }
 const resendVerify = (email, callback) => {
-  // need to implement a verify email cooldown, maybe once a day?
+  // Resends a verification email.
   const emailRegex = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(csumb)\.edu$/;
   if (!emailRegex.test(email)) {
       return callback(null, { error: 'Incorrect email format, it must be from CSUMB!'});
@@ -257,7 +263,8 @@ const sendEmail = (name, email, verifyEmailKey) => {
         if (error) {
             return console.log('mailer error: '+ error);
         }
-        console.log('Message %s sent: %s', info.messageId, info.response);
+        //console.log('Message %s sent: %s', info.messageId, info.response);
+        console.log('Sent successfully');
     });
 }
 // Clears db FOR TESTING PURPOSES ONLY
@@ -307,11 +314,11 @@ const retrieveUser = (email, api_key, callback) => {
             api_key: api_key
         })
         .then((user) => {
+          session.close();
           if(_.isEmpty(user.records)){
             return callback(null, {error:'No match found.'});
           }
             var profileObject = new Object();
-            session.close();
             _.forEach(user.records, (record) => {
                 // places each part of user properties into Object for jsonification
                 profileObject.email = (record._fields[0].properties.email);
@@ -335,7 +342,7 @@ const retrieveMyProfile = (email, api_key, callback) => {
         .then((user) => {
             session.close();
             if(_.isEmpty(user.records))
-              return callback(null,{error:'No records found!'});
+              return callback(null, {error:'No records found!'});
             var myProfileObject = new Object();
             _.forEach(user.records, (record) => {
                 myProfileObject.email = (record._fields[0].properties.email);
@@ -354,6 +361,9 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
     // Regex for currency, tbd, need to speak to team about what is passed for price, regex --> ^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(\.[0-9][0-9])?$
     // Check to see if a pass node is in existence
     // If not create it, if so update it
+    if(notes ==  null)
+      notes = '(empty)';
+
     session
         .run('MATCH (pass:Pass) WHERE pass.ownerEmail = {ownerEmail} RETURN pass', {
             ownerEmail: email
@@ -361,23 +371,24 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
         .then((pass) => {
             session.close();
             if (!_.isEmpty(pass.records[0])) {
-                // update route
-                // console.log('updating...');
-                // Match user with their pass node, update information.
+                // Update route
+                // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale} RETURN user.email AS email', {
+                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},'+
+                        'pass.id = {id} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
                             lotLocation: lotLocation,
                             gpsLocation: gpsLocation,
                             notes: notes,
                             api_key: api_key,
-                            forSale: true
+                            id: shortid.generate(),
+                            forSale: true,
+                            saleAccepted: 0
                      })
                     .then((results) => {
                         session.close();
-                        // console.log(results);
                         if (typeof results.records[0] == 'undefined')
                             return callback(false, { error: 'Pass failed to update'});
                         else
@@ -389,7 +400,6 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                     })
             } else {
                 // creation route
-                // console.log('creating...');
                 session
                     .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) RETURN user.email AS email', {
                             email: email,
@@ -403,8 +413,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                         // Create the pass node with given information, then create a relationship between pass and node, returning relationship
                         session
                             .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) ' +
-                                  'CREATE (pass:Pass {id: {id}, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
-                                    'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
+                                 'CREATE (pass:Pass {id: {id}, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
+                                 'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                 email: email,
                                 api_key: api_key,
                                 id: shortid.generate(),
@@ -413,15 +423,16 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                 gpsLocation: gpsLocation,
                                 price: price,
                                 notes: notes,
-                                forSale: true
+                                forSale: true,
+                                saleAccepted: 0
                             })
                             .then((result) => {
-                                return callback(null, { success: 'created pass!' });
                                 session.close();
+                                return callback(null, { success: 'created pass!' });
                             })
                             .catch((e) => {
-                                console.log(JSON.stringify(e));
                                 session.close();
+                                console.log(JSON.stringify(e));
                             });
                     });
             }
@@ -431,55 +442,154 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
             console.log({ error: e });
         });
 }
-const activeUsers = (keyword,api_key,callback) => {
+const activeUsers = (keyword, api_key, callback) => {
   keyword = keyword.trim();
-  // NOTE: All will return active users FROM ALL LOTS!
+  // NOTE: keyword 'all' will return active users FROM ALL LOTS!
   // Whereas anything else will return a specific lot (by number) if found, we should probably implement stricter fields here
   if(keyword == 'all'){
+    // search for each element of pass(rename each?), return as something else, pickup with 'get' and place into json array!
     session
-      .run('MATCH (user:User {api_access_key:{api_key}}),(pass:Pass {forSale: {forSale}}) RETURN pass', {
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (user:User), (pass:Pass {forSale: true})'+
+            'WHERE user.email=pass.ownerEmail AND EXISTS(user.totalStars) '+
+            'RETURN pass.gpsLocation AS gpsLocation, user.totalStars AS totalStars, user.numberOfRatings AS numberOfRatings,' +
+            'pass.notes AS notes, pass.forSale AS forSale, pass.price AS price, toFloat(pass.ownerCount) AS ownerCount, pass.lotLocation AS lotLocation,'+
+            'pass.id AS passId, pass.ownerEmail AS ownerEmail', {
         forSale: true,
         api_key: api_key
       })
       .then((results) => {
+        session.close();
+
         if(_.isEmpty(results.records)){
           return callback(false, {error: 'No active users at this moment, try again later!'});
         }
-        // stores
         let passArray = new Array();
+        // console.log(results.records)
         _.forEach(results.records, (record) => {
-          passArray.push(record._fields[0].properties);
+          var passObject = new Object();
+          passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+          passObject.gpsLocation = record.get('gpsLocation');
+          passObject.notes = record.get('notes');
+          passObject.forSale = record.get('forSale');
+          passObject.price = record.get('price');
+          passObject.lotLocation = record.get('lotLocation');
+          passObject.passId = record.get('passId');
+          passObject.ownerEmail = record.get('ownerEmail');
+          // passObject.ownerCount = record.get('ownerCount');
+
+          passArray.push(passObject);
         });
-        return callback(true, {success:passArray});
+        return callback(true, {success: passArray});
       })
       .catch((e) => {
+        session.close();
         console.log(e);
         return callback(null, {error:'Something went wrong..'});
       })
   } else {
     session
-      .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {forSale: {forSale}}) ' +
-          'WHERE pass.lotLocation CONTAINS {lotLocation} RETURN pass', {
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (user:User), (pass:Pass {forSale: true})'+
+            'WHERE user.email=pass.ownerEmail AND EXISTS(user.totalStars) AND pass.lotLocation CONTAINS {lotLocation}'+
+            'RETURN pass.gpsLocation AS gpsLocation, user.totalStars AS totalStars, user.numberOfRatings AS numberOfRatings,' +
+            'pass.notes AS notes, pass.forSale AS forSale, pass.price AS price, toFloat(pass.ownerCount) AS ownerCount, pass.lotLocation AS lotLocation,'+
+            'pass.id AS passId, pass.ownerEmail AS ownerEmail, y.email AS api_email', {
             forSale: true,
             api_key: api_key,
             lotLocation: keyword
         })
         .then((results) => {
+          session.close();
           if(_.isEmpty(results.records)){
             return callback(false, {error: 'No active users in this lot or no lot match, try again later!'});
           }
           // stores
           let passArray = new Array();
           _.forEach(results.records, (record) => {
-            passArray.push(record._fields[0].properties);
+            var passObject = new Object();
+            passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+            passObject.gpsLocation = record.get('gpsLocation');
+            passObject.notes = record.get('notes');
+            passObject.forSale = record.get('forSale');
+            passObject.price = record.get('price');
+            passObject.lotLocation = record.get('lotLocation');
+            passObject.passId = record.get('passId');
+            passObject.ownerEmail = record.get('ownerEmail');
+            // passObject.ownerCount = record.get('ownerCount');
+            passArray.push(passObject);
           });
           return callback(true, {success:passArray});
         })
         .catch((e) => {
+          session.close();
           console.log(e);
           return callback(null, {error:'Something went wrong..'});
-        })
+        });
   }
+}
+const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
+  // Increments the amount of times the pass has been sold by 1
+  // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
+  session
+    .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail},'+
+          'id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
+          'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
+              api_key: api_key,
+              currentOwnerEmail: currentOwnerEmail,
+              passId: passId
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0])){
+          return callback(null,{error:'Record not found 503'});
+        }
+        // Finds the newOwner of the pass, the pass to be sold, and the current owner of the pass (before it is transfered)
+        // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
+        // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
+        session
+          .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
+               'WHERE pass.id = {passId} AND NOT (newOwner)-[:OWNS]->() DELETE r '+
+               'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
+                '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
+                  'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
+                    currentOwnerEmail: currentOwnerEmail,
+                    api_key: api_key,
+                    passId: passId
+            })
+            .then((results) => {
+                session.close();
+                // Finds newOwner of pass, updates the soldPass to reflect newOwners email.
+                if(_.isEmpty(results.records[0]))
+                  return callback(null,{error:'Record not found 524'});
+                session
+                  .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id:{passId} })' +
+                        'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner',
+                          {passId:passId, api_key:api_key})
+                  .then((results) => {
+                    session.close();
+                    if(_.isEmpty(results.records[0])){
+                        return callback(null, {error:'Record not found 531'});
+                    }
+                    else {
+                        return callback(null, {success:'You\'ve just bought this users pass!'});
+                    }
+                  })
+                  .catch((e) => {
+                    session.close();
+                    console.log(e);
+                    return callback(null,'error!?');
+                  });
+            })
+            .catch((e)=> {
+                session.close();
+                console.log(e);
+                return callback({error:'error!?'});
+             });
+      })
+      .catch((e) => {
+        session.close();
+        console.log(e);
+        return callback(null,'error!?');
+      });
 }
 module.exports = {
     activeUsers,
@@ -491,5 +601,6 @@ module.exports = {
     retrieveUser,
     retrieveMyProfile,
     registerPass,
-    resendVerify
+    resendVerify,
+    purchasePass
 };

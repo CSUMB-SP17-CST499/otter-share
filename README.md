@@ -83,4 +83,5 @@ Returns active passes based on given lot location : api_key, keyword (Either 'al
 "keyword": "keyword-here"<br>
 
 **Response** <br>
-Pass(es) information
+Pass(es) information <br>
+UPDATE: Now returns the average rating of the user tied to pass, as avgRating.
