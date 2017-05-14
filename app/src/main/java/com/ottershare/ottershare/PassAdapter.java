@@ -35,6 +35,7 @@ public class PassAdapter extends ArrayAdapter<ParkingPassInfo>{
         userTv.setText(pass.getEmail());
         priceTv.setText(Float.toString(pass.getPrice()));
         lotTv.setText(Integer.toString(pass.getLotLocation()));
+        lotTv.setText(Integer.toString(pass.getLotLocation()));
 
         return convertView;
 

@@ -7,5 +7,9 @@
         android:layout_height="match_parent"
         android:id="@+id/top_pannel_filter_item"
         android:textSize="15sp"
-        android:gravity="center|top"/>
+        android:gravity="center|top"
+        android:textColor="@color/colorPrimaryDark"
+        android:background="#e0dfde"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"/>
 </RelativeLayout>

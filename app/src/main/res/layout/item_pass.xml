@@ -8,7 +8,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="$"
-        android:textSize="40sp"
+        android:textSize="30sp"
         android:textColor="@color/colorPrimaryDark"/>
 
     <TextView
@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="0.00"
-        android:textSize="40sp"
+        android:textSize="30sp"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/price_lable_tv"
         android:layout_toEndOf="@+id/price_lable_tv"
@@ -28,7 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" 
         android:text="User : "
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
         android:layout_toRightOf="@+id/price_tv"/>
 
@@ -37,7 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="user@csumb.edu"
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
         android:layout_toRightOf="@+id/user_lable_tv"/>
 
@@ -46,7 +46,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Lot : "
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
         android:layout_below="@+id/user_lable_tv"
         android:layout_toRightOf="@+id/price_tv"/>
@@ -56,7 +56,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="###"
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
         android:layout_below="@+id/user_lable_tv"
         android:layout_toRightOf="@+id/lot_lable_tv"/>

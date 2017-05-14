@@ -65,7 +65,7 @@
                 android:layout_height="150dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:background="@drawable/main_menu_pannel_rounded_corners"
+                android:background="@drawable/main_menu_pannel_rounded_cornersblue"
                 android:orientation="vertical">
 
                 <!--<TextView
@@ -79,7 +79,10 @@
                     android:id="@+id/top_pannel_filters"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="20dp"/>
+                    android:layout_marginTop="30dp"
+                    android:fadeScrollbars="false"
+                    android:scrollbarTrackVertical="@color/colorPrimary"
+                    android:scrollbarThumbVertical="@color/colorPrimaryDark"/>
 
             </LinearLayout>
 
@@ -97,7 +100,10 @@
                 <ListView
                     android:id="@+id/pass_list"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:fadeScrollbars="false"
+                    android:scrollbarTrackVertical="@color/colorPrimary"
+                    android:scrollbarThumbVertical="@color/colorPrimaryDark">
 
                 </ListView>
 

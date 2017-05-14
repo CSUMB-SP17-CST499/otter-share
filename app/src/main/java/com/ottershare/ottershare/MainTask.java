@@ -40,7 +40,6 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-// asynchronous call to log in and retreive key
 public class MainTask extends AsyncTask<String, String, Integer> {
     private final String LOG_TAG = MainTask.class.getSimpleName();
 
@@ -58,7 +57,9 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     ArrayList<ParkingPassInfo> parkingPassInfoArray;
     ArrayList<LatLng> locations;
 
-
+    PassAdapter passAdapter;
+    ListView passList;
+    HashMap<Integer, Integer> lotMap;
 
     public MainTask(Activity activity,MapOSFragment frag) {
         status = 0;
@@ -153,7 +154,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                             parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email));
                             locations.add(gpsLocation);
 
-                        }catch(NumberFormatException e){
+                        } catch(NumberFormatException e) {
                         Log.i("number format exeption", id);
                     }
                 }else{
@@ -205,9 +206,9 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
-                parkingPassInfoArray = testData();
-                final PassAdapter adapter = new PassAdapter(prevActivity,parkingPassInfoArray);
-                final ListView passList = (ListView) prevActivity.findViewById(R.id.pass_list);
+                parkingPassInfoArray = testdata();
+                passAdapter = new PassAdapter(prevActivity,parkingPassInfoArray);
+                passList = (ListView) prevActivity.findViewById(R.id.pass_list);
                 passList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -219,12 +220,12 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                         prevActivity.startActivity(nextIntent);
                     }
                 });
-                passList.setAdapter(adapter);
-                adapter.add(parkingPassInfoArray.get(0));
+                passList.setAdapter(passAdapter);
+                passAdapter.add(parkingPassInfoArray.get(0));
                 frag.addHeatMap(locations);
 
                 //For top part of the list view
-                HashMap<Integer, Integer> lotMap = new HashMap<>();
+                lotMap = new HashMap<>();
                 for (int i = 0; i < parkingPassInfoArray.size(); ++i) {
                     int currentLot = parkingPassInfoArray.get(i).getLotLocation();
                     if (lotMap.containsKey(currentLot)) {
@@ -236,19 +237,19 @@ public class MainTask extends AsyncTask<String, String, Integer> {
 
                 //iterate through lotMap keys
                 Iterator it = lotMap.entrySet().iterator();
-                int count = 0;
-                ArrayList<String> filterList = new ArrayList<>();
-                String lotCounts = "";
+                final ArrayList<String> filterList = new ArrayList<>();
+                ArrayList<Integer> filtersListLots = new ArrayList<>();
+
+                filterList.add("Filter by all (" + parkingPassInfoArray.size() + ((parkingPassInfoArray.size() == 1) ? " pass" : " passes") + " in " + lotMap.size() + ((lotMap.size() == 1) ? " lot" : " lots") + ")");
+                filtersListLots.add(9999); //filter for all is lot #9999
                 while (it.hasNext()) {
                     Map.Entry pair = (Map.Entry)it.next();
-                    filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes") + "\n");
-                    count++;
+                    filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes"));
+                    filtersListLots.add(Integer.parseInt(pair.getKey().toString()));
                     it.remove(); // avoids a ConcurrentModificationException
                 }
-                showFiltersList(filterList);
-                //tried to get a label to show up but the LinearLayout only shows 1 thing max for some reason
-                //TextView topLotLabel = (TextView) prevActivity.findViewById(R.id.top_pannel_label);
-               // topLotLabel.setText("Passes available in: " + count + ((count == 1) ? " lot" : " lots"));
+
+                showFiltersList(filterList, filtersListLots);
 
                 Log.d(LOG_TAG, "case = 3: " + result);
                 break;
@@ -289,11 +290,20 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     // to set up dummy data remove when needed.
     private ArrayList<ParkingPassInfo> testData(){
         ArrayList<ParkingPassInfo> returnData = new ArrayList<>();
-        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,200,"fake@email.com"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",false,(float)1.00,200,"fake1@email.com"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,200,"fake2@email.com"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,200,"fake3@email.com"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,200,"fake4@email.com"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,12,"bchehraz@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"montey@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,19,"ott21@csumb.edu"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,19,"mlopez@csumb.edu"));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"rgrab@csumb.edu"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"bbob@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,508,"abcd@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,12,"brett@csumb.edu"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"montedean@csumb.edu"));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"monte@csumb.edu"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"otterxp@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"jimdean@csumb.edu"));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,508,"defg@csumb.edu"));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"abcd@csumb.edu"));
         locations.add(new LatLng(36.652324, -121.798293));
         locations.add(new LatLng(36.652348, -121.798682));
         locations.add(new LatLng(36.651795, -121.800519));
@@ -302,7 +312,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         return returnData;
     }
 
-    public void showFiltersList(ArrayList<String> filtersList) {
+    public void showFiltersList(ArrayList<String> filtersList, final ArrayList<Integer> filtersListLots) {
         final ListView lotFilterList = (ListView) prevActivity.findViewById(R.id.top_pannel_filters);
 
         FilterAdapter adapter = new FilterAdapter(mContext, filtersList);
@@ -311,6 +321,18 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //do something here about filtering the list.
+                int currentFilter = filtersListLots.get(position);
+                ArrayList<ParkingPassInfo> list = new ArrayList<>();
+                for (int i = 0; i < parkingPassInfoArray.size(); ++i) {
+                    if (parkingPassInfoArray.get(i).getLotLocation() == currentFilter) {
+                        list.add(parkingPassInfoArray.get(i));
+                    } else if (currentFilter == 9999) {
+                        list = parkingPassInfoArray;
+                        break;
+                    }
+                }
+                passAdapter = new PassAdapter(prevActivity, list);
+                passList.setAdapter(passAdapter);
             }
         });
     }
