@@ -55,17 +55,22 @@ const login = (email, password, callback) => {
                 // compares entered password with stored_pw in database.
                 bcrypt.compare(password, stored_pw, (err, res) => {
                     if (res == true) {
-                    // sets status to a timestamp, allowing us to find last time user active
-                        session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
-                               .catch((e) => {console.log(e)});
-                        session.close();
-                        return callback(null, result_string);
+                      // sets status to a timestamp, allowing us to find last time user active
+                            session
+                               .run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
+                               .then(() => {session.close();})
+                               .catch((e) => {
+                                 session.close();
+                                 console.log(`At Line 61 ${JSON.stringify(e)} `);
+                               });
+                            return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
                     session.close();
                     return callback(null, false);
                 });
-            } else {
+            }
+            else {
                 // user Does Not exist. NOTE: Should return nothing null, this is ok.
                 return callback(null, null);
             }
