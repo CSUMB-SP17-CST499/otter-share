@@ -137,12 +137,14 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 for (int i = 0; i < jsonResponse.length(); i++) {
                     JSONObject parkingPass = jsonResponse.getJSONObject(i);
 
-                    String id = parkingPass.getString("id");
                     String gpsLocationString = parkingPass.getString("gpsLocation");
+
+                    //making sure that the latlong for the passes are in the correct format.
                     if ((gpsLocationString.length() - gpsLocationString.replace(",", "").length()) == 1) {
                         String[] gpsLocationStringSplit = gpsLocationString.split(",");
                         try {
 
+                            String id = parkingPass.getString("id");
                             double lat = Double.parseDouble(gpsLocationStringSplit[0]);
                             double lon = Double.parseDouble(gpsLocationStringSplit[1]);
                             LatLng gpsLocation = new LatLng(lat, lon);
@@ -151,11 +153,11 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                             float price = (float) parkingPass.getDouble("price");
                             int lotLocation = parkingPass.getInt("lotLocation");
                             String email = parkingPass.getString("ownerEmail");
-                            parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email));
+                            float rating = (float) parkingPass.getDouble("avgRating");
+                            parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email , rating));
                             locations.add(gpsLocation);
 
                         } catch(NumberFormatException e) {
-                        Log.i("number format exeption", id);
                     }
                 }else{
                         Log.i("Main Task", "not a latlon format");
@@ -206,50 +208,9 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
-                parkingPassInfoArray = testdata();
-                passAdapter = new PassAdapter(prevActivity,parkingPassInfoArray);
-                passList = (ListView) prevActivity.findViewById(R.id.pass_list);
-                passList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent nextIntent = new Intent(prevActivity,PassView.class);
-                        ParkingPassInfo currentpass = parkingPassInfoArray.get(position);
-                        Bundle b = new Bundle();
-                        b.putParcelable("pass", currentpass);
-                        nextIntent.putExtras(b);
-                        prevActivity.startActivity(nextIntent);
-                    }
-                });
-                passList.setAdapter(passAdapter);
-                passAdapter.add(parkingPassInfoArray.get(0));
-                frag.addHeatMap(locations);
-
-                //For top part of the list view
-                lotMap = new HashMap<>();
-                for (int i = 0; i < parkingPassInfoArray.size(); ++i) {
-                    int currentLot = parkingPassInfoArray.get(i).getLotLocation();
-                    if (lotMap.containsKey(currentLot)) {
-                        lotMap.put(currentLot, lotMap.get(currentLot) + 1);
-                    } else {
-                        lotMap.put(currentLot, 1);
-                    }
-                }
-
-                //iterate through lotMap keys
-                Iterator it = lotMap.entrySet().iterator();
-                final ArrayList<String> filterList = new ArrayList<>();
-                ArrayList<Integer> filtersListLots = new ArrayList<>();
-
-                filterList.add("Filter by all (" + parkingPassInfoArray.size() + ((parkingPassInfoArray.size() == 1) ? " pass" : " passes") + " in " + lotMap.size() + ((lotMap.size() == 1) ? " lot" : " lots") + ")");
-                filtersListLots.add(9999); //filter for all is lot #9999
-                while (it.hasNext()) {
-                    Map.Entry pair = (Map.Entry)it.next();
-                    filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes"));
-                    filtersListLots.add(Integer.parseInt(pair.getKey().toString()));
-                    it.remove(); // avoids a ConcurrentModificationException
-                }
-
-                showFiltersList(filterList, filtersListLots);
+                parkingPassInfoArray = testData();
+                populateBottomPannel();
+                populateTopPannel();
 
                 Log.d(LOG_TAG, "case = 3: " + result);
                 break;
@@ -287,23 +248,76 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         Toast.makeText(mContext, message, length).show();
     }
 
+    private void populateBottomPannel(){
+        passAdapter = new PassAdapter(prevActivity,parkingPassInfoArray);
+        passList = (ListView) prevActivity.findViewById(R.id.pass_list);
+        passList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent nextIntent = new Intent(prevActivity,PassView.class);
+                ParkingPassInfo currentpass = parkingPassInfoArray.get(position);
+                Bundle b = new Bundle();
+                b.putParcelable("pass", currentpass);
+                nextIntent.putExtras(b);
+                prevActivity.startActivity(nextIntent);
+            }
+        });
+        passList.setAdapter(passAdapter);
+        passAdapter.add(parkingPassInfoArray.get(0));
+        frag.addHeatMap(locations);
+
+    }
+
+    private void populateTopPannel(){
+
+        //For top part of the list view
+        lotMap = new HashMap<>();
+        for (int i = 0; i < parkingPassInfoArray.size(); ++i) {
+            int currentLot = parkingPassInfoArray.get(i).getLotLocation();
+            if (lotMap.containsKey(currentLot)) {
+                lotMap.put(currentLot, lotMap.get(currentLot) + 1);
+            } else {
+                lotMap.put(currentLot, 1);
+            }
+        }
+
+        //iterate through lotMap keys
+        Iterator it = lotMap.entrySet().iterator();
+        final ArrayList<String> filterList = new ArrayList<>();
+        ArrayList<Integer> filtersListLots = new ArrayList<>();
+
+        filterList.add("Filter by all (" + parkingPassInfoArray.size() + ((parkingPassInfoArray.size() == 1) ? " pass" : " passes") + " in " + lotMap.size() + ((lotMap.size() == 1) ? " lot" : " lots") + ")");
+        filtersListLots.add(9999); //filter for all is lot #9999
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            filterList.add("Lot #" + pair.getKey() + ": " + pair.getValue() + ((pair.getValue().toString().equals("1")) ? " pass" : " passes"));
+            filtersListLots.add(Integer.parseInt(pair.getKey().toString()));
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        showFiltersList(filterList, filtersListLots);
+    }
+
+
+
+
     // to set up dummy data remove when needed.
     private ArrayList<ParkingPassInfo> testData(){
         ArrayList<ParkingPassInfo> returnData = new ArrayList<>();
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,12,"bchehraz@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"montey@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,19,"ott21@csumb.edu"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,19,"mlopez@csumb.edu"));
-        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"rgrab@csumb.edu"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"bbob@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,508,"abcd@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,12,"brett@csumb.edu"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"montedean@csumb.edu"));
-        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"monte@csumb.edu"));
-        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"otterxp@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"jimdean@csumb.edu"));
-        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,508,"defg@csumb.edu"));
-        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"abcd@csumb.edu"));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,12,"bchehraz@csumb.edu",(float) .5));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"montey@csumb.edu",(float) 1.0));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,19,"ott21@csumb.edu",(float) 1.2));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,19,"mlopez@csumb.edu",(float) 2.0));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"rgrab@csumb.edu",(float) 2.5));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"bbob@csumb.edu",(float) 3.0));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,508,"abcd@csumb.edu",(float) 3.5));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,12,"brett@csumb.edu",(float) 4.0));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"montedean@csumb.edu",(float) 4.5));
+        returnData.add(new ParkingPassInfo("aaa",new LatLng(36.652324, -121.798293),"",true,(float)4.00,508,"monte@csumb.edu",(float) 5.0));
+        returnData.add(new ParkingPassInfo("bbb",new LatLng(36.652348, -121.798682),"",true,(float)1.00,508,"otterxp@csumb.edu",(float) 1.25));
+        returnData.add(new ParkingPassInfo("ccc",new LatLng(36.651795, -121.800519),"",true,(float)2.00,19,"jimdean@csumb.edu",(float) 1.75));
+        returnData.add(new ParkingPassInfo("ddd",new LatLng(36.652477, -121.800111),"",true,(float)3.00,508,"defg@csumb.edu",(float) 2.5));
+        returnData.add(new ParkingPassInfo("eee",new LatLng(36.652129, -121.804482),"",true,(float)5.00,508,"abcd@csumb.edu",(float) 3.5));
         locations.add(new LatLng(36.652324, -121.798293));
         locations.add(new LatLng(36.652348, -121.798682));
         locations.add(new LatLng(36.651795, -121.800519));

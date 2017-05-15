@@ -36,7 +36,6 @@
         android:id="@+id/user_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="user@csumb.edu"
         android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
         android:layout_toRightOf="@+id/user_lable_tv"/>
@@ -61,7 +60,38 @@
         android:layout_below="@+id/user_lable_tv"
         android:layout_toRightOf="@+id/lot_lable_tv"/>
 
+    <TextView
+        android:id="@+id/user_lable_rating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="  Rating : "
+        android:textSize="16sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_below="@+id/user_lable_tv"
+        android:layout_toRightOf="@+id/lot_tv"/>
+
+    <TextView
+        android:id="@+id/user_rating_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="#.#"
+        android:textSize="16sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_below="@+id/user_lable_tv"
+        android:layout_toRightOf="@+id/user_lable_rating"/>
+
+    <TextView
+        android:id="@+id/out_of_5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="/5.0"
+        android:textSize="10sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_below="@+id/user_lable_tv"
+        android:layout_toRightOf="@+id/user_rating_tv"/>
+
     <View
+        android:id="@+id/view"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/colorPrimaryDark"

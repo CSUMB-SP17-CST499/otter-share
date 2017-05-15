@@ -20,14 +20,16 @@ public class ParkingPassInfo implements Parcelable{
     private float price;
     private int lotLocation;
     private String email;
+    private float rating;
 
     public ParkingPassInfo( String id,
-                          LatLng gpsLoction,
-                          String notes,
-                          boolean forSale,
-                          float price,
-                          int lotLocation,
-                          String email){
+                            LatLng gpsLoction,
+                            String notes,
+                            boolean forSale,
+                            float price,
+                            int lotLocation,
+                            String email,
+                            float rating){
 
         this.id = id;
         this.gpsLocation = gpsLoction;
@@ -36,6 +38,7 @@ public class ParkingPassInfo implements Parcelable{
         this.price = price;
         this.lotLocation = lotLocation;
         this.email = email;
+        this.rating = rating;
 
     }
 
@@ -68,6 +71,7 @@ public class ParkingPassInfo implements Parcelable{
         return email;
     }
 
+    public float getRating() { return rating; }
 
 
     @Override
@@ -83,6 +87,7 @@ public class ParkingPassInfo implements Parcelable{
         price = p.readFloat();
         lotLocation = p.readInt();
         email = p.readString();
+        rating =p.readFloat();
     }
 
     @Override
@@ -95,6 +100,7 @@ public class ParkingPassInfo implements Parcelable{
         dest.writeFloat(getPrice());
         dest.writeInt(getLotLocation());
         dest.writeString(getEmail());
+        dest.writeFloat(getRating());
 
     }
 
