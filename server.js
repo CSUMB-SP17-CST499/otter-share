@@ -84,7 +84,7 @@ app.post('/login', (req, res) => {
         db.login(req.body.email.trim(), req.body.password.trim(), (err, user) => {
 
             if (err) {
-                res.send('oi!'+err );
+                res.send(err);
             }
             if (!!user) {
                 // If email is not verified, then we send an error back describing what to do next
@@ -246,12 +246,19 @@ app.post('/passListener', (req,res) => {
   var passId = req.body.passId;
   var customerType = req.body.customerType;
   var requestCount = req.body.requestCount;
+  var action = req.body.action;
   // maybe I can ask if they are buying or selling?
   // On front end, keep count of requests.. if count = 0,  AND custType = Buyer we change the sale to pending
   // if count greater than 0 but less than 300? (1 req a minute, idk what our limit is..) then we should no longer accept them
+  // NOTE: Seller action is optional, only for use of accepting or rejecting an exchange offer
   if(!!api_key && !!passId && !!customerType && !!requestCount){
-    db.passListener(api_key, passId, customerType, requestCount, (status, data) => {
-        res.send(data);
+    db.passListener(api_key, passId, customerType, requestCount, action, (status, data) => {
+      if(status == false){
+        res.status(400).send(data);
+      }
+      else
+        res.status(200).send(data);
+
     });
   }
   else {

@@ -57,8 +57,8 @@ const login = (email, password, callback) => {
                     if (res == true) {
                     // sets status to a timestamp, allowing us to find last time user active
                         session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
+                               .then(()=> {session.close()})
                                .catch((e) => {console.log(e)});
-                        session.close();
                         return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
@@ -175,8 +175,7 @@ const createUser = (email, name, password, callback) => {
                         })
                         .catch((e) => {
                             session.close();
-                            var out = e;
-                            return callback(null, { error_output: out });
+                            return callback(null, { error_output: e });
                         });
                 });
             }
@@ -514,7 +513,7 @@ const activeUsers = (keyword, api_key, callback) => {
             passObject.lotLocation = record.get('lotLocation');
             passObject.passId = record.get('passId');
             passObject.ownerEmail = record.get('ownerEmail');
-            passObject.ownerCount = record.get('ownerCount');
+            // passObject.ownerCount = record.get('ownerCount');
             passArray.push(passObject);
           });
           return callback(true, {success:passArray});
@@ -591,16 +590,17 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
         return callback(null,'error!?');
       });
 }
-const passListener = (api_key, passId, customerType, requestCount, callback) => {
+const passListener = (api_key, passId, customerType, requestCount, action, callback) => {
   // two branches here 1. Buyer branch 2. Seller branches
   if(customerType == 'buyer'){
-    if(requestCount === 1) {
+    if(requestCount == 1) {
+      // console.log(`here ${api_key} ${passId} ${customerType} ${requestCount}`);
       // if it is the buyers first visit to this pass, set status of pass to salePending
       // also need to check to see if the user is first one to attempt to buy the pass (buyer will remove property pass.interestedUser once rejected!)
       let saleState = 1;
       session
         .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}})'+
-              'WHERE NOT exists(pass.interestedUser)'+
+              'WHERE NOT exists(pass.interestedUser) AND pass.saleState = 0'+
               'SET pass.saleState = {saleState}, pass.interestedUser = y.email RETURN pass.saleState AS saleState', {
                api_key: api_key,
                passId: passId,
@@ -608,8 +608,8 @@ const passListener = (api_key, passId, customerType, requestCount, callback) => 
         })
         .then((results) => {
           if(_.isEmpty(results.records[0]))
-            return callback(false, {error:'Record not found 611'});
-          return callback(true, {pending: 'Pass sale state changed, please wait for owner to respond!'});
+            return callback(false, {error:'Record not found 611(pass probably in interest)'});
+          return callback(true, {pending: 'You changed the state of pass, please wait for owner to respond!'});
         })
         .catch((e) => {
           console.log(`Line 608: ${e}`);
@@ -638,7 +638,8 @@ const passListener = (api_key, passId, customerType, requestCount, callback) => 
               if(parseInt(record.get('saleState')) == 0){ // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
                 session
                   .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser RETURN pass.ownerEmail AS ownerEmail',
-                      {passId: passId, api_key: api_key})
+                      {passId: passId, api_key: api_key}
+                  )
                   .then((results) => {
                     session.close();
                     if(_.isEmpty(results.records[0]))
@@ -651,12 +652,15 @@ const passListener = (api_key, passId, customerType, requestCount, callback) => 
                   });
               }
               if(parseInt(record.get('saleState')) == 2){ // if pass owner accepts your offer to exchange, invoke exchange method!
-                  //purchasePass(api_key, record.get('ownerEmail'), passId, )
-                  // Instead of invocation of
+                  // purchasePass(api_key, record.get('ownerEmail'), passId, )
+                  // instead of invocation of function that exchange pass, send back a message that tells client to now meet with counter-part
+                  // (break out of listening mode)
+                  return callback(true, {accepted:'Now make the exchange with the seller!'});
               }
           });
         })
         .catch((e) => {
+          session.close();
           console.log(`Line 608: ${e}`);
           return callback(false, {error:'Sys error 636'});
         });
@@ -664,15 +668,45 @@ const passListener = (api_key, passId, customerType, requestCount, callback) => 
   }
 ////// Seller section
   else if(customerType == 'seller'){
-    session
-      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass)')
-      .then((records) => {
-        session.close();
-      })
-      .catch((e) => {
-        session.close();
+    if(requestCount >= 1 && action == null) {
+        session
+          .run('MATCH (x:User {api_access_key: {api_key}}) MATCH (pass:Pass {id: {passId}})' +
+               'RETURN pass.saleState AS saleState, pass.', {api_key:api_key, passId:passId})
+          .then((results) => {
+            session.close();
+            if(_.isEmpty(results.records[0]))
+              return callback(false, {error:'Record not found 644'});
+            _.forEach(results.records, (record) => {
+              if(parseInt(record.get('saleState')) == 0){
+                console.log('Still at initial state, continue requests');
+              }
+              if(parseInt(record.get('saleState')) == 1){
+                // If accepted by buyer, seller must decide an action
+              }
+            });
 
-      });
+          })
+          .catch((e) => {
+            session.close();
+            console.log(`Line 608: ${e}`);
+            return callback(false, {error:'Sys error 636'});
+          });
+    }
+    if(requestCount >= 1 && (action == 'accept' || action == 'reject')){
+      if(action == 'accept'){
+        // Accept the pass, client leaves endpoint and moves to new "completion" screen that takes place
+        session
+          .run('MATCH (x:User {})')
+          .then()
+          .close()
+      }
+      else {
+        session
+          .run()
+          .then()
+          .close()
+      }
+    }
   }
   else {
     callback(false, {error:'Looks like you are sending incorrect parameters'});
