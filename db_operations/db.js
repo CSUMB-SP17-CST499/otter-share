@@ -56,9 +56,13 @@ const login = (email, password, callback) => {
                 bcrypt.compare(password, stored_pw, (err, res) => {
                     if (res == true) {
                     // sets status to a timestamp, allowing us to find last time user active
-                        session.run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
-                               .then(()=> {session.close()})
-                               .catch((e) => {console.log(e)});
+                        session
+                           .run("MATCH (a:User) WHERE a.email = {email} SET a.status = timestamp()", {email:email})
+                           .then(() => {session.close();})
+                           .catch((e) => {
+                             session.close();
+                             console.log(`At Line 61 ${JSON.stringify(e)} `);
+                           });
                         return callback(null, result_string);
                     }
                     // return nothing if no match, NOTE: Should return false
@@ -600,11 +604,12 @@ const passListener = (api_key, passId, customerType, requestCount, action, callb
       let saleState = 1;
       session
         .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}})'+
-              'WHERE NOT exists(pass.interestedUser) AND pass.saleState = 0'+
+              'WHERE NOT exists(pass.interestedUser) AND pass.saleState = {zeroCheck}'+
               'SET pass.saleState = {saleState}, pass.interestedUser = y.email RETURN pass.saleState AS saleState', {
                api_key: api_key,
                passId: passId,
-               saleState: saleState
+               saleState: saleState,
+               zeroCheck: 0
         })
         .then((results) => {
           if(_.isEmpty(results.records[0]))
@@ -612,7 +617,7 @@ const passListener = (api_key, passId, customerType, requestCount, action, callb
           return callback(true, {pending: 'You changed the state of pass, please wait for owner to respond!'});
         })
         .catch((e) => {
-          console.log(`Line 608: ${e}`);
+          console.log(`Line 608: ${JSON.stringify(e)}`);
           return callback(false, {error:'Sys error 616'});
         });
     }
@@ -668,50 +673,74 @@ const passListener = (api_key, passId, customerType, requestCount, action, callb
   }
 ////// Seller section
   else if(customerType == 'seller'){
-    if(requestCount >= 1 && action == null) {
+    if(action == null) {
+      // optional match for user information, use interested user
+      /* 'OPTIONAL MATCH (potentialBuyer:User) WHERE EXISTS(pass.interestedUser) AND potentialBuyer.email = pass.interestedUser' +
+       'RETURN pass.saleState AS saleState, potentialBuyer.email AS buyerEmail, potentialBuyer.totalStars as totalStars, '+*/
         session
           .run('MATCH (x:User {api_access_key: {api_key}}) MATCH (pass:Pass {id: {passId}})' +
-               'RETURN pass.saleState AS saleState, pass.', {api_key:api_key, passId:passId})
+               'potentialBuyer.numberOfRatings AS numberOfRatings', {api_key: api_key, passId: passId})
           .then((results) => {
             session.close();
             if(_.isEmpty(results.records[0]))
-              return callback(false, {error:'Record not found 644'});
+              return callback(false, {error:'Record not found 681'});
             _.forEach(results.records, (record) => {
               if(parseInt(record.get('saleState')) == 0){
                 console.log('Still at initial state, continue requests');
+                return callback(true, {pending:'Still no buyers....'});
               }
               if(parseInt(record.get('saleState')) == 1){
-                // If accepted by buyer, seller must decide an action
+                // If accepted by buyer, seller must decide on an action, send back their profile. Return rating of buyer and email
+                session
+                  .run('MATCH (buyer:User), (pass:Pass) WHERE pass.id = {passId} AND pass.potentialBuyer = buyer.email'+
+                       'RETURN buyer.email AS buyerEmail, buyer.totalStars AS totalStars, buyer.numberOfRatings as numberOfRatings')
+                  .then((results) => {
+                    session.close();
+                    if(_.isEmpty(results.records[0]))
+                      return callback(false, {error:'Record not found 644 seller'});
+
+                    var passObject = new Object();
+                    _.forEach(results.records, (record) => {
+                      passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+                      passObject.email = record.get('buyerEmail');
+                    });
+
+                  })
+                  .catch((e) => {
+                    session.close();
+                    console.log(`Line 706: ${e}`);
+                    return callback(false, {error:'Sys error 706'});
+                  });
+                console.log('Buyer must decide on action, buyer info is sent. ');
+                return callback(true, JSON.stringify(passObject));
               }
             });
 
           })
           .catch((e) => {
             session.close();
-            console.log(`Line 608: ${e}`);
-            return callback(false, {error:'Sys error 636'});
+            console.log(`Line 718: ${e}`);
+            return callback(false, {error:'Sys error 718'});
           });
     }
-    if(requestCount >= 1 && (action == 'accept' || action == 'reject')){
-      if(action == 'accept'){
-        // Accept the pass, client leaves endpoint and moves to new "completion" screen that takes place
-        session
-          .run('MATCH (x:User {})')
-          .then()
-          .close()
-      }
-      else {
-        session
-          .run()
-          .then()
-          .close()
-      }
+    if(action == 'accept'){
+      // Accept the offer, then seller leaves endpoint and moves to new "completion" screen that takes place
+      session
+        .run('MATCH (x:User {})')
+        .then()
+        .close()
+    }
+    if(action == 'reject'){
+      // Reject the offer
+      session
+        .run('MATCH (x:User {})')
+        .then()
+        .close()
     }
   }
   else {
     callback(false, {error:'Looks like you are sending incorrect parameters'});
   }
-
 }
 module.exports = {
     activeUsers,
