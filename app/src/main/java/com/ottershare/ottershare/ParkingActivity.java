@@ -1,48 +1,25 @@
 package com.ottershare.ottershare;
 
-import android.animation.ObjectAnimator;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.AnticipateOvershootInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import static android.R.attr.bitmap;
-import static android.R.attr.button;
-import static android.R.attr.content;
-import static android.R.attr.radius;
-import static com.ottershare.ottershare.R.color.Color_AppBackground;
-import static com.ottershare.ottershare.R.color.colorPrimary;
-
-import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.maps.model.LatLng;
 import com.ottershare.ottershare.FusedGpsService.LocalBinder;
-import android.os.IBinder;
 
 public class ParkingActivity extends AppCompatActivity{
 
@@ -108,7 +85,7 @@ public class ParkingActivity extends AppCompatActivity{
         };
 
 
-
+        // getcolor deprecated sdk 23
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             swipeButtonSettings
                     .setButtonPressText("SLIDE")
