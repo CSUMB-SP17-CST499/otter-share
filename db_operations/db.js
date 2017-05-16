@@ -520,7 +520,7 @@ const activeUsers = (keyword, api_key, callback) => {
             // passObject.ownerCount = record.get('ownerCount');
             passArray.push(passObject);
           });
-          return callback(true, {success:passArray});
+          return callback(true, {success: passArray});
         })
         .catch((e) => {
           session.close();
@@ -594,152 +594,189 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
         return callback(null,'error!?');
       });
 }
-const passListener = (api_key, passId, customerType, requestCount, action, callback) => {
-  // two branches here 1. Buyer branch 2. Seller branches
-  if(customerType == 'buyer'){
-    if(requestCount == 1) {
+const buyerListener = (api_key, passId, requestCount, callback) => {
+  if(requestCount == 1) {
       // console.log(`here ${api_key} ${passId} ${customerType} ${requestCount}`);
-      // if it is the buyers first visit to this pass, set status of pass to salePending
-      // also need to check to see if the user is first one to attempt to buy the pass (buyer will remove property pass.interestedUser once rejected!)
-      let saleState = 1;
-      session
-        .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}})'+
-              'WHERE NOT exists(pass.interestedUser) AND pass.saleState = {zeroCheck}'+
-              'SET pass.saleState = {saleState}, pass.interestedUser = y.email RETURN pass.saleState AS saleState', {
-               api_key: api_key,
-               passId: passId,
-               saleState: saleState,
-               zeroCheck: 0
-        })
-        .then((results) => {
-          if(_.isEmpty(results.records[0]))
-            return callback(false, {error:'Record not found 611(pass probably in interest)'});
-          return callback(true, {pending: 'You changed the state of pass, please wait for owner to respond!'});
-        })
-        .catch((e) => {
-          console.log(`Line 608: ${JSON.stringify(e)}`);
-          return callback(false, {error:'Sys error 616'});
-        });
-    }
-    // NOTE: should set limitations, maybe 300 requests? (300 minutes)
-    // If greater that 1, second or later requests, we constantly check for a change in the status until it is:
-    // 0 == Which means the exchange is cancelled, or 2 == Which means that exchange is accepted, then we make exchange (call purchasePass function)
-    if(requestCount > 1){
-      session
-        .run('MATCH (y:User {api_access_key: { api_key }})' +
-             'MATCH (pass:Pass {id: {passId}})' +
-             'WHERE exists(pass.saleState) AND pass.interestedUser = y.email RETURN pass.ownerEmail AS ownerEmail , pass.saleState AS saleState', {
-                  api_key: api_key,
-                  passId: passId
-        })
-        .then((results) => {
-          session.close();
-          if(_.isEmpty(results.records[0]))
-            return callback(false, {error:'Record not found 632'});
-
-          _.forEach(results.records, (record) => {
-              if(parseInt(record.get('saleState')) == 1) // if pass owner has yet to respond to request to exchange pass
-                return callback(true, {pending:'Pass has not yet updated...'});
-              if(parseInt(record.get('saleState')) == 0){ // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
-                session
-                  .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser RETURN pass.ownerEmail AS ownerEmail',
-                      {passId: passId, api_key: api_key}
-                  )
-                  .then((results) => {
-                    session.close();
-                    if(_.isEmpty(results.records[0]))
-                      return callback(false, {error:'Record not found 644'});
-                    return callback(true, {rejected:'Sorry, looks like your exchange has been rejected by the owner!'});
-                  })
-                  .catch((e) => {
-                    console.log(`Line 649: ${e}`);
-                    return callback(false, {error:'Sys error 649'});
-                  });
-              }
-              if(parseInt(record.get('saleState')) == 2){ // if pass owner accepts your offer to exchange, invoke exchange method!
-                  // purchasePass(api_key, record.get('ownerEmail'), passId, )
-                  // instead of invocation of function that exchange pass, send back a message that tells client to now meet with counter-part
-                  // (break out of listening mode)
-                  return callback(true, {accepted:'Now make the exchange with the seller!'});
-              }
-          });
-        })
-        .catch((e) => {
-          session.close();
-          console.log(`Line 608: ${e}`);
-          return callback(false, {error:'Sys error 636'});
-        });
-    }
+    // if it is the buyers first visit to this pass, set status of pass to salePending
+    // also need to check to see if the user is first one to attempt to buy the pass (buyer will remove property pass.interestedUser once rejected!)
+    let saleState = 1;
+    session
+      .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}})'+
+            'WHERE NOT exists(pass.interestedUser) AND pass.saleState = {zeroCheck}'+
+            'SET pass.saleState = {saleState}, pass.interestedUser = y.email RETURN pass.saleState AS saleState', {
+             api_key: api_key,
+             passId: passId,
+             saleState: saleState,
+             zeroCheck: 0
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0]))
+          return callback(false, {error:'Record not found 611(pass probably in interest)'});
+        return callback(true, {pending: 'You changed the state of pass, please wait for owner to respond!'});
+      })
+      .catch((e) => {
+        session.close();
+        console.log(`Line 608: ${JSON.stringify(e)}`);
+        return callback(false, {error:'Sys error 616'});
+      });
   }
-////// Seller section
-  else if(customerType == 'seller'){
-    if(action == null) {
-      // optional match for user information, use interested user
-      /* 'OPTIONAL MATCH (potentialBuyer:User) WHERE EXISTS(pass.interestedUser) AND potentialBuyer.email = pass.interestedUser' +
-       'RETURN pass.saleState AS saleState, potentialBuyer.email AS buyerEmail, potentialBuyer.totalStars as totalStars, '+*/
-        session
-          .run('MATCH (x:User {api_access_key: {api_key}}) MATCH (pass:Pass {id: {passId}})' +
-               'potentialBuyer.numberOfRatings AS numberOfRatings', {api_key: api_key, passId: passId})
-          .then((results) => {
-            session.close();
-            if(_.isEmpty(results.records[0]))
-              return callback(false, {error:'Record not found 681'});
-            _.forEach(results.records, (record) => {
-              if(parseInt(record.get('saleState')) == 0){
-                console.log('Still at initial state, continue requests');
-                return callback(true, {pending:'Still no buyers....'});
-              }
-              if(parseInt(record.get('saleState')) == 1){
-                // If accepted by buyer, seller must decide on an action, send back their profile. Return rating of buyer and email
-                session
-                  .run('MATCH (buyer:User), (pass:Pass) WHERE pass.id = {passId} AND pass.potentialBuyer = buyer.email'+
-                       'RETURN buyer.email AS buyerEmail, buyer.totalStars AS totalStars, buyer.numberOfRatings as numberOfRatings')
-                  .then((results) => {
-                    session.close();
-                    if(_.isEmpty(results.records[0]))
-                      return callback(false, {error:'Record not found 644 seller'});
+  // NOTE: should set limitations, maybe 300 requests? (300 minutes)
+  // If greater that 1, second or later requests, we constantly check for a change in the status until it is:
+  // 0 == Which means the exchange is cancelled, or 2 == Which means that exchange is accepted, then we make exchange (call purchasePass function)
+else if(requestCount > 1){
+    session
+      .run('MATCH (y:User {api_access_key: { api_key }})' +
+           'MATCH (pass:Pass {id: {passId}})' +
+           'WHERE exists(pass.saleState) AND pass.interestedUser = y.email RETURN pass.ownerEmail AS ownerEmail , pass.saleState AS saleState', {
+                api_key: api_key,
+                passId: passId
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0]))
+          return callback(false, {error:'Record not found 632'});
 
-                    var passObject = new Object();
-                    _.forEach(results.records, (record) => {
-                      passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
-                      passObject.email = record.get('buyerEmail');
-                    });
-
-                  })
-                  .catch((e) => {
-                    session.close();
-                    console.log(`Line 706: ${e}`);
-                    return callback(false, {error:'Sys error 706'});
-                  });
-                console.log('Buyer must decide on action, buyer info is sent. ');
-                return callback(true, JSON.stringify(passObject));
-              }
-            });
-
-          })
-          .catch((e) => {
-            session.close();
-            console.log(`Line 718: ${e}`);
-            return callback(false, {error:'Sys error 718'});
-          });
-    }
-    if(action == 'accept'){
-      // Accept the offer, then seller leaves endpoint and moves to new "completion" screen that takes place
-      session
-        .run('MATCH (x:User {})')
-        .then()
-        .close()
-    }
-    if(action == 'reject'){
-      // Reject the offer
-      session
-        .run('MATCH (x:User {})')
-        .then()
-        .close()
-    }
+        _.forEach(results.records, (record) => {
+            if(parseInt(record.get('saleState')) == 1) // if pass owner has yet to respond to request to exchange pass
+              return callback(true, {pending:'Pass has not yet updated...'});
+            if(parseInt(record.get('saleState')) == 0){ // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
+              session
+                .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser RETURN pass.ownerEmail AS ownerEmail',
+                    {passId: passId, api_key: api_key}
+                )
+                .then((results) => {
+                  session.close();
+                  if(_.isEmpty(results.records[0]))
+                    return callback(false, {error:'Record not found 644'});
+                  return callback(true, {rejected:'Sorry, looks like your exchange has been rejected by the owner!'});
+                })
+                .catch((e) => {
+                  console.log(`Line 649: ${e}`);
+                  return callback(false, {error:'Sys error 649'});
+                });
+            }
+            if(parseInt(record.get('saleState')) == 2){ // if pass owner accepts your offer to exchange, invoke exchange method!
+                // purchasePass(api_key, record.get('ownerEmail'), passId, )
+                // instead of invocation of function that exchange pass, send back a message that tells client to now meet with counter-part
+                // (break out of listening mode)
+                return callback(true, {accepted:'Now make the exchange with the seller!'});
+            }
+        });
+      })
+      .catch((e) => {
+        session.close();
+        console.log(`Line 608: ${e}`);
+        return callback(false, {error:'Sys error 636'});
+      });
   }
   else {
+    console.log(`Else, caught 672:  ${api_key} ${passId} ${requestCount}`);
     callback(false, {error:'Looks like you are sending incorrect parameters'});
+  }
+}
+const sellerListener = (api_key, passId, action, callback) => {
+  if(action == null) {
+    // optional match for user information, use interested user
+    /* 'OPTIONAL MATCH (potentialBuyer:User) WHERE EXISTS(pass.interestedUser) AND potentialBuyer.email = pass.interestedUser' +
+     'RETURN pass.saleState AS saleState, potentialBuyer.email AS buyerEmail, potentialBuyer.totalStars as totalStars, '+*/
+     let cqlString = 
+           'MATCH (y:User {api_access_key: { api_key }})' +
+           'MATCH (pass:Pass) WHERE pass.id = {passId} AND exists(pass.saleState) '+
+           'RETURN pass.saleState AS saleState';
+
+    session
+      .run(cqlString, {
+             api_key: api_key, 
+             passId: passId
+    })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0]))
+          return callback(false, {error:'Record not found 681'});
+        _.forEach(results.records, (record) => {
+          if(parseInt(record.get('saleState')) == 0){
+            console.log('Still at initial state, continue requests');
+            return callback(true, {pending:'Still no buyers....'});
+          }
+          if(parseInt(record.get('saleState')) == 1){
+            var passObject = new Object();
+            // If accepted by buyer, seller must decide on an action, backend will send back their profile. Return rating of buyer and email
+            session
+              .run('MATCH (buyer:User), (pass:Pass) WHERE pass.id = {passId} AND pass.interestedUser = buyer.email '+
+                   'RETURN buyer.email AS buyerEmail, buyer.totalStars AS totalStars, buyer.numberOfRatings as numberOfRatings', {
+                      passId: passId
+              })
+              .then((results) => {
+                if(_.isEmpty(results.records[0])){
+                  return callback(false, {error:'Record not found 703 seller'});
+                }
+                _.forEach(results.records, (record) => {
+                  passObject.avgRating = parseFloat(record.get('totalStars')) / parseFloat(record.get('numberOfRatings'));
+                  passObject.email = record.get('buyerEmail');
+                });
+                // returns buyer info in JSON format to seller.
+                console.log('Buyer must decide on action, buyer info is sent.');
+                return callback(true, {decision:passObject});
+              })
+              .catch((e) => {
+                session.close();
+                console.log(`Line 724: ${e}`);
+                return callback(false, {error:'Sys error 724'});
+              });
+          }
+        });
+      })
+      .catch((e) => {
+        session.close();
+        console.log(`Line 728: ${JSON.stringify(e)}`);
+        return callback(false, {error:e});
+      });
+  }
+  else if(action == 'accept'){
+    // Accept the offer, then seller leaves endpoint and moves to new "completion" screen that takes place
+    let saleState = 2;
+    session
+      .run('MATCH (pass:Pass {id: {passId} }) SET pass.saleState = {saleState} RETURN pass.saleState as saleState', {
+        saleState:saleState,
+        passId: passId
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0])){
+          return callback(false, {error:'Pass acceptance failed'});
+        }
+        return callback(true, {accepted:'You have accepted this offer, after meeting the buyer, please complete transaction here!'});
+        
+      })
+      .catch((e) => {
+        session.close();
+        //JSON.stringify(obj, null, 4)
+        console.log(`Line 748: ${JSON.stringify(e, null, 4)}`);
+        return callback(false, {error:'Error caught in acceptance'});
+      });
+  }
+  else if(action == 'reject'){
+    // Reject the offer (Change status to zero == 0 )
+    let saleState = 0;
+    session
+      .run('MATCH (pass:Pass {id:{passId}}) SET pass.saleState = {saleState} RETURN pass.saleState as saleState', {
+        saleState: saleState,
+        passId: passId
+      })
+      .then((results) => {
+        if(_.isEmpty(results.records[0]))
+          return callback(false, {error:'Pass rejection failed'});
+        return callback(true, {rejected:'You have successfully rejected this user\'s offer, pass is back up for sale'});
+      })
+      .catch((e) => {
+        session.close();
+        console.log(`Line 718: ${JSON.stringify(e)}`);
+        return callback(false, {error:'Error caught in rejection'});
+      });
+  }
+  else {
+    return callback(false, {error:'on action'});
   }
 }
 module.exports = {
@@ -754,5 +791,6 @@ module.exports = {
     registerPass,
     resendVerify,
     purchasePass,
-    passListener
+    buyerListener,
+    sellerListener
 };

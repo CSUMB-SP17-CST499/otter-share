@@ -241,24 +241,40 @@ app.post('/resendEmail', (req,res) => {
 //   }
 // });
 //
-app.post('/passListener', (req,res) => {
+app.post('/buyerListener', (req,res) => {
   var api_key = req.body.api_key;
   var passId = req.body.passId;
-  var customerType = req.body.customerType;
   var requestCount = req.body.requestCount;
-  var action = req.body.action;
   // maybe I can ask if they are buying or selling?
   // On front end, keep count of requests.. if count = 0,  AND custType = Buyer we change the sale to pending
   // if count greater than 0 but less than 300? (1 req a minute, idk what our limit is..) then we should no longer accept them
-  // NOTE: Seller action is optional, only for use of accepting or rejecting an exchange offer
-  if(!!api_key && !!passId && !!customerType && !!requestCount){
-    db.passListener(api_key, passId, customerType, requestCount, action, (status, data) => {
+  if(!!api_key && !!passId && !!requestCount){
+    db.buyerListener(api_key, passId, requestCount, (status, data) => {
       if(status == false){
         res.status(400).send(data);
       }
       else
         res.status(200).send(data);
 
+    });
+  }
+  else {
+    res.send({error:'Incorrect parameters received'});
+  }
+});
+app.post('/sellerListener', (req,res) => {
+  // res.setHeader('Content-Type', 'application/json');
+  var api_key = req.body.api_key;
+  var passId = req.body.passId;
+  var action = req.body.action;
+
+  if(!!api_key && !!passId){
+    db.sellerListener(api_key, passId, action, (status, data) => {
+      if(status == false){
+        res.status(400).json(data);
+      }
+      else
+        res.status(200).send(data);
     });
   }
   else {
@@ -277,7 +293,7 @@ app.post('/passListener', (req,res) => {
 // });
 // begins listening on port 3000 or instance given port.
 app.listen(port, () => {
-    setTimeout(executeOrder66, 624000, 'Killing Server to prevent session expiration!? (this is temporary)');
+    // setTimeout(executeOrder66, 624000, 'Killing Server to prevent session expiration!? (this is temporary)');
     console.log(`Started on port ${port}`);
 });
 
