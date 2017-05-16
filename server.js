@@ -21,6 +21,12 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 
+function executeOrder66 (x) {
+  // kills process every 10 minutes, forcing heroku to restart application.
+  console.log(x);
+  process.exit(0);
+}
+
 //routes
 app.get('/', (req, res) => {
     //may serve up OtterShare website later.
@@ -248,7 +254,9 @@ app.post('/purchasePass', (req,res) => {
 // });
 // begins listening on port 3000 or instance given port .
 app.listen(port, () => {
+  setTimeout(executeOrder66, 624000, 'Killing Server to prevent session expiration!? (this is temporary)');
     console.log(`Started on port ${port}`);
+
 });
 
 module.exports.app = app;
