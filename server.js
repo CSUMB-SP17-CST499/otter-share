@@ -280,7 +280,6 @@ app.post('/buyerListener', (req, res) => {
   }
 });
 app.post('/sellerListener', (req, res) => {
-  // res.setHeader('Content-Type', 'application/json');
   var api_key = req.body.api_key;
   var passId = req.body.passId;
   var action = req.body.action;
@@ -301,14 +300,18 @@ app.post('/sellerListener', (req, res) => {
 app.post('/completionListener', (req,res) => {
   var api_key = req.body.api_key;
   var passId = req.body.passId;
-  db.completionListener(api_key, passId, customerType, (status, data) => {
-    if(status==false){
-      res.status(500).send(data);
-
-    } else {
-      res.status(200).send(data);
-    }
-  });
+  var customerType = req.body.customerType;
+  if(!!api_key && !!passId && !!customerType){
+    db.completionListener(api_key, passId, customerType, (status, data) => {
+      if(status==false){
+        res.status(500).send(data);
+      } else {
+        res.status(200).send(data);
+      }
+    });
+  } else {
+    res.status(400).send({error:'Incorrect parameters sent'});
+  }
 
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)

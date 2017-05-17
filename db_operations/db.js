@@ -840,7 +840,7 @@ const sellerListener = (api_key, passId, action, callback) => {
             })
             .catch((e) => {
                 session.close();
-                console.log(`Line 728: ${JSON.stringify(e, null, 4)}`);
+                console.log(`Line 843: ${JSON.stringify(e, null, 4)}`);
                 return callback(false, {
                     error: e
                 });
@@ -868,7 +868,7 @@ const sellerListener = (api_key, passId, action, callback) => {
             .catch((e) => {
                 session.close();
                 //JSON.stringify(obj, null, 4)
-                console.log(`Line 748: ${JSON.stringify(e, null, 4)}`);
+                console.log(`Line 871: ${JSON.stringify(e, null, 4)}`);
                 return callback(false, {
                     error: 'Error caught in acceptance'
                 });
@@ -892,7 +892,7 @@ const sellerListener = (api_key, passId, action, callback) => {
             })
             .catch((e) => {
                 session.close();
-                console.log(`Line 718: ${JSON.stringify(e, null, 4)}`);
+                console.log(`Line 895: ${JSON.stringify(e, null, 4)}`);
                 return callback(false, {
                     error: 'Error caught in rejection'
                 });
@@ -904,15 +904,96 @@ const sellerListener = (api_key, passId, action, callback) => {
     }
 }
 const completionListener = (api_key, passId, customerType, callback) => {
-    // Can change this to 1 or 0 for simplicity on frontend, but feel this is probably easier to read
-    if(customerType = 'buyer'){
-        console.log('here Buyer')
+    // Can change type to 1 or 0 for simplicity on frontend, but feel this is probably easier to read
+    if(customerType == 'buyer'){
+        console.log(customerType);
+        session
+            .run('MATCH (user:User {api_access_key: {api_key} }),(pass:Pass) '+
+                 'WHERE pass.interestedUser = user.email AND NOT exists(pass.buyerConfirmed) ' + 
+                 'SET pass.buyerConfirmed = {buyerConfirmed} RETURN pass.buyerConfirmed as buyerConfirmed', {
+                 buyerConfirmed: 1,
+                 api_key: api_key
+            })
+            .then((results) => {
+                if (_.isEmpty(results.records[0]))
+                    return callback(false, {
+                        error: 'Pass exchange confirmation failed! (buyer)'
+                    });
+                return callback(true, {
+                    exchanged:'Please wait for seller to confirm exchange, return with customerType = "pending"'})
+            })
+            .catch((e) => {
+                session.close();
+                console.log(`Error in seller confirmation : ${JSON.stringify(e, null, 4)}`);
+                return callback(false, {
+                    error: 'Error caught in seller confirmation'
+                });
+            });
     }
-    else if(customerType = 'seller'){
-        console.log('here seller')
+    else if(customerType == 'seller'){
+        session
+            .run('MATCH (user:User {api_access_key: {api_key} }) MATCH (pass:Pass) ' + 
+                 'WHERE pass.ownerEmail = user.email AND NOT exists(pass.sellerConfirmed) AND exists(pass.interestedUser)' +
+                 'SET pass.sellerConfirmed = {sellerConfirmed} RETURN pass.sellerConfirmed as sellerConfirmed', {
+                api_key : api_key,
+                sellerConfirmed: 1
+            })
+            .then((results) => {
+                if (_.isEmpty(results.records[0]))
+                    return callback(false, {
+                        error: 'Pass exchange confirmation failed! (seller)'
+                    });
+                return callback(true, {
+                    exchanged:'Please wait for buyer to confirm exchange, return with customerType = "pending" '})
+            })
+            .catch((e) => {
+                session.close();
+                console.log(`Line 948: ${JSON.stringify(e, null, 4)}`);
+                return callback(false, {
+                    error: 'Error caught in seller confirmation'
+                });
+            });
+    }
+    else if(customerType == 'pending'){
+        // When a user clicks transaction complete on UI
+        session
+            .run('MATCH (user:User {api_access_key: {api_key} }) ' + 
+                 'OPTIONAL MATCH (pass:Pass {id: {passId} }) '+ 
+                 'RETURN pass.sellerConfirmed AS sellerConfirmed, pass.buyerConfirmed AS buyerConfirmed', {
+                  api_key: api_key,
+                  passId: passId
+            })
+            .then((results) => {
+                let pendingString =  '';
+                if (_.isEmpty(results.records[0]))
+                    return callback(false, {
+                        error: 'Pass confirmation failed! (in pending)'
+                    });
+                _.forEach(results.records, (record) => {
+                    console.log(`${record.get('sellerConfirmed')}`);
+                    console.log(`${record.get('buyerConfirmed')}`);
+                    if(record.get('buyerConfirmed').includes('null') || record.get('sellerConfirmed').includes('null')){
+                        return callback(false, {
+                            pending:'Please try again, other user must confirm the exchange too!'
+                        });
+                    } 
+                    // call my other function here
+                    return callback(true, {
+                        complete:'Exchanged! Pass exchange complete!'
+                    });
+                });
+            })
+            .catch((e) => {
+                session.close();
+                console.log(`Line 968: ${JSON.stringify(e, null, 4)}`);
+                return callback(false, {
+                    error: 'Error caught in pending confirmation'
+                });
+            });
+         
     }
     else {
-        console.log(`Incorrect parameters sent`)
+        console.log(`Incorrect parameters sent`);
     }
 }
 module.exports = {
