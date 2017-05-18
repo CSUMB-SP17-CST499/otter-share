@@ -99,4 +99,9 @@ public class MainActivity extends FragmentActivity{
         MainTask mainTask = new MainTask(this, frag);
         mainTask.execute(apikey, keyword);
     }
+
+    @Override
+    public void onBackPressed() {
+        //do nothing!!!
+    }
 }

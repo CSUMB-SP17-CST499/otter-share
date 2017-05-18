@@ -175,7 +175,7 @@ public class LoginTask extends AsyncTask<String, String, Integer> {
                 //start next activity upon a successful login
                 Intent i = new Intent(prevActivity, MainActivity.class);
                 prevActivity.startActivity(i);
-
+                prevActivity.finish();
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);

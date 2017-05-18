@@ -45,6 +45,7 @@ public class SellPassConfirm extends AppCompatActivity {
                 case R.id.wait_for_sell_cancel_btn:
                     i = new Intent(SellPassConfirm.this, MainActivity.class);
                     startActivity(i);
+                    finish();
                     break;
                 default:
                     break;
@@ -61,7 +62,7 @@ public class SellPassConfirm extends AppCompatActivity {
 
         circleFrameWithFade = (CircleFrameWithFade) fragmentManagerFrame.findFragmentById(R.id.sell_pass_circle_frame);
         frag = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.sell_pass_confirm_parking_map);
-        frag.changeCameraLocation(Double.parseDouble(getString(R.string.all_csumb_lat)),Double.parseDouble(getString(R.string.all_csumb_lon)),Float.parseFloat(getString(R.string.all_csumb_zoom)));
+        frag.changeCameraLocation(Double.parseDouble(getString(R.string.all_csumb_lat)), Double.parseDouble(getString(R.string.all_csumb_lon)), Float.parseFloat(getString(R.string.all_csumb_zoom)));
         circleFrameWithFade.fadeOutAnimation();
     }
 }

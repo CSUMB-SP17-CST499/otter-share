@@ -315,7 +315,9 @@ public class ParkingActivity extends AppCompatActivity{
 
         ParkingTask parkingTask = new ParkingTask(this);
         //pass in some sample data but real key and email
-        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", new LatLng(36.652129, -121.804482).toString(), "4", "This pass is the best one");
+        LatLng latLng = myFusedGpsService.getLocationLatLng();
+        String locationString = latLng.latitude + "," + latLng.longitude;
+        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", locationString, "4", "This pass is the best one");
 
     }
 }
