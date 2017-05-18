@@ -73,7 +73,7 @@ Creates a pass for a user from given info (api_key, email-address, lotLocation, 
 "price" : "price-here",<br>
 "notes" : "notes-here"<br>
 **Response** <br>
-created pass!
+Success: 'pass-id'
 
 
 ## POST /activeUsers <br>
