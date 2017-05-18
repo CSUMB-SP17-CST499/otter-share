@@ -129,7 +129,6 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
             if (jsonResponse.has("success")) {
                 status = 2;
             } else {
-                status = getErrorStatus(jsonResponse.getString("error"));
                 status = 1;
             }
 
@@ -162,6 +161,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
             case (1):
                 break;
             case (2)://success, start main activity
+                storePassStatus("registered");
                 Intent i = new Intent(prevActivity,MainActivity.class);
                 prevActivity.startActivity(i);
                 break;
@@ -199,27 +199,10 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
         Toast.makeText(mContext, message, length).show();
     }
 
-    private int getErrorStatus(String message) {
-        return message.contains("Code 1") ? 1: 0;
-    }
-
-    /**
-     * This could potentially be on the server side where you can just check, upon logging in successfully, what that value returned is... and if it's 1, display welcome message, and if 2, different message
-     * The advantage
-     */
-    private void updateUserStatus() {
+    private void storePassStatus(String status) {
         prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(mContext.getString(R.string.os_new_status), false);
+        editor.putString(mContext.getString(R.string.os_pass_status), status);
         editor.commit();
-    }
-
-    void displayWelcomeToast(boolean isNew) {
-        if (isNew) {
-            makeToast(R.string.login_toast_success_new, Toast.LENGTH_SHORT);
-            updateUserStatus();
-        } else {
-            makeToast(R.string.login_toast_success, Toast.LENGTH_SHORT);
-        }
     }
 }

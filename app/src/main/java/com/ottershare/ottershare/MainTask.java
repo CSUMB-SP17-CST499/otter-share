@@ -6,21 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -28,7 +22,6 @@ import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -51,7 +44,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     SharedPreferences prefs;
 
     /* Information needed from server response */
-    int status;
     private MapOSFragment frag;
 
     ArrayList<ParkingPassInfo> parkingPassInfoArray;
@@ -62,7 +54,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
     HashMap<Integer, Integer> lotMap;
 
     public MainTask(Activity activity,MapOSFragment frag) {
-        status = 0;
         mContext = activity.getApplicationContext();
         prevActivity = activity;
         locations = new ArrayList<LatLng>();
@@ -130,7 +121,13 @@ public class MainTask extends AsyncTask<String, String, Integer> {
 
             //Put data into a json object format
             JSONObject jsonResponseObject = new JSONObject(response);
-            JSONArray jsonResponse = jsonResponseObject.getJSONArray("success");
+            JSONArray jsonResponse = null;
+            if (jsonResponseObject.has("success")) {
+                jsonResponse = jsonResponseObject.getJSONArray("success");
+            } else if (jsonResponseObject.has("error")) {
+                return 4;
+            }
+
             //todo : change if statement to eventually distinguish sucsess and failures.
             if(true) {
                 parkingPassInfoArray = new ArrayList<ParkingPassInfo>();
@@ -160,7 +157,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                         } catch(NumberFormatException e) {
                     }
                 }else{
-                        Log.i("Main Task", "not a latlon format");
+                        Log.i("MainTask", "not a latlon format");
                     }
 
                 }
@@ -208,6 +205,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
+
                 parkingPassInfoArray = testData();
                 populateBottomPannel();
                 populateTopPannel();

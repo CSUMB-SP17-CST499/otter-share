@@ -67,7 +67,8 @@
                 android:id="@+id/wait_for_sell_progress_bar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:indeterminateDrawable="@drawable/progress"/>
+                android:indeterminateDrawable="@drawable/progress"
+                android:visibility="visible"/>
         </RelativeLayout>
 
         <RelativeLayout
@@ -75,7 +76,8 @@
             android:layout_width="match_parent"
             android:layout_height="70dp"
             android:layout_alignParentBottom="true"
-            android:paddingBottom="10dp">
+            android:paddingBottom="10dp"
+            android:visibility="invisible">
 
             <Button
                 android:id="@+id/cancel_sell_lower_btn"

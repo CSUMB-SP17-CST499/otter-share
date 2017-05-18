@@ -29,8 +29,9 @@ dependencies {
     /* For testing */
     testCompile 'junit:junit:4.12'
     // Mockito framework
+
+    compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-v4:25.2.0'
     compile 'com.google.android.gms:play-services-maps:10.2.0'
     compile 'com.google.android.gms:play-services-location:10.2.0'
     compile 'com.sothree.slidinguppanel:library:3.3.1'
