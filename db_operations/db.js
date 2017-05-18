@@ -720,7 +720,7 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
         session
             .run('MATCH (y:User {api_access_key: { api_key }})' +
                 'MATCH (pass:Pass {id: {passId}})' +
-                'WHERE exists(pass.saleState) AND pass.interestedUser = y.email RETURN pass.ownerEmail AS ownerEmail , pass.saleState AS saleState', {
+                'WHERE exists(pass.saleState) RETURN pass.ownerEmail AS ownerEmail , pass.saleState AS saleState', {
                     api_key: api_key,
                     passId: passId
                 })
@@ -736,9 +736,9 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
                         return callback(true, {
                             pending: 'Pass has not yet updated...'
                         });
-                    if (parseInt(record.get('saleState')) == 0) { // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
+                    if (parseInt(record.get('saleState')) == 0) { // if pass owner rejects your offer to exchange, (now handled by seller: remove yourself from their pass property), end search on this pass!
                         session
-                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser '+
+                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) '+
                                  'RETURN pass.ownerEmail AS ownerEmail', {
                                 passId: passId,
                                 api_key: api_key
@@ -800,10 +800,12 @@ const sellerListener = (api_key, passId, action, callback) => {
             })
             .then((results) => {
                 session.close();
-                if (_.isEmpty(results.records[0]))
+                if (_.isEmpty(results.records[0])){
+                    console.log('First query, no records found (probably something user sent incorrectly)');
                     return callback(false, {
-                        error: 'Record not found 681'
+                        error: 'Record not found 806'
                     });
+                }
                 _.forEach(results.records, (record) => {
                     if (parseInt(record.get('saleState')) == 0) {
                         console.log('Still at initial state, continue requests');
@@ -811,7 +813,7 @@ const sellerListener = (api_key, passId, action, callback) => {
                             pending: 'Still no buyers....'
                         });
                     }
-                    if (parseInt(record.get('saleState')) == 1) {
+                    else if (parseInt(record.get('saleState')) == 1) {
                         var passObject = new Object();
                         // If accepted by buyer, seller must decide on an action, backend will send back their profile. Return rating of buyer and email
                         session
@@ -843,6 +845,12 @@ const sellerListener = (api_key, passId, action, callback) => {
                                     error: 'Sys error 724'
                                 });
                             });
+                    }
+                    else {
+                        console.log('Buyer must decide on action, buyer info is sent.');   
+                        return callback(false, {
+                            error: 'looks like the pass state is non-existant or two. You should not be calling action with null...'
+                        });
                     }
                 });
             })
@@ -885,16 +893,17 @@ const sellerListener = (api_key, passId, action, callback) => {
         // Reject the offer (Change status to zero == 0 )
         let saleState = 0;
         session
-            .run('MATCH (pass:Pass {id:{passId}}) SET pass.saleState = {saleState} RETURN pass.saleState as saleState', {
+            .run('MATCH (pass:Pass {id:{passId}}) SET pass.saleState = {saleState} REMOVE pass.interestedUser RETURN pass.saleState as saleState', {
                 saleState: saleState,
                 passId: passId
             })
             .then((results) => {
                 session.close();
-                if (_.isEmpty(results.records[0]))
+                if (_.isEmpty(results.records[0])){
                     return callback(false, {
                         error: 'Pass rejection failed'
                     });
+                }
                 return callback(true, {
                     rejected: 'You have successfully rejected this user\'s offer, pass is back up for sale'
                 });
@@ -907,8 +916,9 @@ const sellerListener = (api_key, passId, action, callback) => {
                 });
             });
     } else {
+        console.log('error on action type');
         return callback(false, {
-            error: 'on action'
+            error: 'on reject'
         });
     }
 }
@@ -985,14 +995,13 @@ const completionListener = (api_key, passId, customerType, callback) => {
             })
             .then((results) => {
                 session.close();
-                let pendingString = '';
                 if (_.isEmpty(results.records[0])){
+                    // check for existance of transaction node (with id, if exists RETURN 'Exchanged' ELSE return false etc....)
                     return callback(false, {
                         error: 'Pass confirmation failed! (in pending)'
                     });
                 }
-                _.forEach(results.records, (record) => {
-
+                _.forEach(results.records, (record) => {    
                     var currentOwnerEmail = record.get('ownerEmail');
                     var api_key = record.get('api_key');
                     if (record.get('buyerConfirmed') === null || record.get('sellerConfirmed') === null) {
@@ -1034,7 +1043,6 @@ const completionListener = (api_key, passId, customerType, callback) => {
 }
 
 const rateUser = (api_key, targetUser, rating, callback) => {
-    // console.log(`${api_key} ${targetUser} ${rating}`);
     session
         .run('MATCH (rater:User {api_access_key: {api_key}}) MATCH (targetUser:User {email: {targetUser}}) ' +
              'SET targetUser.totalStars = targetUser.totalStars + {rating}, targetUser.numberOfRatings = targetUser.numberOfRatings + 1 '+ 
