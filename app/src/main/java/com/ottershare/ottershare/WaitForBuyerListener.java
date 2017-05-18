@@ -7,11 +7,11 @@ public class WaitForBuyerListener implements OSEventListener {
 
     @Override
     public void onEventCompleted() {
-        // TODO
+
     }
 
     @Override
     public void onEventFailed() {
-        // TODO
+
     }
 }
