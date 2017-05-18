@@ -83,7 +83,7 @@ public class MainActivity extends FragmentActivity{
         ArrayList<LatLng> locations = new ArrayList<LatLng>();
 
         runMainTask();
-        //runWaitForBuyerTask();
+        runWaitForBuyerTask();
 
         /*
         todo: there should eventualy be a function to get all of the points from the backend and store it into a array list and then pass it to the below function
@@ -107,7 +107,7 @@ public class MainActivity extends FragmentActivity{
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_RESPONSE);
         String passId = "SyXJvhcg-";
-        String requestCount = "2";
+        String requestCount = "1";
 
 
         WaitForBuyerTask waitForBuyerTask = new WaitForBuyerTask(this);

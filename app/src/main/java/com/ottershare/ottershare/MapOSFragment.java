@@ -101,21 +101,22 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     public void addHeatMap(ArrayList<LatLng> locations){
 
         int[] colors = {
-                R.color.colorsecondDarker,
+                R.color.colorPrimary,
                 R.color.colorPrimaryDark
         };
 
         float[] startPoints = {
-                0.2f,.3f
+                0.2f,1f
         };
 
         Gradient gradient = new Gradient(colors,startPoints);
         mProvider = new HeatmapTileProvider.Builder()
                 .data(locations)
                 //.gradient(gradient)
+                .radius(15)
                 .build();
 
-        mProvider.setOpacity(2.0);
+        mProvider.setOpacity(1.0);
         mOverlay = mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
 
         }

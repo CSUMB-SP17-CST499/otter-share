@@ -151,6 +151,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                             int lotLocation = parkingPass.getInt("lotLocation");
                             String email = parkingPass.getString("ownerEmail");
                             float rating = (float) parkingPass.getDouble("avgRating");
+                            Log.i(LOG_TAG + " first",email);
                             parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email , rating));
                             locations.add(gpsLocation);
 
@@ -206,8 +207,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
-
-                parkingPassInfoArray = testData();
+                //parkingPassInfoArray = testData();
                 populateBottomPannel();
                 populateTopPannel();
                 break;
@@ -260,7 +260,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             }
         });
         passList.setAdapter(passAdapter);
-        passAdapter.add(parkingPassInfoArray.get(0));
         frag.addHeatMap(locations);
 
     }
