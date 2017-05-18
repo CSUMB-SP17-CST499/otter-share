@@ -239,32 +239,11 @@ app.post('/resendEmail', (req, res) => {
     })
   }
 });
-// // Buying a pass from a user, takes buyer's api key, the passes's current owner email and ID
-// // This should be invoked after a payment has been processed, changes ownership of parking pass
-// app.post('/purchasePass', (req,res) => {
-//   var api_key = req.body.api_key;
-//   var currentOwnerEmail = req.body.currentOwnerEmail;
-//   var passId = req.body.passId;
-//   if(!!api_key && !!currentOwnerEmail && !!passId){
-//     db.purchasePass(api_key, currentOwnerEmail, passId, (err, response) => {
-//       if(err) {
-//         return res.send(err);
-//       }
-//       return res.send(response);
-//     });
-//   }
-//   else {
-//     return res.send({error:'error, incorrect parameters received.'});
-//   }
-// });
-//
+
 app.post('/buyerListener', (req, res) => {
   var api_key = req.body.api_key;
   var passId = req.body.passId;
   var requestCount = req.body.requestCount;
-  // maybe I can ask if they are buying or selling?
-  // On front end, keep count of requests.. if count = 0,  AND custType = Buyer we change the sale to pending
-  // if count greater than 0 but less than 300? (1 req a minute, idk what our limit is..) then we should no longer accept them
   if (!!api_key && !!passId && !!requestCount) {
     db.buyerListener(api_key, passId, requestCount, (status, data) => {
       if (status == false) {
@@ -279,6 +258,7 @@ app.post('/buyerListener', (req, res) => {
     });
   }
 });
+
 app.post('/sellerListener', (req, res) => {
   var api_key = req.body.api_key;
   var passId = req.body.passId;
@@ -297,6 +277,7 @@ app.post('/sellerListener', (req, res) => {
     });
   }
 });
+
 app.post('/completionListener', (req,res) => {
   var api_key = req.body.api_key;
   var passId = req.body.passId;
