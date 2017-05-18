@@ -293,7 +293,25 @@ app.post('/completionListener', (req,res) => {
   } else {
     res.status(400).send({error:'Incorrect parameters sent'});
   }
+});
+//
+app.post('/rateUser', (req,res) => {
+  var api_key = req.body.api_key;
+  var targetEmail = req.body.targetEmail;
+  var rating = req.body.rating;
+  rating = parseFloat(rating);
 
+  if(!!api_key && !!targetEmail && (rating <= 5 && rating >= 0)) {
+    db.rateUser(api_key, targetEmail, rating, (status, data) => {
+      if(status==false){
+        res.status(500).send(data);
+      } else {
+        res.status(200).send(data);
+      }
+    });
+  } else {
+    res.status(400).send({error:'Incorrect parameters sent'});
+  }
 });
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res) => {

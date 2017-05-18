@@ -175,7 +175,7 @@ const createUser = (email, name, password, callback) => {
                 bcrypt.hash(password, 10, (err, hash) => {
                     session
                         .run("CREATE (a:User {name: {name}, email: {email}, password: {password}, completeProfile:{completeProfile}," +
-                            "api_access_key: {api_access_key}, status:{status}, emailTime:timestamp(), verify_email_key: {verify_email_key}})", {
+                            "api_access_key: {api_access_key}, status:{status}, emailTime:timestamp(), verify_email_key: {verify_email_key}, totalStars: {totalStars}, numberOfRatings: {numberOfRatings} })", {
                                 name: name,
                                 email: email,
                                 password: hash,
@@ -917,7 +917,6 @@ const completionListener = (api_key, passId, customerType, callback) => {
     // When a buyer claims to have completed a transaction (obtained pass from seller) then they set 
     // buyerConfirmed to 1, showing that they have confirmed the exchange NOTE: Seller section the same
     if (customerType == 'buyer') {
-
         session
             .run('MATCH (user:User {api_access_key: {api_key} }),(pass:Pass) ' +
                 'WHERE pass.interestedUser = user.email AND NOT exists(pass.buyerConfirmed) ' +
@@ -983,7 +982,7 @@ const completionListener = (api_key, passId, customerType, callback) => {
                     api_key: api_key,
                     passId: passId,
                     nullCheck: null
-                })
+            })
             .then((results) => {
                 session.close();
                 let pendingString = '';
@@ -1033,12 +1032,43 @@ const completionListener = (api_key, passId, customerType, callback) => {
         console.log(`Incorrect parameters sent`);
     }
 }
+
+const rateUser = (api_key, targetUser, rating, callback) => {
+    // console.log(`${api_key} ${targetUser} ${rating}`);
+    session
+        .run('MATCH (rater:User {api_access_key: {api_key}}) MATCH (targetUser:User {email: {targetUser}}) ' +
+             'SET targetUser.totalStars = targetUser.totalStars + {rating}, targetUser.numberOfRatings = targetUser.numberOfRatings + 1 '+ 
+             'RETURN targetUser.totalStars AS totalStars, targetUser.numberOfRatings AS numberOfRatings', {
+                 api_key: api_key,
+                 targetUser: targetUser,
+                 rating:rating
+        })
+        .then((results) => {
+            if (_.isEmpty(results.records[0]))
+                return callback(false, {
+                    error: 'Rating failed!'
+                });
+            else {
+                return callback(true, {
+                    complete: 'Rating received!'
+                });
+            }
+        })
+        .catch((e) => {
+            session.close();
+            console.log(`Rating error caught: ${JSON.stringify(e, null, 4)}`);
+            return callback(false, {
+                error: 'Error caught in rating!'
+            });
+        });
+}
 module.exports = {
     activeUsers,
     login,
     createUser,
     completeProfile,
     verifyEmail,
+    rateUser,
     resetDB,
     retrieveUser,
     retrieveMyProfile,
