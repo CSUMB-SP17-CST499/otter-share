@@ -1,6 +1,7 @@
 package com.ottershare.ottershare;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ public class SellPassConfirm extends AppCompatActivity {
     FragmentManager fragmentManagerFrame;
     FragmentManager fragmentManagerMap;
     MapOSFragment frag;
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,5 +62,6 @@ public class SellPassConfirm extends AppCompatActivity {
         circleFrameWithFade = (CircleFrameWithFade) fragmentManagerFrame.findFragmentById(R.id.sell_pass_circle_frame);
         frag = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.sell_pass_confirm_parking_map);
         frag.changeCameraLocation(Double.parseDouble(getString(R.string.all_csumb_lat)),Double.parseDouble(getString(R.string.all_csumb_lon)),Float.parseFloat(getString(R.string.all_csumb_zoom)));
+        circleFrameWithFade.fadeOutAnimation();
     }
 }

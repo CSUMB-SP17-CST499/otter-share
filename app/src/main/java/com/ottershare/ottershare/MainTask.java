@@ -141,7 +141,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                         String[] gpsLocationStringSplit = gpsLocationString.split(",");
                         try {
 
-                            String id = parkingPass.getString("id");
+                            String id = parkingPass.getString("passId");
                             double lat = Double.parseDouble(gpsLocationStringSplit[0]);
                             double lon = Double.parseDouble(gpsLocationStringSplit[1]);
                             LatLng gpsLocation = new LatLng(lat, lon);
@@ -177,7 +177,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             //Log.d(LOG_TAG, "\"name\" --> " + name);
             //Log.d(LOG_TAG, "\"email\" --> " + email);
             //Log.d(LOG_TAG, "\"Retrieved user api_key\" --> " + api_key);
-            return 2;
 
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage(), e);

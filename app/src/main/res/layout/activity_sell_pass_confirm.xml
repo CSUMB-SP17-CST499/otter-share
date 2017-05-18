@@ -32,20 +32,28 @@
         android:paddingTop="30dp"
         android:layout_below="@+id/sell_pass_confirm_text">
 
-        <fragment
-            android:id="@+id/sell_pass_confirm_parking_map"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            class="com.ottershare.ottershare.MapOSFragment"
-            tools:layout="@layout/fragment_map" />
-
-        <fragment
-            class="com.ottershare.ottershare.CircleFrameWithFade"
+        <RelativeLayout
             android:layout_width="300dp"
             android:layout_height="300dp"
-            android:id="@+id/sell_pass_circle_frame"
-            tools:layout="@layout/fragment_circle_frame_with_fade"/>
+            android:gravity="center_horizontal"
+            android:paddingTop="30dp">
 
+            <fragment
+                android:id="@+id/sell_pass_confirm_parking_map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                class="com.ottershare.ottershare.MapOSFragment"
+                tools:layout="@layout/fragment_map" />
+
+            <fragment
+                class="com.ottershare.ottershare.CircleFrameWithFade"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:id="@+id/sell_pass_circle_frame"
+                tools:layout="@layout/fragment_circle_frame_with_fade"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
