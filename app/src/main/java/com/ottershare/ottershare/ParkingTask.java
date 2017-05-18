@@ -41,7 +41,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
 
     /* Information needed from server response */
     int status;
-
+    String gpsLocationToStore;
 
 
     public ParkingTask(Activity activity) {
@@ -59,6 +59,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
         String email = params[1];
         String lotLocation = params[2];
         String gpsLocation = params[3];
+        gpsLocationToStore = gpsLocation;
         String price = params[4];
         String notes = params[5];
 
@@ -203,6 +204,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
         prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(mContext.getString(R.string.os_pass_status), status);
+        editor.putString(mContext.getString(R.string.os_pass_geolocation), gpsLocationToStore);
         editor.commit();
     }
 }
