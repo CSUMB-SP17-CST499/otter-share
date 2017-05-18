@@ -121,18 +121,17 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                     Log.d(LOG_TAG, response);
                 }
             } else {
-                /**
-                 * TODO: find out how to test this for when there really is a bad response code
-                 * Perhaps test the next step where the result is returned to the Switch in onPostExecute...
-                 */
+                /*
+                * TODO: find out how to test this for when there really is a bad response code
+                * Perhaps test the next step where the result is returned to the Switch in onPostExecute...
+                */
                 return -1;
             }
 
             //Put data into a json object format
             JSONObject jsonResponseObject = new JSONObject(response);
-            JSONArray jsonResponse = jsonResponseObject.getJSONArray("success");
-            //todo : change if statement to eventually distinguish sucsess and failures.
-            if(true) {
+            if(jsonResponseObject.has("success")) {
+                JSONArray jsonResponse = jsonResponseObject.getJSONArray("success");
                 parkingPassInfoArray = new ArrayList<ParkingPassInfo>();
                 for (int i = 0; i < jsonResponse.length(); i++) {
                     JSONObject parkingPass = jsonResponse.getJSONObject(i);
@@ -160,11 +159,13 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                         } catch(NumberFormatException e) {
                     }
                 }else{
-                        Log.i("Main Task", "not a latlon format");
+                        Log.i(LOG_TAG, "not a latlon format");
                     }
 
                 }
 
+            }else{
+                Log.i(LOG_TAG, "json not successful");
             }
 
             Log.d(LOG_TAG, api_key);
@@ -178,7 +179,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             //Log.d(LOG_TAG, "\"name\" --> " + name);
             //Log.d(LOG_TAG, "\"email\" --> " + email);
             //Log.d(LOG_TAG, "\"Retrieved user api_key\" --> " + api_key);
-
+            return 2;
 
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage(), e);
@@ -206,13 +207,9 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 break;
             case (2):
                 Log.d(LOG_TAG, "case = 2: " + result);
-                break;
-            case (3):
                 parkingPassInfoArray = testData();
                 populateBottomPannel();
                 populateTopPannel();
-
-                Log.d(LOG_TAG, "case = 3: " + result);
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);
@@ -221,7 +218,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
 
     }
 
-    protected void onProgressUpdate(Integer... progress) {
+    protected void onProgressUpdate(String... progress) {
         //probably wont use, but maybe way later...
 
     }

@@ -65,7 +65,6 @@ public class ParkingActivity extends AppCompatActivity{
             public void onSwipeConfirm() {
                 LatLng tempLatLng = myFusedGpsService.getLocationLatLng();
 
-
                 //// TODO: 4/19/17 change "if" statement to be true if the tempLatLng location is within the csumb bounds.
                 if(true) {
                     frag.changeCameraLocation(tempLatLng.latitude, tempLatLng.longitude, 14);
@@ -182,7 +181,6 @@ public class ParkingActivity extends AppCompatActivity{
 
             @Override
             public void onAnimationRepeat(Animation animation) {
-
             }
         });
     }
@@ -196,7 +194,6 @@ public class ParkingActivity extends AppCompatActivity{
         slideRightOnScreen.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
-
             }
 
             @Override
@@ -206,7 +203,6 @@ public class ParkingActivity extends AppCompatActivity{
 
             @Override
             public void onAnimationRepeat(Animation animation) {
-
             }
         });
     }
@@ -302,7 +298,7 @@ public class ParkingActivity extends AppCompatActivity{
             unbindService(myConnection);
             boundToFusedGpsService = false;
         }
-    };
+    }
 
     //start parking task to register the pass
     private void runParkingTask() {

@@ -31,7 +31,7 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
     private FusedLocationProviderApi myFusedLocationProviderApi;
     private GoogleApiClient myGoogleApiClient;
     private LocationRequest myLocationRequest;
-
+    private String LOG_TAG = myFusedLocationProviderApi.getClass().getSimpleName();
     private LatLng currentLocation;
 
     //Default Constructor.
@@ -40,7 +40,7 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onCreate() {
-        Log.w("gps", "on create");
+        Log.w(LOG_TAG , "on create");
         myGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -63,12 +63,12 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.w("gps", "on conected");
+        Log.w(LOG_TAG, "on conected");
         requestLocationUpdates();
     }
 
     private void requestLocationUpdates() {
-        Log.w("gps", "Request location updates");
+        Log.w(LOG_TAG, "Request location updates");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -90,12 +90,12 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.w("gps", "on connection failed");
+        Log.w(LOG_TAG, "on connection failed");
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.w("gps", "on location changed");
+        Log.w(LOG_TAG, "on location changed");
         currentLocation = new LatLng(location.getLatitude(),location.getLongitude());
     }
 
@@ -108,14 +108,14 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onStart(Intent intent, int startId) {
-        Log.w("gps", "on start");
+        Log.w(LOG_TAG, "on start");
         onstartgps();
         super.onStart(intent, startId);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.w("gps", "onStartCommand");
+        Log.w(LOG_TAG, "onStartCommand");
         onstartgps();
         onResume();
         return super.onStartCommand(intent, flags, startId);
@@ -123,14 +123,14 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onDestroy() {
-        Log.w("gps", "on destroy");
+        Log.w(LOG_TAG, "on destroy");
         super.onDestroy();
         onstop();
     }
 
 
     public void onstartgps(){
-        Log.w("gps", "onstart gps");
+        Log.w(LOG_TAG, "onstart gps");
         myGoogleApiClient.connect();
     }
 
@@ -140,14 +140,14 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
     }
 
     public void onResume(){
-        Log.w("gps", "on Resume");
+        Log.w(LOG_TAG, "on Resume");
         if(myGoogleApiClient.isConnected()){
             requestLocationUpdates();
         }
     }
 
     public void onstop(){
-        Log.w("gps", "on stop");
+        Log.w(LOG_TAG, "on stop");
         myGoogleApiClient.disconnect();
     }
 

@@ -40,8 +40,4 @@
     <string name="complete_transaction_seller_meet_text">meet them at your car</string>
     <string name="complete_transaction_seller_agreed_text">has agreed to buy your pass</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
-
 </resources>
