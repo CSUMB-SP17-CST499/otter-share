@@ -1,12 +1,16 @@
 package com.ottershare.ottershare;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import com.google.android.gms.maps.model.LatLng;
 
 public class SellPassConfirm extends AppCompatActivity {
 
@@ -17,6 +21,7 @@ public class SellPassConfirm extends AppCompatActivity {
     FragmentManager fragmentManagerMap;
     MapOSFragment frag;
     SharedPreferences prefs;
+    LatLng passLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +33,7 @@ public class SellPassConfirm extends AppCompatActivity {
 
         cancelBtn = (Button) findViewById(R.id.wait_for_sell_cancel_btn);
         cancelBtn.setOnClickListener(listener);
+        prefs = SellPassConfirm.this.getApplicationContext().getSharedPreferences(SellPassConfirm.this.getApplicationContext().getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
     }
 
     View.OnClickListener listener = new View.OnClickListener()
@@ -61,7 +67,17 @@ public class SellPassConfirm extends AppCompatActivity {
 
         circleFrameWithFade = (CircleFrameWithFade) fragmentManagerFrame.findFragmentById(R.id.sell_pass_circle_frame);
         frag = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.sell_pass_confirm_parking_map);
-        frag.changeCameraLocation(Double.parseDouble(getString(R.string.all_csumb_lat)),Double.parseDouble(getString(R.string.all_csumb_lon)),Float.parseFloat(getString(R.string.all_csumb_zoom)));
-        circleFrameWithFade.fadeOutAnimation();
+
+        //getting the location of current pass.
+        try{
+            String[] tempPassLocation = prefs.getString(this.getString(R.string.os_pass_geolocation), "No location").split(",");
+            passLocation = new LatLng(Double.parseDouble(tempPassLocation[0]),Double.parseDouble(tempPassLocation[1]));
+            frag.changeCameraLocation(passLocation.latitude, passLocation.longitude ,Float.parseFloat(getString(R.string.all_csumb_zoom)));
+            frag.makeMarker(passLocation.latitude, passLocation.longitude);
+            circleFrameWithFade.fadeOutAnimation();
+
+        }catch (NumberFormatException e){
+            Log.i("ASS", "ASS");
+        }
     }
 }

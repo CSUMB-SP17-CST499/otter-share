@@ -31,7 +31,7 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
     private FusedLocationProviderApi myFusedLocationProviderApi;
     private GoogleApiClient myGoogleApiClient;
     private LocationRequest myLocationRequest;
-    private String LOG_TAG = myFusedLocationProviderApi.getClass().getSimpleName();
+    private String LOG_TAG;
     private LatLng currentLocation;
 
     //Default Constructor.
@@ -53,6 +53,7 @@ public class FusedGpsService extends Service implements GoogleApiClient.Connecti
                 .setFastestInterval(5000);
 
         myFusedLocationProviderApi = LocationServices.FusedLocationApi;
+        LOG_TAG = myFusedLocationProviderApi.getClass().getSimpleName();
     }
 
     @Override

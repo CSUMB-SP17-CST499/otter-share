@@ -30,6 +30,7 @@ public class ParkingActivity extends AppCompatActivity{
 
     private FragmentManager fragmentManagerFrame;
     private FragmentManager fragmentManagerMap;
+    private MapOSFragment mapOSFragment;
     private CircleFrameWithFade circleFrameWithFade;
     private MapOSFragment frag;
     private RelativeLayout swipeButton;
@@ -128,6 +129,9 @@ public class ParkingActivity extends AppCompatActivity{
         slideLeftOffScreen.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
+                circleFrameWithFade.fadeInAnimation();
+                mapOSFragment.removeAllFormating();
+
 
             }
 
@@ -177,6 +181,8 @@ public class ParkingActivity extends AppCompatActivity{
         slideRightOffScreen.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
+                circleFrameWithFade.fadeOutAnimation();
+                mapOSFragment.makeMarker(myFusedGpsService.getLocationLatLng().latitude, myFusedGpsService.getLocationLatLng().longitude);
             }
 
             @Override
@@ -249,7 +255,9 @@ public class ParkingActivity extends AppCompatActivity{
         }
 
         fragmentManagerFrame = getSupportFragmentManager();
+
         fragmentManagerMap = getSupportFragmentManager();
+        mapOSFragment = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.parking_map);
 
         circleFrameWithFade = (CircleFrameWithFade) fragmentManagerFrame.findFragmentById(R.id.parking_activity_circle_frame);
         frag = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.parking_map);
@@ -315,7 +323,6 @@ public class ParkingActivity extends AppCompatActivity{
 
         ParkingTask parkingTask = new ParkingTask(this);
         //pass in some sample data but real key and email
-        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", new LatLng(36.652129, -121.804482).toString(), "4", "This pass is the best one");
-
+        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", myFusedGpsService.getLocationLatLng().toString() , "4", "This pass is the best one");
     }
 }
