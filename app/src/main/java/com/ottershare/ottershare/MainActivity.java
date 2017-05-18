@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -25,21 +26,24 @@ public class MainActivity extends FragmentActivity{
     ListView topLotList;
     ListView bottomPassList;
 
-    final String DEFAULT_API_KEY = "empty";
+    final String DEFAULT_RESPONSE = "empty";
 
     View.OnClickListener listener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
+            Intent i;
             switch (v.getId())
             {
                 case R.id.register_pass_btn:
-                    Intent intent = new Intent(MainActivity.this, WaitForSell.class);
-                    MainActivity.this.startActivity(intent);
+                    i = new Intent(MainActivity.this, ParkingActivity.class);
+                    startActivity(i);
                     break;
                 case R.id.sell_pass_btn:
-
+                    i = new Intent(MainActivity.this, SellPassConfirm.class);
+                    startActivity(i);
+                    break;
                 default:
                     break;
             }
@@ -52,16 +56,21 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        regPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
-        regPassBtn.setOnClickListener(listener);
+        SharedPreferences prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
 
         sellPassBtn = (ImageView) findViewById(R.id.sell_pass_btn);
-        regPassBtn.setOnClickListener(listener);
+        regPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
 
-        //topLotList = (ListView) findViewById(R.id.top_pannel_list_view);
-       // bottomPassList = (ListView) findViewById(R.id.bottom_pannel_list_view);
-
-        //runParkingTask();
+        String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
+        if (passStatus.equals("registered")) {
+            sellPassBtn.setOnClickListener(listener);
+            sellPassBtn.setVisibility(View.VISIBLE);
+            regPassBtn.setVisibility(View.GONE);
+        } else {
+            sellPassBtn.setVisibility(View.GONE);
+            regPassBtn.setVisibility(View.VISIBLE);
+            regPassBtn.setOnClickListener(listener);
+        }
     }
 
     @Override
@@ -84,14 +93,10 @@ public class MainActivity extends FragmentActivity{
     private void runMainTask() {
         Context context = MainActivity.this.getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
-        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
+        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_RESPONSE);
         String keyword = "all";
 
-
-        MainTask mainTask = new MainTask(this , frag);
+        MainTask mainTask = new MainTask(this, frag);
         mainTask.execute(apikey, keyword);
-        sellPassBtn.setVisibility(View.GONE);
     }
-
-    // delete this after testing.
 }

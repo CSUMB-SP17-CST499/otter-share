@@ -22,6 +22,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.ottershare.ottershare.FusedGpsService.LocalBinder;
 
 public class ParkingActivity extends AppCompatActivity{
+    private final String LOG_TAG = ParkingActivity.class.getSimpleName();
 
     private TextView parkingConformationPrompt;
     private SwipeButton swipeWhenParkedSlider;
@@ -47,12 +48,16 @@ public class ParkingActivity extends AppCompatActivity{
     private Button cancelBtn;
     private Button acceptBtn;
 
+    LatLng tempLatLng;
+
     final String DEFAULT_API_KEY = "empty";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pre_parking);
+
+        tempLatLng = new LatLng(0,0);
 
         setUpAnimations();
 
@@ -63,12 +68,11 @@ public class ParkingActivity extends AppCompatActivity{
         swipeButtonSettings = new SwipeButtonCustomItems() {
             @Override
             public void onSwipeConfirm() {
-                LatLng tempLatLng = myFusedGpsService.getLocationLatLng();
+                tempLatLng = myFusedGpsService.getLocationLatLng();
 
                 //// TODO: 4/19/17 change "if" statement to be true if the tempLatLng location is within the csumb bounds.
                 if(true) {
-                    frag.changeCameraLocation(tempLatLng.latitude, tempLatLng.longitude, 14);
-                    circleFrameWithFade.fadeOutAnimation();
+                    frag.changeCameraLocation(ParkingActivity.this.tempLatLng.latitude, ParkingActivity.this.tempLatLng.longitude, 14);
                     swipeButton.startAnimation(slideRightOffScreen);
 
                     if(buttonsLayout != null) {
@@ -129,6 +133,7 @@ public class ParkingActivity extends AppCompatActivity{
 
             @Override
             public void onAnimationEnd(Animation animation) {
+                Log.d(LOG_TAG, "slideLeftOffScreen.setAnimationListener->onAnimationEnd");
                 buttonsLayout.setVisibility(View.GONE);
             }
 
@@ -198,6 +203,7 @@ public class ParkingActivity extends AppCompatActivity{
 
             @Override
             public void onAnimationEnd(Animation animation) {
+                Log.d(LOG_TAG, "slideRightOnScreen.setAnimationListener->onAnimationEnd");
                 buttonsLayout.setVisibility(View.VISIBLE);
             }
 
@@ -214,7 +220,7 @@ public class ParkingActivity extends AppCompatActivity{
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-
+        Log.d(LOG_TAG, "onWindowFocusChanged");
         swipeButton = (RelativeLayout) findViewById(R.id.swipe_layout);
 
         buttonsLayout = (RelativeLayout) findViewById(R.id.parking_btn_layout);
@@ -270,7 +276,7 @@ public class ParkingActivity extends AppCompatActivity{
 
     @Override
     protected void onStart() {
-        Log.w("parking", "onStart");
+        Log.w(LOG_TAG, "onStart");
         super.onStart();
         Intent myIntent = new Intent(this, FusedGpsService.class);
         bindService(myIntent, myConnection ,BIND_AUTO_CREATE);
