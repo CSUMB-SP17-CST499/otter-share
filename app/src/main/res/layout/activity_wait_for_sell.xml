@@ -32,6 +32,16 @@
         android:layout_marginTop="50dp"
         android:gravity="center"/>
 
+    <TextView
+        android:id="@+id/found_buyer_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_below="@+id/wait_for_sell_text_view"
+        android:visibility="invisible"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorPrimaryDark"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -42,7 +52,8 @@
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_marginTop="30dp"
-            android:layout_centerHorizontal="true">
+            android:layout_centerHorizontal="true"
+            android:id="@+id/circleFrame">
 
             <RelativeLayout
                 android:id="@+id/wait_for_sell_frame_layout"
@@ -72,6 +83,30 @@
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/found_buyer_rating_layout"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@drawable/rounded_corners_primary"
+            android:paddingTop="10dp"
+            android:visibility="invisible"
+            android:layout_below="@+id/circleFrame">
+
+            <RatingBar
+                android:id="@+id/user_profile_rating_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:numStars="5"
+                android:max="5"
+                android:progressTint="@color/colorPrimaryDark"
+                android:secondaryProgressTint="@color/colorPrimary"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:isIndicator="true"
+                android:rating="2.5"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/wait_for_sell_button_layout"
             android:layout_width="match_parent"
             android:layout_height="70dp"
@@ -80,12 +115,12 @@
             android:visibility="invisible">
 
             <Button
-                android:id="@+id/cancel_sell_lower_btn"
+                android:id="@+id/cancel_sell_btn"
                 android:layout_width="150dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="20dp"
-                android:text="cancel sell"
+                android:text="reject"
                 android:background="@drawable/cancel_btn_draw"/>
 
             <Button
@@ -93,8 +128,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginRight="10dp"
-                android:layout_toRightOf="@id/cancel_sell_lower_btn"
-                android:text="confirm buyer"
+                android:layout_toRightOf="@id/cancel_sell_btn"
+                android:text="accept"
                 android:background="@drawable/go_button_draw"/>
 
         </RelativeLayout>

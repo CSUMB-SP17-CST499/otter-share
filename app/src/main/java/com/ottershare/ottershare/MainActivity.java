@@ -23,6 +23,8 @@ public class MainActivity extends FragmentActivity{
     ImageView regPassBtn;
     ImageView sellPassBtn;
     ArrayList <ParkingPassInfo> testdataarray = new ArrayList<>();
+    boolean alreadySelling;
+    boolean alreadyFoundBuyer;
     ListView topLotList;
     ListView bottomPassList;
 
@@ -56,10 +58,24 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        alreadySelling = false;
+        alreadyFoundBuyer = false;
         SharedPreferences prefs = this.getSharedPreferences(this.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
 
         sellPassBtn = (ImageView) findViewById(R.id.sell_pass_btn);
         regPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
+        alreadySelling = prefs.getBoolean(this.getString(R.string.os_pass_selling_status),false);
+        alreadyFoundBuyer = prefs.getBoolean(this.getString(R.string.os_pass_selling_status_foundBuyer),false);
+
+        if (alreadySelling) {
+            Intent i = new Intent(this, WaitForSell.class);
+            startActivity(i);
+            finish();
+        } else if (alreadyFoundBuyer) {
+            Intent i = new Intent(this, CompleteTransactonSeller.class);
+            startActivity(i);
+            finish();
+        }
 
         String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
         if (passStatus.equals("registered")) {

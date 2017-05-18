@@ -53,11 +53,7 @@ public class SplashScreen extends AppCompatActivity {
     }
 
     protected boolean isValidApi(String api) {
-        return api.equals(DEFAULT_API_KEY) ? false : true;
-    }
-
-    protected boolean prefsContainsApiKey(SharedPreferences prefs) {
-        return false;
+        return !api.equals(DEFAULT_API_KEY);
     }
 
 }

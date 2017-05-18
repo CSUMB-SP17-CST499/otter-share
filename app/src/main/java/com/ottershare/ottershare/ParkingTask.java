@@ -43,6 +43,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
     /* Information needed from server response */
     int status;
     String gpsLocationToStore;
+    String passId;
 
 
     public ParkingTask(Activity activity) {
@@ -110,17 +111,11 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
                 String line;
                 BufferedReader br = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
 
-                int index = 0;
                 while ((line = br.readLine()) != null) {
                     response += line;
                     Log.d(LOG_TAG, response);
                 }
             } else {
-                /**
-                 * TODO: find out how to test this for when there really is a bad response code
-                 * Perhaps test the next step where the result is returned to the Switch in onPostExecute...
-                 */
-                response = "";
                 return -1;
             }
 
@@ -129,16 +124,11 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
 
             Log.d(LOG_TAG, api_key);
             if (jsonResponse.has("success")) {
+                passId = jsonResponse.getString("success"); //retrieve passId
                 status = 2;
             } else {
                 status = 1;
             }
-
-            //Log.d(LOG_TAG, "\"name\" --> " + name);
-            //Log.d(LOG_TAG, "\"email\" --> " + email);
-            //Log.d(LOG_TAG, "\"Retrieved user api_key\" --> " + api_key);
-
-
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -205,6 +195,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
         prefs = mContext.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(mContext.getString(R.string.os_pass_status), status);
+        editor.putString(mContext.getString(R.string.os_pass_id), passId);
         editor.putString(mContext.getString(R.string.os_pass_geolocation), gpsLocationToStore);
         editor.commit();
     }
