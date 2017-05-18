@@ -22,11 +22,13 @@ public class SellPassConfirm extends AppCompatActivity {
     MapOSFragment frag;
     SharedPreferences prefs;
     LatLng passLocation;
+    String LOG_TAG;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sell_pass_confirm);
+        LOG_TAG = this.getClass().getSimpleName();
 
         confirmBtn = (Button) findViewById(R.id.wait_for_sell_accept_btn);
         confirmBtn.setOnClickListener(listener);
@@ -79,7 +81,7 @@ public class SellPassConfirm extends AppCompatActivity {
             circleFrameWithFade.fadeOutAnimation();
 
         }catch (NumberFormatException e){
-            Log.i("ASS", "ASS");
+            Log.i(LOG_TAG, "lat/lng improper format");
         }
     }
 }
