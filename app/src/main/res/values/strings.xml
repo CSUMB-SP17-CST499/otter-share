@@ -25,6 +25,7 @@
     <string name="os_email">ottershare_user_email</string>
     <string name="os_apikey">ottershare_user_api_key</string>
     <string name="os_pass_status">ottershare_user_pass_status</string>
+    <string name="os_pass_geolocation">ottershare_registered_pass_geolocation</string>
 
     <string name="title_activity_main_map">MainMap</string>
     <string name="action_settings">Settings</string>

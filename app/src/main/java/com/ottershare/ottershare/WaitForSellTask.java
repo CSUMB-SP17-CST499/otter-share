@@ -30,7 +30,10 @@ public class WaitForSellTask extends AsyncTask<String,String,Integer>{
     @Override
     protected Integer doInBackground(String... params) {
         HttpURLConnection httpURLConnection = null;
+        String response = "";
 
+        String emailInput = params[0];
+        String passInput = params[1];
 
         try {
 
