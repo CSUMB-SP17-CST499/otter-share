@@ -151,6 +151,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                             int lotLocation = parkingPass.getInt("lotLocation");
                             String email = parkingPass.getString("ownerEmail");
                             float rating = (float) parkingPass.getDouble("avgRating");
+                            Log.i(LOG_TAG + " first",email);
                             parkingPassInfoArray.add(new ParkingPassInfo(id, gpsLocation, notes, forSale, price, lotLocation, email , rating));
                             locations.add(gpsLocation);
 
@@ -206,8 +207,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
                 Log.d(LOG_TAG, "case = 2: " + result);
                 break;
             case (3):
-
-                parkingPassInfoArray = testData();
+                //parkingPassInfoArray = testData();
                 populateBottomPannel();
                 populateTopPannel();
                 break;
@@ -260,7 +260,6 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             }
         });
         passList.setAdapter(passAdapter);
-        passAdapter.add(parkingPassInfoArray.get(0));
         frag.addHeatMap(locations);
 
     }
@@ -320,6 +319,15 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         locations.add(new LatLng(36.651795, -121.800519));
         locations.add(new LatLng(36.652477, -121.800111));
         locations.add(new LatLng(36.652129, -121.804482));
+
+        locations.add(new LatLng(36.654945, -121.794864));
+        locations.add(new LatLng(36.654904, -121.794751));
+        locations.add(new LatLng(36.654949, -121.794470));
+        locations.add(new LatLng(336.655433, -121.794365));
+        locations.add(new LatLng(36.655430, -121.794285));
+        locations.add(new LatLng(36.655524, -121.794381));
+        locations.add(new LatLng(36.655570, -121.793888));
+        locations.add(new LatLng(36.655427, -121.793707));
         return returnData;
     }
 

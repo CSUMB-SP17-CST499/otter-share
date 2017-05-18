@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
 import java.util.ArrayList;
@@ -99,11 +100,25 @@ public class MapOSFragment extends Fragment implements OnMapReadyCallback{
     //turnes current markers into a heat map
     public void addHeatMap(ArrayList<LatLng> locations){
 
+        int[] colors = {
+                R.color.colorPrimary,
+                R.color.colorPrimaryDark
+        };
+
+        float[] startPoints = {
+                0.2f,1f
+        };
+
+        Gradient gradient = new Gradient(colors,startPoints);
         mProvider = new HeatmapTileProvider.Builder()
                 .data(locations)
+                //.gradient(gradient)
+                .radius(15)
                 .build();
 
+        mProvider.setOpacity(1.0);
         mOverlay = mGoogleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-    }
+
+        }
 
 }
