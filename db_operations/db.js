@@ -420,11 +420,11 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
         .then((pass) => {
             session.close();
             if (!_.isEmpty(pass.records[0])) {
-                // Update route
+                // Update route (REFACTORABLE VIA MERGE!! NOTE: Refactor when time allows)
                 // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                        'SET pass.price = {price}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
+                        'SET pass.price = {price}, saleState: 0, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
                         'pass.id = {id} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
@@ -433,8 +433,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             notes: notes,
                             api_key: api_key,
                             id: shortid.generate(),
-                            forSale: true,
-                            saleState: 0
+                            forSale: true
                         })
                     .then((results) => {
                         session.close();
@@ -468,7 +467,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                         // Create the pass node with given information, then create a relationship between pass and node, returning relationship
                         session
                             .run('MATCH (user:User { email: {email} , api_access_key: {api_key}}) ' +
-                                'CREATE (pass:Pass {id: {id}, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
+                                'CREATE (pass:Pass {id: {id}, saleState: 0, ownerCount: 0, ownerEmail: {ownerEmail}, lotLocation: {lotLocation}, gpsLocation:{gpsLocation}, price: {price}, notes:{notes}, forSale:{forSale}})' +
                                 'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                     email: email,
                                     api_key: api_key,
@@ -478,13 +477,12 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                     gpsLocation: gpsLocation,
                                     price: price,
                                     notes: notes,
-                                    forSale: true,
-                                    saleState: 0
+                                    forSale: true
                                 })
                             .then((result) => {
                                 session.close();
                                 return callback(null, {
-                                    success: 'created pass!'
+                                    success: 'Created pass!'
                                 });
                             })
                             .catch((e) => {
@@ -597,7 +595,7 @@ const activeUsers = (keyword, api_key, callback) => {
             });
     }
 }
-const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
+const exchangePass = (api_key, currentOwnerEmail, passId, callback) => {
     // Increments the amount of times the pass has been sold by 1
     // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
     session
@@ -638,11 +636,13 @@ const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
                     }
 
                     session
-                        .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id:{passId} })' +
-                            'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner', {
+                        .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id: {passId} }) ' +
+                            'SET exchangedPass.ownerEmail = newOwner.email, exchangedPass.saleState = 0 '+
+                            'REMOVE exchangedPass.buyerConfirmed, exchangedPass.sellerConfirmed, exchangedPass.interestedUser '+
+                            'RETURN newOwner', {
                                 passId: passId,
                                 api_key: api_key
-                            })
+                        })
                         .then((results) => {
                             session.close();
                             if (_.isEmpty(results.records[0])) {
@@ -704,13 +704,13 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
                 session.close();
                 console.log(`ERROR: ${JSON.stringify(e, null, 4)}`);
                 return callback(false, {
-                    error: 'Sys error 616'
+                    error: 'Sys error 708'
                 });
             });
     }
     // NOTE: should set limitations, maybe 300 requests? (300 minutes)
     // If greater that 1, second or later requests, we constantly check for a change in the status until it is:
-    // 0 == Which means the exchange is cancelled, or 2 == Which means that exchange is accepted, then we make exchange (call purchasePass function)
+    // 0 == Which means the exchange is cancelled, or 2 == Which means that exchange is accepted, then we make exchange (call exchangePass function)
     else if (requestCount > 1) {
         session
             .run('MATCH (y:User {api_access_key: { api_key }})' +
@@ -733,7 +733,8 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
                         });
                     if (parseInt(record.get('saleState')) == 0) { // if pass owner rejects your offer to exchange, remove yourself from their pass property, end search on this pass!
                         session
-                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser RETURN pass.ownerEmail AS ownerEmail', {
+                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) REMOVE pass.interestedUser '+
+                                 'RETURN pass.ownerEmail AS ownerEmail', {
                                 passId: passId,
                                 api_key: api_key
                             })
@@ -981,10 +982,11 @@ const completionListener = (api_key, passId, customerType, callback) => {
             .then((results) => {
                 session.close();
                 let pendingString = '';
-                if (_.isEmpty(results.records[0]))
+                if (_.isEmpty(results.records[0])){
                     return callback(false, {
                         error: 'Pass confirmation failed! (in pending)'
                     });
+                }
                 _.forEach(results.records, (record) => {
 
                     var currentOwnerEmail = record.get('ownerEmail');
@@ -997,7 +999,7 @@ const completionListener = (api_key, passId, customerType, callback) => {
                         });
                     }
                     console.log(`Buyer: ${api_key} Seller: ${currentOwnerEmail}  pid: ${passId}`);
-                    purchasePass(api_key, currentOwnerEmail, passId, (status, data) => {
+                    exchangePass(api_key, currentOwnerEmail, passId, (status, data) => {
                         if (status == false) {
                             console.log(`Creation failed.. ${data}`);
                             return callback(false, {
@@ -1040,7 +1042,7 @@ module.exports = {
     retrieveMyProfile,
     registerPass,
     resendVerify,
-    purchasePass,
+    exchangePass,
     buyerListener,
     sellerListener,
     completionListener
