@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -165,6 +166,7 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
                 storePassStatus("registered");
                 Intent i = new Intent(prevActivity,MainActivity.class);
                 prevActivity.startActivity(i);
+                prevActivity.finish();
                 break;
             default:
                 Log.d(LOG_TAG, "case = default" + " actual: " + result);
@@ -174,7 +176,6 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
 
     protected void onProgressUpdate(Integer... progress) {
         //probably wont use, but maybe way later...
-
     }
 
     //put the data from hash map into POST format "this=this&this=that" since post data has be sent via a string

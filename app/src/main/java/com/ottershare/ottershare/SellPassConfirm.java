@@ -51,6 +51,7 @@ public class SellPassConfirm extends AppCompatActivity {
                 case R.id.wait_for_sell_cancel_btn:
                     i = new Intent(SellPassConfirm.this, MainActivity.class);
                     startActivity(i);
+                    finish();
                     break;
                 default:
                     break;
@@ -67,6 +68,7 @@ public class SellPassConfirm extends AppCompatActivity {
 
         circleFrameWithFade = (CircleFrameWithFade) fragmentManagerFrame.findFragmentById(R.id.sell_pass_circle_frame);
         frag = (MapOSFragment) fragmentManagerMap.findFragmentById(R.id.sell_pass_confirm_parking_map);
+
 
         //getting the location of current pass.
         try{

@@ -129,6 +129,7 @@ public class PassView extends AppCompatActivity {
                 case R.id.back_btn_not_available:{
                     Intent newIntent = new Intent(PassView.this,MainActivity.class);
                     startActivity(newIntent);
+                    finish();
                     Log.i("backBtn","look");
                  break;
                 }
