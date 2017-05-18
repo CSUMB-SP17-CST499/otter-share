@@ -598,80 +598,71 @@ const activeUsers = (keyword, api_key, callback) => {
     }
 }
 const purchasePass = (api_key, currentOwnerEmail, passId, callback) => {
-    // Increments the amount of times the pass has been sold by 1
-    // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
-    session
-        .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail},' +
-            'id: {passId} }), (owner:User {email: {currentOwnerEmail} })' +
-            'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
-                api_key: api_key,
-                currentOwnerEmail: currentOwnerEmail,
-                passId: passId
+  // Increments the amount of times the pass has been sold by 1
+  // console.log(`Line 505: ${api_key} ${currentOwnerEmail} ${passId}`);
+  session
+    .run('MATCH (user:User {api_access_key: {api_key} }), (pass:Pass {ownerEmail: {currentOwnerEmail},'+
+          'id: {passId} }), (owner:User {email: {currentOwnerEmail} })'+
+          'WHERE user.email <> owner.email SET pass.ownerCount = pass.ownerCount + 1 RETURN pass', {
+              api_key: api_key,
+              currentOwnerEmail: currentOwnerEmail,
+              passId: passId
+      })
+      .then((results) => {
+        session.close();
+        if(_.isEmpty(results.records[0])){
+          return callback(false,{error:'Record not found 503'});
+        }
+        // Finds the newOwner of the pass, the pass to be sold, and the current owner of the pass (before it is transfered)
+        // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
+        // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
+        session
+          .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)'+
+               'WHERE pass.id = {passId} AND NOT (newOwner)-[:OWNS]->() DELETE r '+
+               'MERGE (newOwner)-[x:OWNS]->(pass) CREATE'+
+                '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,'+
+                  'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
+                    currentOwnerEmail: currentOwnerEmail,
+                    api_key: api_key,
+                    passId: passId
             })
-        .then((results) => {
-            session.close();
-            if (_.isEmpty(results.records[0])) {
-                return callback(null, {
-                    error: 'Record not found 503'
-                });
-            }
-            // Finds the newOwner of the pass, the pass to be sold, and the current owner of the pass (before it is transfered)
-            // Deletes the current relationship between the former (currentOwner) of the pass and the pass itself, then creates
-            // a new relationship with said pass to newOwner. Finally creates a transaction node that stores relevant sale info
-            session
-                .run('MATCH (newOwner:User {api_access_key:{api_key} }), (pass:Pass {ownerEmail:{currentOwnerEmail}, id:{passId} }), (owner:User {email: {currentOwnerEmail} })-[r:OWNS]->(pass)' +
-                    'WHERE pass.id = {passId} AND NOT (newOwner)-[:OWNS]->() DELETE r ' +
-                    'MERGE (newOwner)-[x:OWNS]->(pass) CREATE' +
-                    '(trans:Transaction {passId: pass.id, buyerEmail: newOwner.email, ownerEmail: pass.ownerEmail, gpsLocation: pass.gpsLocation,' +
-                    'transactionTime: timestamp(), notes: pass.notes, price: pass.price}) RETURN trans', {
-                        currentOwnerEmail: currentOwnerEmail,
-                        api_key: api_key,
-                        passId: passId
-                    })
-                .then((results) => {
+            .then((results) => {
+                session.close();
+                // Finds newOwner of pass, updates the soldPass to reflect newOwners email.
+                if(_.isEmpty(results.records[0])){
+                  return callback(false, {error:'pass swap failed (newOwner)'});
+                }
+
+                session
+                  .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id:{passId} })' +
+                        'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner',
+                          {passId:passId, api_key:api_key})
+                  .then((results) => {
                     session.close();
-                    // Finds newOwner of pass, updates the soldPass to reflect newOwners email.
-                    if (_.isEmpty(results.records[0]))
-                        return callback(null, {
-                            error: 'Record not found 524'
-                        });
-                    session
-                        .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id:{passId} })' +
-                            'SET exchangedPass.ownerEmail = newOwner.email RETURN newOwner', {
-                                passId: passId,
-                                api_key: api_key
-                            })
-                        .then((results) => {
-                            session.close();
-                            if (_.isEmpty(results.records[0])) {
-                                return callback(null, {
-                                    error: 'Record not found 531'
-                                });
-                            } else {
-                                return callback(null, {
-                                    success: 'You\'ve just bought this users pass!'
-                                });
-                            }
-                        })
-                        .catch((e) => {
-                            session.close();
-                            console.log(e);
-                            return callback(null, 'error!?');
-                        });
-                })
-                .catch((e) => {
+                    if(_.isEmpty(results.records[0])){
+                        return callback(false, {error:'owner to newOwner email swap failed!'});
+                    }
+                    else {
+                        return callback(true, {success:'You\'ve just bought this users pass!'});
+                    }
+                  })
+                  .catch((e) => {
                     session.close();
                     console.log(e);
-                    return callback({
-                        error: 'error!?'
-                    });
-                });
-        })
-        .catch((e) => {
-            session.close();
-            console.log(e);
-            return callback(null, 'error!?');
-        });
+                    return callback(null, 'error!?');
+                  });
+            })
+            .catch((e)=> {
+                session.close();
+                console.log(e);
+                return callback(null,{error:'error!?'});
+             });
+      })
+      .catch((e) => {
+        session.close();
+        console.log(e);
+        return callback(null,'error!?');
+      });
 }
 const buyerListener = (api_key, passId, requestCount, callback) => {
     if (requestCount == 1) {
@@ -700,7 +691,7 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
             })
             .catch((e) => {
                 session.close();
-                console.log(`Line 608: ${JSON.stringify(e, null, 4)}`);
+                console.log(`ERROR: ${JSON.stringify(e, null, 4)}`);
                 return callback(false, {
                     error: 'Sys error 616'
                 });
@@ -752,8 +743,7 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
                                 });
                             });
                     }
-                    if (parseInt(record.get('saleState')) == 2) { // if pass owner accepts your offer to exchange, invoke exchange method!
-                        // purchasePass(api_key, record.get('ownerEmail'), passId, )
+                    if (parseInt(record.get('saleState')) == 2) { 
                         // instead of invocation of function that exchange pass, send back a message that tells client to now meet with counter-part
                         // (break out of listening mode)
                         return callback(true, {
@@ -813,6 +803,7 @@ const sellerListener = (api_key, passId, action, callback) => {
                                     passId: passId
                                 })
                             .then((results) => {
+                                session.close();
                                 if (_.isEmpty(results.records[0])) {
                                     return callback(false, {
                                         error: 'Record not found 703 seller'
@@ -882,6 +873,7 @@ const sellerListener = (api_key, passId, action, callback) => {
                 passId: passId
             })
             .then((results) => {
+                session.close();
                 if (_.isEmpty(results.records[0]))
                     return callback(false, {
                         error: 'Pass rejection failed'
@@ -905,6 +897,8 @@ const sellerListener = (api_key, passId, action, callback) => {
 }
 const completionListener = (api_key, passId, customerType, callback) => {
     // Can change type to 1 or 0 for simplicity on frontend, but feel this is probably easier to read
+    // When a buyer claims to have completed a transaction (obtained pass from seller) then they set 
+    // buyerConfirmed to 1, showing that they have confirmed the exchange NOTE: Seller section the same
     if(customerType == 'buyer'){
         console.log(customerType);
         session
@@ -915,6 +909,7 @@ const completionListener = (api_key, passId, customerType, callback) => {
                  api_key: api_key
             })
             .then((results) => {
+                session.close();
                 if (_.isEmpty(results.records[0]))
                     return callback(false, {
                         error: 'Pass exchange confirmation failed! (buyer)'
@@ -939,6 +934,7 @@ const completionListener = (api_key, passId, customerType, callback) => {
                 sellerConfirmed: 1
             })
             .then((results) => {
+                session.close();
                 if (_.isEmpty(results.records[0]))
                     return callback(false, {
                         error: 'Pass exchange confirmation failed! (seller)'
@@ -954,33 +950,73 @@ const completionListener = (api_key, passId, customerType, callback) => {
                 });
             });
     }
+    // When a buyer or seller sends pending, they have already confirmed the exchange and are waiting for 
+    // their counterparts to also confirm, once both confirmed, the pass node is exchanged from seller to buyer.
     else if(customerType == 'pending'){
         // When a user clicks transaction complete on UI
+        // Can look for existance of transaction node to prevent double buys.*****
         session
-            .run('MATCH (user:User {api_access_key: {api_key} }) ' + 
-                 'OPTIONAL MATCH (pass:Pass {id: {passId} }) '+ 
-                 'RETURN pass.sellerConfirmed AS sellerConfirmed, pass.buyerConfirmed AS buyerConfirmed', {
+            .run('MATCH (user:User {api_access_key: {api_key} }) MATCH (tempPass:Pass {id: {passId} }) ' + 
+                 'MATCH (buyer:User) WHERE buyer.email = tempPass.interestedUser '+
+                 'OPTIONAL MATCH (trans:Transaction {passId: {passId}, buyerEmail: buyer.email }) WHERE trans.buyerEmail = {nullCheck}'+
+                 'OPTIONAL MATCH (pass:Pass {id: {passId} })'+ 
+                 'RETURN trans.buyerEmail , pass.sellerConfirmed AS sellerConfirmed, pass.buyerConfirmed AS buyerConfirmed,'+
+                 'pass.ownerEmail AS ownerEmail, buyer.api_access_key AS api_key', {
                   api_key: api_key,
-                  passId: passId
+                  passId: passId,
+                  nullCheck: null
             })
             .then((results) => {
+                session.close();
                 let pendingString =  '';
                 if (_.isEmpty(results.records[0]))
                     return callback(false, {
                         error: 'Pass confirmation failed! (in pending)'
                     });
                 _.forEach(results.records, (record) => {
-                    console.log(`${record.get('sellerConfirmed')}`);
-                    console.log(`${record.get('buyerConfirmed')}`);
-                    if(record.get('buyerConfirmed').includes('null') || record.get('sellerConfirmed').includes('null')){
+                    // console.log(`${record.get('sellerConfirmed')}`);
+                    // console.log(`${record.get('buyerConfirmed')}`);
+                    // api_key, currentOwnerEmail, passId 
+                    // var buyerEmail = record.get('buyerEmail');
+                    var currentOwnerEmail = record.get('ownerEmail');
+                    var api_key    = record.get('api_key');
+                    console.log(`Buyer: ${record.get('buyerConfirmed')} Seller: ${record.get('sellerConfirmed')} ${record.get('trans.buyerEmail')}`)
+                    // console.log(`${record.get('api_key')} ${api_key}`);
+                    if(record.get('buyerConfirmed') === null || record.get('sellerConfirmed') === null ){
                         return callback(false, {
                             pending:'Please try again, other user must confirm the exchange too!'
                         });
                     } 
-                    // call my other function here
-                    return callback(true, {
-                        complete:'Exchanged! Pass exchange complete!'
+                    console.log(`Buyer: ${api_key} Seller: ${currentOwnerEmail}  pid: ${passId}`);
+                    var exchangeResults;
+                    purchasePass(api_key, currentOwnerEmail, passId, (status, data) => {
+                        if(status == false){
+                            console.log(`Creation failed.. ${data}`);
+                            exchangeResults = status;
+                        }
+                        else if(status == null){
+                            console.log(`Creation failed (catches)... ${data}`);
+                            exchangeResults = status;
+
+                        }
+                        else {
+                            console.log(`Created ${status}`);
+                            exchangeResults = status;
+                        }
                     });
+
+                    console.log(`result -> ${exchangeResult}`);
+                    if(exchangeResults == true){
+                        return callback(true, {
+                            complete:'Exchanged! Pass exchange complete!'
+                        });
+                    }
+                    if(exchangeResults == false || exchangeResults == null) {
+                        console.log('false or null');
+                        return callback(true, {
+                            error:'Something went wrong..'
+                        });
+                    }
                 });
             })
             .catch((e) => {
