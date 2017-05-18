@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:max="5"
                 android:numStars="5"
-                android:rating="2.5"
+                android:rating="5"
                 android:progressTint="@color/colorPrimaryDark"/>
 
         </RelativeLayout>

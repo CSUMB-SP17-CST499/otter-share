@@ -320,6 +320,15 @@ public class MainTask extends AsyncTask<String, String, Integer> {
         locations.add(new LatLng(36.651795, -121.800519));
         locations.add(new LatLng(36.652477, -121.800111));
         locations.add(new LatLng(36.652129, -121.804482));
+
+        locations.add(new LatLng(36.654945, -121.794864));
+        locations.add(new LatLng(36.654904, -121.794751));
+        locations.add(new LatLng(36.654949, -121.794470));
+        locations.add(new LatLng(336.655433, -121.794365));
+        locations.add(new LatLng(36.655430, -121.794285));
+        locations.add(new LatLng(36.655524, -121.794381));
+        locations.add(new LatLng(36.655570, -121.793888));
+        locations.add(new LatLng(36.655427, -121.793707));
         return returnData;
     }
 
