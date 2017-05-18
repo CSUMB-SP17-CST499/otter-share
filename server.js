@@ -307,7 +307,7 @@ app.post('/completionListener', (req,res) => {
 // });
 // begins listening on port 3000 or instance given port.
 app.listen(port, () => {
-  // setTimeout(executeOrder66, 624000, 'Killing Server to prevent session expiration!? (this is temporary)');
+  setTimeout(executeOrder66, 1200000, 'Killing Server to prevent session expiration!? (this is temporary)');
   console.log(`Started on port ${port}`);
 });
 

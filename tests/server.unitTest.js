@@ -164,7 +164,7 @@ it('should create a pass node', (done) => {
       .send('notes='+ testNotes)
       .expect((res) => {
         expect(res.body).toMatch({
-          success: /created/
+          success: /.*/
         });
       })
       .end(done);

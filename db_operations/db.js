@@ -410,6 +410,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
     // Regex for currency, tbd, need to speak to team about what is passed for price, regex --> ^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(\.[0-9][0-9])?$
     // Check to see if a pass node is in existence
     // If not create it, if so update it
+    var passId = shortid.generate();
+
     if (notes == null)
         notes = '(empty)';
 
@@ -420,20 +422,22 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
         .then((pass) => {
             session.close();
             if (!_.isEmpty(pass.records[0])) {
+
                 // Update route (REFACTORABLE VIA MERGE!! NOTE: Refactor when time allows)
                 // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                        'SET pass.price = {price}, saleState: 0, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
-                        'pass.id = {id} RETURN user.email AS email', {
+                         'SET pass.price = {price}, pass.saleState = {saleState}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
+                         'pass.id = {passId} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
                             lotLocation: lotLocation,
                             gpsLocation: gpsLocation,
                             notes: notes,
                             api_key: api_key,
-                            id: shortid.generate(),
-                            forSale: true
+                            passId: passId,
+                            forSale: true,
+                            saleState: 0
                         })
                     .then((results) => {
                         session.close();
@@ -441,10 +445,11 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             return callback(false, {
                                 error: 'Pass failed to update'
                             });
-                        else
+                        else{
                             return callback(null, {
-                                success: 'Updated pass!'
+                                success: passId
                             });
+                        }
                     })
                     .catch((e) => {
                         session.close();
@@ -471,7 +476,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                                 'CREATE (user)-[r:OWNS]->(pass) RETURN r', {
                                     email: email,
                                     api_key: api_key,
-                                    id: shortid.generate(),
+                                    id: passId,
                                     ownerEmail: email,
                                     lotLocation: lotLocation,
                                     gpsLocation: gpsLocation,
@@ -482,7 +487,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             .then((result) => {
                                 session.close();
                                 return callback(null, {
-                                    success: 'Created pass!'
+                                    success: passId
                                 });
                             })
                             .catch((e) => {
@@ -912,7 +917,7 @@ const completionListener = (api_key, passId, customerType, callback) => {
     // When a buyer claims to have completed a transaction (obtained pass from seller) then they set 
     // buyerConfirmed to 1, showing that they have confirmed the exchange NOTE: Seller section the same
     if (customerType == 'buyer') {
-        console.log(customerType);
+
         session
             .run('MATCH (user:User {api_access_key: {api_key} }),(pass:Pass) ' +
                 'WHERE pass.interestedUser = user.email AND NOT exists(pass.buyerConfirmed) ' +
@@ -991,14 +996,11 @@ const completionListener = (api_key, passId, customerType, callback) => {
 
                     var currentOwnerEmail = record.get('ownerEmail');
                     var api_key = record.get('api_key');
-                    console.log(`Buyer: ${record.get('buyerConfirmed')} Seller: ${record.get('sellerConfirmed')} ${record.get('trans.buyerEmail')}`)
-                    // console.log(`${record.get('api_key')} ${api_key}`);
                     if (record.get('buyerConfirmed') === null || record.get('sellerConfirmed') === null) {
                         return callback(false, {
                             pending: 'Please try again, other user must confirm the exchange too!'
                         });
                     }
-                    console.log(`Buyer: ${api_key} Seller: ${currentOwnerEmail}  pid: ${passId}`);
                     exchangePass(api_key, currentOwnerEmail, passId, (status, data) => {
                         if (status == false) {
                             console.log(`Creation failed.. ${data}`);
