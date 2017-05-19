@@ -252,16 +252,25 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent nextIntent = new Intent(prevActivity,PassView.class);
-                ParkingPassInfo currentpass = parkingPassInfoArray.get(position);
+                ParkingPassInfo currentPass = parkingPassInfoArray.get(position);
                 Bundle b = new Bundle();
-                b.putParcelable("pass", currentpass);
+                b.putParcelable("pass", currentPass);
                 nextIntent.putExtras(b);
+                storeBuyPassStatus(false, currentPass.getId(), currentPass.getEmail());
                 prevActivity.startActivity(nextIntent);
             }
         });
         passList.setAdapter(passAdapter);
         frag.addHeatMap(locations);
+    }
 
+    private void storeBuyPassStatus(boolean isBuying, String passIdBuying, String emailOfPassBuying) {
+        SharedPreferences prefs = prevActivity.getSharedPreferences(mContext.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(mContext.getString(R.string.os_pass_buying_id), passIdBuying);
+        editor.putBoolean(mContext.getString(R.string.os_pass_buying_status), isBuying);
+        editor.putString(mContext.getString(R.string.os_pass_buying_email), emailOfPassBuying);
+        editor.apply();
     }
 
     private void populateTopPannel(){

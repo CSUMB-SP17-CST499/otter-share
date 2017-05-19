@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -32,13 +33,20 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
     Context context;
     Activity prevActivity;
     private String LOG_TAG =  WaitForBuyerTask.class.getSimpleName();
+    private int status;
+    WaitForBuyerListener callback;
 
+    public WaitForBuyerTask(WaitForBuyerListener cb, Activity activity){
+        prevActivity = activity;
+        this.context = activity.getApplicationContext();
+        status = -1;
+        this.callback = cb;
+    }
 
     public WaitForBuyerTask(Activity activity){
         prevActivity = activity;
         this.context = activity.getApplicationContext();
-        SharedPreferences sharedPrefrences;
-
+        status = -1;
     }
 
     @Override
@@ -49,6 +57,9 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
         String apiKey = params[0];
         String passId = params[1];
         String requestCount = params[2];
+        Log.d(LOG_TAG, apiKey);
+        Log.d(LOG_TAG, passId);
+        Log.d(LOG_TAG, requestCount);
 
         try {
             final String BASE_URL = "https://young-plains-98404.herokuapp.com/";
@@ -99,24 +110,55 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
 
             JSONObject jsonResponse = new JSONObject(response);
             //parse json
-
+            if (jsonResponse.has("pending")) {
+                try {
+                    Thread.sleep(5000);                 //1000 milliseconds is one second.
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                status = 0;
+            } else if (jsonResponse.has("accepted")) {
+                status = 1;
+            } else if (jsonResponse.has("rejected")) {
+                status = 2;
+            } else if (jsonResponse.has("error")) {
+                status = -1;
+            }
         }catch (Exception e){
             Log.e(LOG_TAG, e.getMessage());
             e.printStackTrace();
         }
 
-        return -1;
+        return status;
     }
 
     /*available responses
     0 : Buyer not found
-    1 : Buyer Found
-    2 : unverified api
-    anything else : error
+    1 : Buyer accepted
+    2 : Buyer rejected
+    -1 : api fail or anything
  */
     @Override
     protected void onPostExecute(Integer result){
-
+        switch (result) {
+            case 0:
+                callback.onEventFailed();
+                break;
+            case 1:
+                if (callback != null) {
+                    callback.setStatus("accepted");
+                    callback.onEventCompleted();
+                }
+                break;
+            case 2:
+                if (callback != null) {
+                    callback.setStatus("rejected");
+                    callback.onEventCompleted();
+                }
+                break;
+            default:
+                Toast.makeText(context, "An expected error occured.", Toast.LENGTH_SHORT);
+        }
     }
 
     private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {

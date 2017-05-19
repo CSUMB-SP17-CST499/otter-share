@@ -22,11 +22,8 @@ public class MainActivity extends FragmentActivity{
     MapOSFragment frag;
     ImageView regPassBtn;
     ImageView sellPassBtn;
-    ArrayList <ParkingPassInfo> testdataarray = new ArrayList<>();
     boolean alreadySelling;
     boolean alreadyFoundBuyer;
-    ListView topLotList;
-    ListView bottomPassList;
 
     final String DEFAULT_RESPONSE = "empty";
 
@@ -71,11 +68,11 @@ public class MainActivity extends FragmentActivity{
             Intent i = new Intent(this, WaitForSell.class);
             startActivity(i);
             finish();
-        } else if (alreadyFoundBuyer) {
+        }/* else if (alreadyFoundBuyer) {
             Intent i = new Intent(this, CompleteTransactonSeller.class);
             startActivity(i);
             finish();
-        }
+        }*/
 
         String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
         if (passStatus.equals("registered")) {
@@ -99,7 +96,6 @@ public class MainActivity extends FragmentActivity{
         ArrayList<LatLng> locations = new ArrayList<LatLng>();
 
         runMainTask();
-        runWaitForBuyerTask();
 
         /*
         todo: there should eventualy be a function to get all of the points from the backend and store it into a array list and then pass it to the below function
@@ -115,19 +111,6 @@ public class MainActivity extends FragmentActivity{
 
         MainTask mainTask = new MainTask(this, frag);
         mainTask.execute(apikey, keyword);
-
-    }
-
-    private void runWaitForBuyerTask() {
-        Context context = MainActivity.this.getApplicationContext();
-        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
-        String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_RESPONSE);
-        String passId = "SyXJvhcg-";
-        String requestCount = "1";
-
-
-        WaitForBuyerTask waitForBuyerTask = new WaitForBuyerTask(this);
-        waitForBuyerTask.execute(apikey, passId , requestCount);
 
     }
 

@@ -134,7 +134,7 @@ public class PassView extends AppCompatActivity {
                  break;
                 }
                 case R.id.accept_btn_available:
-                    Intent newIntent = new Intent(PassView.this,WaitForSell.class);
+                    Intent newIntent = new Intent(PassView.this,WaitForBuyer.class);
 
                     //todo :need to start a task here and send the proper info !! need to do this asap.
 

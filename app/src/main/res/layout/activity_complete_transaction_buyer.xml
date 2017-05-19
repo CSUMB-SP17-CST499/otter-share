@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20sp"
-            android:text="has agreed to sell to you"
+            android:text="has agreed to sell to you!"
             android:gravity="center"/>
 
         <TextView
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="30sp"
-            android:text="meet them at their car"
+            android:text="Meet them at their car"
             android:gravity="center"/>
 
     </LinearLayout>
@@ -86,7 +86,7 @@
         android:id="@+id/complete_slider"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:text="Slide"
+        android:text="Slide to Confirm Transaction"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

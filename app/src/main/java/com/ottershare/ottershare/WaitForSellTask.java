@@ -169,6 +169,7 @@ public class WaitForSellTask extends AsyncTask<String,String,Integer>{
                     storeSellingStatus(true, true);
 
                     TextView buyerEmailText = (TextView) prevActivity.findViewById(R.id.found_buyer_email);
+                    storeBuyerEmail(buyerEmail);
                     buyerEmailText.setText(buyerEmail);
                     buyerEmailText.setVisibility(View.VISIBLE);
 
@@ -195,6 +196,13 @@ public class WaitForSellTask extends AsyncTask<String,String,Integer>{
             default:
                 Toast.makeText(context, "An unexpected error occured", Toast.LENGTH_SHORT);
         }
+    }
+
+    private void storeBuyerEmail(String email) {
+        SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(context.getString(R.string.os_pass_selling_buyerEmail), email);
+        editor.apply();
     }
 
     private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
