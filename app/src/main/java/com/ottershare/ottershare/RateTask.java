@@ -2,6 +2,7 @@ package com.ottershare.ottershare;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -27,29 +28,19 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by ryan on 5/14/17.
  */
 
-public class TransactionTask extends AsyncTask<String,String,Integer>{
+public class RateTask extends AsyncTask<String,String,Integer>{
 
     /* Context being passed in from main thread*/
     Context context;
     Activity prevActivity;
-    private String LOG_TAG =  TransactionTask.class.getSimpleName();
+    private String LOG_TAG =  RateTask.class.getSimpleName();
     private int status;
-    TransactionListener callback;
-    String passIdNew;
 
-    public TransactionTask(TransactionListener cb, Activity activity){
+
+    public RateTask(Activity activity){
         prevActivity = activity;
         this.context = activity.getApplicationContext();
         status = -1;
-        this.callback = cb;
-        passIdNew = "";
-    }
-
-    public TransactionTask(Activity activity){
-        prevActivity = activity;
-        this.context = activity.getApplicationContext();
-        status = -1;
-        passIdNew = "";
     }
 
     @Override
@@ -58,20 +49,19 @@ public class TransactionTask extends AsyncTask<String,String,Integer>{
         String response = "";
 
         String apiKey = params[0];
-        String passId = params[1];
-        String customerType = params[2];
-        passIdNew = passId;
+        String targetEmail = params[1];
+        String rating = params[2];
 
         Log.d(LOG_TAG, apiKey);
-        Log.d(LOG_TAG, passId);
-        Log.d(LOG_TAG, customerType);
+        Log.d(LOG_TAG, targetEmail);
+        Log.d(LOG_TAG, rating);
 
         try {
             final String BASE_URL = "https://young-plains-98404.herokuapp.com/";
-            final String CALL = "completionListener";
+            final String CALL = "rateUser";
             final String API_KEY_PARAM = "api_key";
-            final String PASS_ID_PARAM = "passId";
-            final String CUSTOMER_TYPE_PARAM = "customerType";
+            final String PASS_ID_PARAM = "targetEmail";
+            final String CUSTOMER_TYPE_PARAM = "rating";
 
             URL url = new URL(BASE_URL + CALL);
 
@@ -86,8 +76,8 @@ public class TransactionTask extends AsyncTask<String,String,Integer>{
             HashMap<String, String> postDataParams = new HashMap<>();
 
             postDataParams.put(API_KEY_PARAM, apiKey);
-            postDataParams.put(PASS_ID_PARAM, passId);
-            postDataParams.put(CUSTOMER_TYPE_PARAM, customerType);
+            postDataParams.put(PASS_ID_PARAM, targetEmail);
+            postDataParams.put(CUSTOMER_TYPE_PARAM, rating);
 
             OutputStream os = httpURLConnection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
@@ -110,34 +100,14 @@ public class TransactionTask extends AsyncTask<String,String,Integer>{
                     Log.d(LOG_TAG, response);
                 }
             } else {
-                return -1;
+                status = -1;
             }
 
             JSONObject jsonResponse = new JSONObject(response);
-            if (customerType.equals("buyer") || customerType.equals("seller")) {
-                if (jsonResponse.has("exchanged")) {
-                    status = 0;
-                    try {
-                        Thread.sleep(5000);                 //1000 milliseconds is one second.
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
-                } else {
-                    status = -1;
-                }
-            } else if (customerType.equals("pending")) {
-                if (jsonResponse.has("pending")) {
-                    try {
-                        Thread.sleep(5000);                 //1000 milliseconds is one second.
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
-                    status = 1;
-                } else if (jsonResponse.has("complete")) {
-                    status = 2;
-                }
-            } else {
-                status = -1;
+            if (jsonResponse.has("complete")) {
+                status = 0;
+            } else if (jsonResponse.has("error")) {
+                status = 1;
             }
         }catch (Exception e){
             Log.e(LOG_TAG, e.getMessage());
@@ -148,35 +118,27 @@ public class TransactionTask extends AsyncTask<String,String,Integer>{
     }
 
     /*available responses
-    0 : Successfully swiped, go to pending
-    1 : Currently pending, keep calling
-    2 : Other person successfully swiped too, end
-    -1 : api fail or anything
+    0 : Successful rating
+    1 : Incorrect params to API
+    -1 : unexpected error
  */
     @Override
     protected void onPostExecute(Integer result){
         switch (result) {
             case 0:
-                if (callback != null) {
-                    //callback.setWhatItWas(pa)
-                    callback.setStatus("pending");
-
-                    callback.onEventFailed();
-                }
+                clearPassDataAndReinitialize();
+                Intent i = new Intent(prevActivity, MainActivity.class);
+                prevActivity.startActivity(i);
+                prevActivity.finish();
                 break;
             case 1:
-                if (callback != null) {
-                    callback.onEventFailed();
-                }
+                Toast.makeText(context, "Rating failed.", Toast.LENGTH_SHORT).show();
                 break;
             case 2:
-                if (callback != null) {
-                    storeNewPassId(passIdNew);
-                    callback.onEventCompleted();
-                }
+
                 break;
             default:
-                //Toast.makeText(context, "An expected error occured.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "An unexpected error occured.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -197,10 +159,25 @@ public class TransactionTask extends AsyncTask<String,String,Integer>{
         return result.toString();
     }
 
-    protected void storeNewPassId(String passId) {
+    protected void clearPassDataAndReinitialize() {
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(context.getString(R.string.os_pass_id), passId);
+        String oldPassId = prefs.getString(context.getString(R.string.os_pass_id), "empty");
+        String oldPassStatus = prefs.getString(context.getString(R.string.os_pass_status), "empty");
+        String oldPassGeoLocation = prefs.getString(context.getString(R.string.os_pass_geolocation), "empty");
+        String oldApiKey = prefs.getString(context.getString(R.string.os_apikey), "empty");
+        String oldEmail = prefs.getString(context.getString(R.string.os_email), "empty");
+        editor.clear();
         editor.apply();
+
+        prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+
+        edit.putString(context.getString(R.string.os_pass_geolocation), oldPassGeoLocation);
+        edit.putString(context.getString(R.string.os_pass_status), oldPassStatus);
+        edit.putString(context.getString(R.string.os_apikey), oldApiKey);
+        edit.putString(context.getString(R.string.os_email), oldEmail);
+        edit.putString(context.getString(R.string.os_pass_id), oldPassId);
+        edit.apply();
     }
 }

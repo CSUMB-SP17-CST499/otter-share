@@ -25,16 +25,7 @@
             android:textSize="30sp"
             android:textColor="@color/colorPrimaryDark"
             android:gravity="center"
-            android:text="Pass ID : "/>
-
-        <TextView
-            android:id="@+id/pass_id"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="30sp"
-            android:textColor="@color/colorPrimaryDark"
-            android:gravity="center"
-            android:text="#####"/>
+            android:text=""/>
 
     </RelativeLayout>
 

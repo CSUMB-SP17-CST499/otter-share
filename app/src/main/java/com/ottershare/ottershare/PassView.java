@@ -38,6 +38,9 @@ public class PassView extends AppCompatActivity {
     private boolean passForSale;
     ParkingPassInfo pass;
     String passOwnerEmail;
+    String passId;
+    Float rating;
+
 
     final String DEFAULT_API_KEY = "empty";
 
@@ -45,12 +48,17 @@ public class PassView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pass_view);
+        id = (TextView) findViewById(R.id.pass_id_tv);
         Bundle b = getIntent().getExtras();
         passOwnerEmail = "";
+        passId = "";
         if(b != null){
             pass = b.getParcelable("pass");
             passOwnerEmail = pass.getEmail();
             passForSale = pass.isForSale();
+            passId = pass.getId();
+            id.setText("Pass ID: " + passId);
+            rating = pass.getRating();
         }
 
     }
@@ -74,6 +82,7 @@ public class PassView extends AppCompatActivity {
         acceptBtnAvailable.setOnClickListener(listener);
 
         userRating = (RatingBar) findViewById(R.id.rating_bar);
+        userRating.setRating(rating);
         user = (TextView) findViewById(R.id.user_tv);
         price = (TextView) findViewById(R.id.price_tv);
         parkingLot = (TextView) findViewById(R.id.lot_tv);
@@ -158,10 +167,10 @@ public class PassView extends AppCompatActivity {
         String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
 
 
-        FetchProfileTask fetchMovieTask = new FetchProfileTask(this);
+        FetchProfileTask fetchProfileTask = new FetchProfileTask(this);
         //pass in some sample data but real key and email
         //fetchMovieTask.execute(passOwnerEmail, apikey);
-        fetchMovieTask.execute("bchehraz@csumb.edu", apikey);
+        fetchProfileTask.execute("bchehraz@csumb.edu", apikey);
 
     }
 
