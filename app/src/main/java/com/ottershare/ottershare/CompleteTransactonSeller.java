@@ -50,4 +50,13 @@ public class CompleteTransactonSeller extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus){
+
+        if(swipeButton != null){
+            swipeButton.setSwipeButtonCustomItems(swipeButtonCustomItems);
+        }
+
+    }
 }
