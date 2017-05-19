@@ -1,19 +1,29 @@
 package com.ottershare.ottershare;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
 
 public class CompleteTransactonSeller extends AppCompatActivity {
 
+    String buyerEmail;
     private SwipeButton swipeButton;
     private SwipeButtonCustomItems swipeButtonCustomItems;
+    TextView userEmailText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complete_transacton_seller);
 
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        buyerEmail = prefs.getString(getString(R.string.os_pass_buying_email), "empty");
+
+        userEmailText = (TextView) findViewById(R.id.user_text);
+        userEmailText.setText(buyerEmail);
 
         swipeButton = (SwipeButton) findViewById(R.id.complete_slider);
         swipeButtonCustomItems = new SwipeButtonCustomItems() {

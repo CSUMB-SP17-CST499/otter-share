@@ -146,6 +146,7 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
                 break;
             case 1:
                 if (callback != null) {
+                    storeBuyPassStatus(true);
                     callback.setStatus("accepted");
                     callback.onEventCompleted();
                 }
@@ -176,5 +177,12 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
         }
 
         return result.toString();
+    }
+
+    private void storeBuyPassStatus(boolean isBuying) {
+        SharedPreferences prefs = prevActivity.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(context.getString(R.string.os_pass_buying_status), isBuying);
+        editor.apply();
     }
 }

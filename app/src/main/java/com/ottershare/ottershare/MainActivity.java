@@ -24,6 +24,7 @@ public class MainActivity extends FragmentActivity{
     ImageView sellPassBtn;
     boolean alreadySelling;
     boolean alreadyFoundBuyer;
+    boolean alreadyFoundSeller;
 
     final String DEFAULT_RESPONSE = "empty";
 
@@ -63,16 +64,20 @@ public class MainActivity extends FragmentActivity{
         regPassBtn = (ImageView) findViewById(R.id.register_pass_btn);
         alreadySelling = prefs.getBoolean(this.getString(R.string.os_pass_selling_status),false);
         alreadyFoundBuyer = prefs.getBoolean(this.getString(R.string.os_pass_selling_status_foundBuyer),false);
-
+        alreadyFoundSeller = prefs.getBoolean(getString(R.string.os_pass_buying_status), false);
         if (alreadySelling) {
             Intent i = new Intent(this, WaitForSell.class);
             startActivity(i);
             finish();
-        }/* else if (alreadyFoundBuyer) {
+        }else if (alreadyFoundSeller) {
+            Intent i = new Intent(this, CompleteTransactionBuyer.class);
+            startActivity(i);
+            finish();
+        } else if (alreadyFoundBuyer) {
             Intent i = new Intent(this, CompleteTransactonSeller.class);
             startActivity(i);
             finish();
-        }*/
+        }
 
         String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
         if (passStatus.equals("registered")) {
