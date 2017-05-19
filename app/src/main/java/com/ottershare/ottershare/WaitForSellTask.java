@@ -201,7 +201,7 @@ public class WaitForSellTask extends AsyncTask<String,String,Integer>{
     private void storeBuyerEmail(String email) {
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(context.getString(R.string.os_pass_selling_buyerEmail), email);
+        editor.putString(context.getString(R.string.os_pass_buying_email), email);
         editor.apply();
     }
 

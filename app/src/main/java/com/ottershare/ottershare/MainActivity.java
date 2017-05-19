@@ -69,7 +69,7 @@ public class MainActivity extends FragmentActivity{
             Intent i = new Intent(this, WaitForSell.class);
             startActivity(i);
             finish();
-        }else if (alreadyFoundSeller) {
+        } /*else if (alreadyFoundSeller) {
             Intent i = new Intent(this, CompleteTransactionBuyer.class);
             startActivity(i);
             finish();
@@ -77,7 +77,7 @@ public class MainActivity extends FragmentActivity{
             Intent i = new Intent(this, CompleteTransactonSeller.class);
             startActivity(i);
             finish();
-        }
+        }*/
 
         String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
         if (passStatus.equals("registered")) {
