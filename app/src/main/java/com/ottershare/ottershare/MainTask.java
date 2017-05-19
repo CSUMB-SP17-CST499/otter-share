@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -261,6 +262,7 @@ public class MainTask extends AsyncTask<String, String, Integer> {
             }
         });
         passList.setAdapter(passAdapter);
+        if(locations.size() != 0)
         frag.addHeatMap(locations);
     }
 

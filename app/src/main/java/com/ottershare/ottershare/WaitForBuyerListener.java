@@ -2,6 +2,7 @@ package com.ottershare.ottershare;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.widget.Toast;
 
 public class WaitForBuyerListener implements OSEventListener {
 
@@ -32,6 +33,7 @@ public class WaitForBuyerListener implements OSEventListener {
             activity.finish();
         } else if (status.equals("rejected")) {
             i = new Intent(activity, MainActivity.class);
+            Toast.makeText(activity.getApplicationContext(), "Seller rejected your buy!", Toast.LENGTH_SHORT).show();
             activity.startActivity(i);
             activity.finish();
         }

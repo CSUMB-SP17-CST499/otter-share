@@ -29,9 +29,7 @@ public class CompleteTransactonSeller extends AppCompatActivity {
         swipeButtonCustomItems = new SwipeButtonCustomItems() {
             @Override
             public void onSwipeConfirm() {
-                // TODO: 5/14/17 make call to say that they have completed the transaction.
-                // TODO: 5/14/17 may need to make a repeating ping to listen for the other user to complete transaction.
-                // TODO: 5/14/17  start activity RateInteraction passing the appropriate information to identify the user that they will be rating.
+                runTransactionListener();
             }
 
         };
@@ -68,5 +66,15 @@ public class CompleteTransactonSeller extends AppCompatActivity {
             swipeButton.setSwipeButtonCustomItems(swipeButtonCustomItems);
         }
 
+    }
+
+    private void runTransactionListener() {
+        SharedPreferences prefs = getSharedPreferences(getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
+        String apikey = prefs.getString(getString(R.string.os_apikey), "empty");
+        String passId = prefs.getString(getString(R.string.os_pass_id), "empty");
+        String customerType = "seller";
+
+        TransactionListener transactionListener = new TransactionListener(this, apikey, passId, customerType);
+        transactionListener.startEvent();
     }
 }

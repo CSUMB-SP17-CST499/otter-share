@@ -53,8 +53,10 @@ public class SellPassConfirm extends AppCompatActivity {
                     break;
                 case R.id.wait_for_sell_cancel_btn:
                     storeSellingStatus(false);
-                    i = new Intent(SellPassConfirm.this, MainActivity.class);
+                    /*i = new Intent(SellPassConfirm.this, MainActivity.class);
                     startActivity(i);
+                    finish();*/
+                    SellPassConfirm.super.onBackPressed();
                     finish();
                     break;
                 default:

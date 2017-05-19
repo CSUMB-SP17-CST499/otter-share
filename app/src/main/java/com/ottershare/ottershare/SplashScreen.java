@@ -43,9 +43,8 @@ public class SplashScreen extends AppCompatActivity {
                 String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
 
                 Class target = isValidApi(apikey) ? MainActivity.class : LoginActivity.class;
-                //target = LoginActivity.class; //for testing, automatically go to LoginActivity
+                target = LoginActivity.class; //for testing, automatically go to LoginActivity
                 Intent intent = new Intent(SplashScreen.this, target);
-
                 startActivity(intent);
                 finish();
             }

@@ -183,6 +183,7 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = prefs.edit();
         editor.remove(this.getString(R.string.os_apikey));
         editor.remove(this.getString(R.string.os_pass_status));
-        editor.commit();
+        editor.clear();
+        editor.apply();
     }
 }

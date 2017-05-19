@@ -319,12 +319,12 @@ public class ParkingActivity extends AppCompatActivity{
         Context context = ParkingActivity.this.getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
         String apikey = prefs.getString(context.getString(R.string.os_apikey), DEFAULT_API_KEY);
-
+        String email = prefs.getString(context.getString(R.string.os_email), "empty");
 
         ParkingTask parkingTask = new ParkingTask(this);
         //pass in some sample data but real key and email
         LatLng latLng = myFusedGpsService.getLocationLatLng();
         String locationString = latLng.latitude + "," + latLng.longitude;
-        parkingTask.execute(apikey, "bchehraz@csumb.edu", "200", locationString, "4", "This pass is the best one");
+        parkingTask.execute(apikey, email, "200", locationString, "4", "This pass is the best one");
     }
 }

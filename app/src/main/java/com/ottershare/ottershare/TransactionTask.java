@@ -23,23 +23,27 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
+/**
+ * Created by ryan on 5/14/17.
+ */
+
+public class TransactionTask extends AsyncTask<String,String,Integer>{
 
     /* Context being passed in from main thread*/
     Context context;
     Activity prevActivity;
-    private String LOG_TAG =  WaitForBuyerTask.class.getSimpleName();
+    private String LOG_TAG =  TransactionTask.class.getSimpleName();
     private int status;
-    WaitForBuyerListener callback;
+    TransactionListener callback;
 
-    public WaitForBuyerTask(WaitForBuyerListener cb, Activity activity){
+    public TransactionTask(TransactionListener cb, Activity activity){
         prevActivity = activity;
         this.context = activity.getApplicationContext();
         status = -1;
         this.callback = cb;
     }
 
-    public WaitForBuyerTask(Activity activity){
+    public TransactionTask(Activity activity){
         prevActivity = activity;
         this.context = activity.getApplicationContext();
         status = -1;
@@ -52,17 +56,18 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
 
         String apiKey = params[0];
         String passId = params[1];
-        String requestCount = params[2];
+        String customerType = params[2];
+
         Log.d(LOG_TAG, apiKey);
         Log.d(LOG_TAG, passId);
-        Log.d(LOG_TAG, requestCount);
+        Log.d(LOG_TAG, customerType);
 
         try {
             final String BASE_URL = "https://young-plains-98404.herokuapp.com/";
-            final String CALL = "buyerListener";
+            final String CALL = "completionListener";
             final String API_KEY_PARAM = "api_key";
             final String PASS_ID_PARAM = "passId";
-            final String REQUEST_COUNT_PARAM = "requestCount";
+            final String CUSTOMER_TYPE_PARAM = "customerType";
 
             URL url = new URL(BASE_URL + CALL);
 
@@ -78,7 +83,7 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
 
             postDataParams.put(API_KEY_PARAM, apiKey);
             postDataParams.put(PASS_ID_PARAM, passId);
-            postDataParams.put(REQUEST_COUNT_PARAM, requestCount);
+            postDataParams.put(CUSTOMER_TYPE_PARAM, customerType);
 
             OutputStream os = httpURLConnection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
@@ -105,19 +110,29 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
             }
 
             JSONObject jsonResponse = new JSONObject(response);
-            //parse json
-            if (jsonResponse.has("pending")) {
-                try {
-                    Thread.sleep(5000);                 //1000 milliseconds is one second.
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+            if (customerType.equals("buyer") || customerType.equals("seller")) {
+                if (jsonResponse.has("exchanged")) {
+                    status = 0;
+                    try {
+                        Thread.sleep(1000);                 //1000 milliseconds is one second.
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                } else {
+                    status = -1;
                 }
-                status = 0;
-            } else if (jsonResponse.has("accepted")) {
-                status = 1;
-            } else if (jsonResponse.has("rejected")) {
-                status = 2;
-            } else if (jsonResponse.has("error")) {
+            } else if (customerType.equals("pending")) {
+                if (jsonResponse.has("pending")) {
+                    try {
+                        Thread.sleep(5000);                 //1000 milliseconds is one second.
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                    status = 1;
+                } else if (jsonResponse.has("complete")) {
+                    status = 2;
+                }
+            } else {
                 status = -1;
             }
         }catch (Exception e){
@@ -129,27 +144,27 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
     }
 
     /*available responses
-    0 : Buyer not found
-    1 : Buyer accepted
-    2 : Buyer rejected
+    0 : Successfully swiped, go to pending
+    1 : Currently pending, keep calling
+    2 : Other person successfully swiped too, end
     -1 : api fail or anything
  */
     @Override
     protected void onPostExecute(Integer result){
         switch (result) {
             case 0:
-                callback.onEventFailed();
+                if (callback != null) {
+                    callback.setStatus("pending");
+                    callback.onEventFailed();
+                }
                 break;
             case 1:
                 if (callback != null) {
-                    storeBuyPassStatus(true);
-                    callback.setStatus("accepted");
-                    callback.onEventCompleted();
+                    callback.onEventFailed();
                 }
                 break;
             case 2:
                 if (callback != null) {
-                    callback.setStatus("rejected");
                     callback.onEventCompleted();
                 }
                 break;
@@ -173,12 +188,5 @@ public class WaitForBuyerTask extends AsyncTask<String,String,Integer>{
         }
 
         return result.toString();
-    }
-
-    private void storeBuyPassStatus(boolean isBuying) {
-        SharedPreferences prefs = prevActivity.getSharedPreferences(context.getString(R.string.os_pref_user_info), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(context.getString(R.string.os_pass_buying_status), isBuying);
-        editor.apply();
     }
 }

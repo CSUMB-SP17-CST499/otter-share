@@ -85,7 +85,7 @@
         android:id="@+id/complete_slider"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:text="Slide"
+        android:text="Slide to Confirm Transaction"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

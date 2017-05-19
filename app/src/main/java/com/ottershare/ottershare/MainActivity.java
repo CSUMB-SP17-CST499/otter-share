@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -27,6 +28,7 @@ public class MainActivity extends FragmentActivity{
     boolean alreadyFoundSeller;
 
     final String DEFAULT_RESPONSE = "empty";
+    LinearLayout topPanel;
 
     View.OnClickListener listener = new View.OnClickListener()
     {
@@ -69,7 +71,7 @@ public class MainActivity extends FragmentActivity{
             Intent i = new Intent(this, WaitForSell.class);
             startActivity(i);
             finish();
-        } /*else if (alreadyFoundSeller) {
+        } else if (alreadyFoundSeller) {
             Intent i = new Intent(this, CompleteTransactionBuyer.class);
             startActivity(i);
             finish();
@@ -77,7 +79,7 @@ public class MainActivity extends FragmentActivity{
             Intent i = new Intent(this, CompleteTransactonSeller.class);
             startActivity(i);
             finish();
-        }*/
+        }
 
         String passStatus = prefs.getString(this.getString(R.string.os_pass_status), DEFAULT_RESPONSE);
         if (passStatus.equals("registered")) {
@@ -116,11 +118,10 @@ public class MainActivity extends FragmentActivity{
 
         MainTask mainTask = new MainTask(this, frag);
         mainTask.execute(apikey, keyword);
-
     }
 
     @Override
     public void onBackPressed() {
-        //do nothing!!!
+        //do nothing!!!;
     }
 }

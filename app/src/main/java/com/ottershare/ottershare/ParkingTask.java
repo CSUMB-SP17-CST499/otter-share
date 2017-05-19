@@ -64,7 +64,12 @@ public class ParkingTask extends AsyncTask<String, String, Integer> {
         gpsLocationToStore = gpsLocation;
         String price = params[4];
         String notes = params[5];
-
+        Log.d(LOG_TAG, api_key);
+        Log.d(LOG_TAG, email);
+        Log.d(LOG_TAG, lotLocation);
+        Log.d(LOG_TAG, gpsLocation);
+        Log.d(LOG_TAG, price);
+        Log.d(LOG_TAG, notes);
         try {
             final String BASE_URL = "https://young-plains-98404.herokuapp.com/";
             final String CALL = "registerPass";
